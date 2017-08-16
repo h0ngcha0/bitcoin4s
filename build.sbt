@@ -13,5 +13,6 @@ scalacOptions := Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.madgag.spongycastle" % "core" % "1.52.0.0"
+  "com.madgag.spongycastle" % "core" % "1.52.0.0",
+  "com.chuusai" %% "shapeless" % "2.3.2"
 )
