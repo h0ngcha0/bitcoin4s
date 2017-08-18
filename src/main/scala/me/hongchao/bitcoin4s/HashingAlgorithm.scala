@@ -7,8 +7,8 @@ import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA256Digest}
 trait HashingAlgorithm {
   val digest: Digest
 
-  def apply(input: Seq[Byte]): Array[Byte] = {
-    digest.update(input.toArray, 0, input.length)
+  def apply(input: Array[Byte]): Array[Byte] = {
+    digest.update(input, 0, input.length)
     val result = new Array[Byte](digest.getDigestSize)
     digest.doFinal(result, 0)
     result

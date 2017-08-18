@@ -8,7 +8,8 @@ case class PrivateKey(value: BigInt, compressed: Boolean = false) {
   def apply(byteArray: Array[Byte]): PrivateKey = {
     val uncompressedKeyLength = 32
     val (first32Bytes, restOfTheBytes) = byteArray.splitAt(uncompressedKeyLength)
-    val paddings = Array.fill(Math.min(uncompressedKeyLength - first32Bytes.length, 0))(0.toByte)
+    val paddingLength = Math.max(uncompressedKeyLength - first32Bytes.length, 0)
+    val paddings = Array.fill(paddingLength)(0.toByte)
     val keyBytes = paddings ++ first32Bytes
 
     restOfTheBytes match {

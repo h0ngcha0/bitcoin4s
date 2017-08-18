@@ -20,4 +20,32 @@ object Base58Check {
     require(checksum == Base58Check.checksum(versionAndHash.toArray), s"invalid Base58Check data $input")
     (versionAndHash.head, versionAndHash.tail.toArray)
   }
+
+  sealed trait VersionPrefix {
+    val value: Byte
+  }
+
+  case object P2PKHVersionPrefix extends VersionPrefix {
+    val value = 0x00.toByte
+  }
+
+  case object P2SHVersionPrefix extends VersionPrefix {
+    val value = 0x05.toByte
+  }
+
+  case object P2PKHTestnetVersionPrefix extends VersionPrefix {
+    val value = 0x6F.toByte
+  }
+
+  case object PrivateKeyWIFVersionPrefix extends VersionPrefix {
+    val value = 0x80.toByte
+  }
+
+  case object BIP38EncryptedPrivateKeyVersionPrefix extends VersionPrefix {
+    val value = 0x0142.toByte
+  }
+
+  case object BIP32ExtendedPublicKeyVersionPrefix extends VersionPrefix {
+    val value = 0x0488B21E.toByte
+  }
 }
