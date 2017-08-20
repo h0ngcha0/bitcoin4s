@@ -4,7 +4,7 @@ import org.spongycastle.crypto.Digest
 import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA256Digest}
 
 
-trait HashingAlgorithm {
+trait Hash {
   val digest: Digest
 
   def apply(input: Array[Byte]): Array[Byte] = {
@@ -15,10 +15,10 @@ trait HashingAlgorithm {
   }
 }
 
-case object Sha256 extends HashingAlgorithm {
+case object Sha256 extends Hash {
   val digest = new SHA256Digest
 }
 
-case object RipeMD160 extends HashingAlgorithm {
+case object RipeMD160 extends Hash {
   val digest = new RIPEMD160Digest
 }
