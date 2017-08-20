@@ -1,7 +1,9 @@
 package me.hongchao.bitcoin4s
 
 import org.spongycastle.crypto.Digest
-import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA256Digest}
+import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA256Digest, SHA512Digest}
+import org.spongycastle.crypto.generators.PKCS5S2ParametersGenerator
+import org.spongycastle.crypto.params.KeyParameter
 
 
 trait Hash {
@@ -21,4 +23,19 @@ case object Sha256 extends Hash {
 
 case object RipeMD160 extends Hash {
   val digest = new RIPEMD160Digest
+}
+
+case object PBKDF2WithHmacSha512 extends Hash {
+  val digest = new SHA512Digest()
+
+  override def apply(input: Array[Byte]): Array[Byte] = {
+    apply(input, "".getBytes)
+  }
+
+  def apply(input: Array[Byte], salt: Array[Byte]): Array[Byte] = {
+    val gen = new PKCS5S2ParametersGenerator(digest)
+    gen.init(input, salt, 2048)
+    val keyParams = gen.generateDerivedParameters(512).asInstanceOf[KeyParameter]
+    keyParams.getKey
+  }
 }
