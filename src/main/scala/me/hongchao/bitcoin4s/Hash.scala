@@ -29,7 +29,7 @@ case object PBKDF2WithHmacSha512 extends Hash {
   val digest = new SHA512Digest()
 
   override def apply(input: Array[Byte]): Array[Byte] = {
-    apply(input, "".getBytes)
+    apply(input, Array.emptyByteArray)
   }
 
   def apply(input: Array[Byte], salt: Array[Byte]): Array[Byte] = {

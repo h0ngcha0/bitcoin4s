@@ -16,6 +16,9 @@ libraryDependencies ++= Seq(
   "com.madgag.spongycastle" % "core" % "1.52.0.0",
   "com.chuusai" %% "shapeless" % "2.3.2",
   "org.scodec" %% "scodec-core" % "1.10.3",
-  "org.scalatest" %% "scalatest" % "3.0.3" % "test",
-  "com.iheart" %% "ficus" % "1.4.1"
+  "io.github.yzernik" %% "bitcoin-scodec" % "0.2.9-hc",
+  "com.iheart" %% "ficus" % "1.4.1",
+  "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
+
+resolvers += Resolver.bintrayRepo("liuhongchao", "maven")
