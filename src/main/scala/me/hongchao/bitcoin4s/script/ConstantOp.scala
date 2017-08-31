@@ -2,14 +2,6 @@ package me.hongchao.bitcoin4s.script
 
 sealed trait ConstantOp extends OpCode
 
-object ConstantOps {
-  val all = Seq(
-    OP_FALSE, OP_0, OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4, OP_1NEGATE,
-    OP_1, OP_TRUE, OP_2, OP_3, OP_4, OP_5, OP_6, OP_7, OP_8, OP_9, OP_10,
-    OP_11, OP_12, OP_13, OP_14, OP_15, OP_16
-  )
-}
-
 case object OP_FALSE extends ConstantOp { val value = 0 }
 case object OP_0 extends ConstantOp { val value = 0 }
 case object OP_PUSHDATA1 extends ConstantOp { val value = 76 }
@@ -33,3 +25,11 @@ case object OP_13 extends ConstantOp { val value = 93 }
 case object OP_14 extends ConstantOp { val value = 94 }
 case object OP_15 extends ConstantOp { val value = 95 }
 case object OP_16 extends ConstantOp { val value = 96 }
+
+object ConstantOps {
+  val all = Seq(
+    OP_FALSE, OP_0, OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4, OP_1NEGATE,
+    OP_1, OP_TRUE, OP_2, OP_3, OP_4, OP_5, OP_6, OP_7, OP_8, OP_9, OP_10,
+    OP_11, OP_12, OP_13, OP_14, OP_15, OP_16
+  )
+}

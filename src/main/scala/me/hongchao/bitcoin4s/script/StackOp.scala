@@ -28,4 +28,70 @@ object StackOps {
     OP_2ROT, OP_2SWAP, OP_IFDUP, OP_DEPTH, OP_DROP, OP_DUP, OP_NIP, OP_OVER,
     OP_PICK, OP_ROLL, OP_ROT, OP_SWAP, OP_TUCK
   )
+
+  implicit val interpreter = new Interpreter[StackOp] {
+    def interpret(opCode: StackOp, context: InterpreterContext): InterpreterContext = {
+      val stack = context.stack
+      val altStack = context.altStack
+      val opCount = context.opCount
+
+      opCode match {
+        case OP_DUP =>
+          val stackHead = stack.headOption.getOrElse(throw new NotEnoughElementsInStack(OP_DUP, stack))
+
+          context.copy(
+            stack = stackHead +: stack,
+            opCount = opCount + 1
+          )
+
+        case OP_TOALTSTACK =>
+          val stackHead = stack.headOption.getOrElse(throw new NotEnoughElementsInStack(OP_TOALTSTACK, stack))
+
+          context.copy(
+            stack = stack.tail,
+            altStack = stackHead +: altStack
+          )
+
+        case OP_FROMALTSTACK =>
+          val altStackHead = altStack.headOption.getOrElse(throw new NotEnoughElementsInAltStack(OP_FROMALTSTACK, stack))
+
+          context.copy(
+            stack = altStackHead +: stack,
+            altStack = altStack.tail
+          )
+
+        case OP_2DROP =>
+          val updatedStack = stack match {
+            case _ :: _ :: rest =>
+              rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_2DROP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_2DUP =>
+          val updatedStack = stack match {
+            case first :: second :: rest =>
+              first :: second :: first :: second :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_2DUP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_3DUP =>
+          val updatedStack = stack match {
+            case first :: second :: third :: rest =>
+              first :: second :: third :: first :: second :: third :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_3DUP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        // TODO: Add more
+      }
+    }
+  }
 }
