@@ -9,6 +9,6 @@ case object OP_XOR extends BitwiseLogicOp { val value = 134 }
 case object OP_EQUAL extends BitwiseLogicOp { val value = 135 }
 case object OP_EQUALVERIFY extends BitwiseLogicOp { val value = 136 }
 
-object BitwiseLogicOps {
+object BitwiseLogicOp {
   val all = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR, OP_EQUAL, OP_EQUALVERIFY)
 }

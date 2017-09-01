@@ -15,14 +15,14 @@ trait ScriptOpCode extends ScriptElement {
 
 object OpCodes {
   val all =
-    ArithmeticOps.all ++
-    BitwiseLogicOps.all ++
-    ConstantOps.all ++
-    CryptoOps.all ++
-    FlowControlOps.all ++
-    LocktimeOps.all ++
-    PseudoOps.all ++
-    ReservedOps.all ++
-    SpliceOps.all ++
-    StackOps.all
+    ArithmeticOp.all ++
+    BitwiseLogicOp.all ++
+    ConstantOp.all ++
+    CryptoOp.all ++
+    FlowControlOp.all ++
+    LocktimeOp.all ++
+    PseudoOp.all ++
+    ReservedOp.all ++
+    SpliceOp.all ++
+    StackOp.all
 }
