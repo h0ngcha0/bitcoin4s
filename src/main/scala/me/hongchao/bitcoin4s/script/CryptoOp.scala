@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait CryptoOp extends OpCode
+sealed trait CryptoOp extends ScriptOpCode
 
 case object OP_RIPEMD160 extends CryptoOp { val value = 166 }
 case object OP_SHA1 extends CryptoOp { val value = 167 }

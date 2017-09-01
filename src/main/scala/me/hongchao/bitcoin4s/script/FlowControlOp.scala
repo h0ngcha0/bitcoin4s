@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait FlowControlOp extends OpCode
+sealed trait FlowControlOp extends ScriptOpCode
 
 case object OP_NOP extends FlowControlOp { val value = 97 }
 case object OP_IF extends FlowControlOp { val value = 99 }

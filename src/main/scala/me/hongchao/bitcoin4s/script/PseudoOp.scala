@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait PseudoOp extends OpCode
+sealed trait PseudoOp extends ScriptOpCode
 
 case object OP_PUBKEYHASH extends PseudoOp { val value = 253 }
 case object OP_PUBKEY extends PseudoOp { val value = 254 }

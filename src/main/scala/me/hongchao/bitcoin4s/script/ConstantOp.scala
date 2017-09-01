@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait ConstantOp extends OpCode
+sealed trait ConstantOp extends ScriptOpCode
 
 case object OP_FALSE extends ConstantOp { val value = 0 }
 case object OP_0 extends ConstantOp { val value = 0 }

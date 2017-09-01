@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait BitwiseLogicOp extends OpCode
+sealed trait BitwiseLogicOp extends ScriptOpCode
 
 case object OP_INVERT extends BitwiseLogicOp { val value = 131 }
 case object OP_AND extends BitwiseLogicOp { val value = 132 }

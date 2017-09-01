@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait LocktimeOp extends OpCode
+sealed trait LocktimeOp extends ScriptOpCode
 
 case object OP_CHECKLOCKTIMEVERIFY extends LocktimeOp { val value = 177 }
 case object OP_CHECKSEQUENCEVERIFY extends LocktimeOp { val value = 178 }

@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait SpliceOp extends OpCode
+sealed trait SpliceOp extends ScriptOpCode
 
 case object OP_CAT extends SpliceOp { val value = 126 }
 case object OP_SUBSTR extends SpliceOp { val value = 127 }

@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait ArithmeticOp extends OpCode
+sealed trait ArithmeticOp extends ScriptOpCode
 
 case object OP_1ADD extends ArithmeticOp { val value = 139 }
 case object OP_1SUB extends ArithmeticOp { val value = 140 }
@@ -37,4 +37,23 @@ object ArithmeticOps {
     OP_BOOLOR, OP_NUMEQUAL, OP_NUMEQUALVERIFY, OP_NUMNOTEQUAL, OP_LESSTHAN,
     OP_GREATERTHAN, OP_LESSTHANOREQUAL, OP_GREATERTHANOREQUAL, OP_MIN, OP_MAX, OP_WITHIN
   )
+
+/*  implicit val interpreter = new Interpreter[ArithmeticOp] {
+    def interpret(opCode: ArithmeticOp, context: InterpreterContext): InterpreterContext = {
+      val script = context.script
+      val stack = context.stack
+
+      opCode match {
+        case OP_ADD =>
+          val firstTwoElements = stack match {
+            case first :: second :: _ => Seq(first, second)
+            case _ => throw NotEnoughElementsInStack(OP_1ADD, stack)
+          }
+
+          context.copy(
+            script = script.tail
+          )
+      }
+    }
+  }*/
 }

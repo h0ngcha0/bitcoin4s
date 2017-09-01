@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait StackOp extends OpCode
+sealed trait StackOp extends ScriptOpCode
 
 case object OP_TOALTSTACK extends StackOp { val value = 107 }
 case object OP_FROMALTSTACK extends StackOp { val value = 108 }
@@ -60,6 +60,16 @@ object StackOps {
             altStack = altStack.tail
           )
 
+        case OP_DROP =>
+          val updatedStack = stack match {
+            case _ :: rest =>
+              rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_DROP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
         case OP_2DROP =>
           val updatedStack = stack match {
             case _ :: _ :: rest =>
@@ -90,7 +100,129 @@ object StackOps {
 
           context.copy(stack = updatedStack, opCount = opCount + 1)
 
-        // TODO: Add more
+        case OP_OVER =>
+          val updatedStack = stack match {
+            case first :: second :: rest =>
+              second :: first :: second :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_OVER, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_2OVER =>
+          val updatedStack = stack match {
+            case first :: second :: third :: fourth :: rest =>
+              third :: fourth :: first :: second :: third :: fourth :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_2OVER, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_ROT =>
+          val updatedStack = stack match {
+            case first :: second :: third :: rest =>
+              third :: first :: second :: third :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_ROT, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_2ROT =>
+          val updatedStack = stack match {
+            case first :: second :: third :: fourth :: fifth :: sixth :: rest =>
+              fifth :: sixth :: first :: second :: third :: fourth :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_2ROT, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_SWAP =>
+          val updatedStack = stack match {
+            case first :: second :: rest =>
+              second :: first :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_SWAP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_2SWAP =>
+          val updatedStack = stack match {
+            case first :: second :: third :: fourth :: rest =>
+              third :: fourth :: first :: second :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_2SWAP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_IFDUP =>
+          val updatedStack = stack match {
+            case ScriptNumber(0) :: rest =>
+              ScriptNumber(0) :: ScriptNumber(0) :: rest
+            case first :: rest =>
+              first :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_IFDUP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_DEPTH =>
+          val updatedStack = ScriptNumber(stack.length) +: stack
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_NIP =>
+          val updatedStack = stack match {
+            case first :: second :: rest =>
+              first :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_NIP, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_PICK =>
+          val updatedStack = stack match {
+            case ScriptNumber(n) :: rest if rest.length >= n =>
+              rest(n.toInt) :: rest
+            case ScriptNumber(n) :: rest if rest.length < n =>
+              throw new NotEnoughElementsInStack(OP_PICK, stack)
+            case _ :: rest =>
+              throw new NumberElementRequired(OP_PICK, stack)
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_PICK, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_ROLL =>
+          val updatedStack = stack match {
+            case ScriptNumber(n) :: rest if rest.length >= n =>
+              rest(n.toInt) :: (rest.take(n.toInt) ++ rest.drop(n.toInt+1))
+            case ScriptNumber(n) :: rest if rest.length < n =>
+              throw new NotEnoughElementsInStack(OP_ROLL, stack)
+            case _ :: rest =>
+              throw new NumberElementRequired(OP_ROLL, stack)
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_ROLL, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
+
+        case OP_TUCK =>
+          val updatedStack = stack match {
+            case first :: second :: rest =>
+              first :: second :: first :: rest
+            case _ =>
+              throw new NotEnoughElementsInStack(OP_TUCK, stack)
+          }
+
+          context.copy(stack = updatedStack, opCount = opCount + 1)
       }
     }
   }

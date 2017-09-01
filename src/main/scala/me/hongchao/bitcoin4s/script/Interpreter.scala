@@ -3,29 +3,33 @@ package me.hongchao.bitcoin4s.script
 import simulacrum._
 
 case class InterpreterContext(
-  script: Seq[OpCode],
-  stack: Seq[OpCode],
-  altStack: Seq[OpCode],
+  script: Seq[ScriptElement],
+  stack: Seq[ScriptElement],
+  altStack: Seq[ScriptElement],
   opCount: Int
 )
 
 sealed trait InterpreterError extends RuntimeException {
-  val opCode: OpCode
-  val stack: Seq[OpCode]
+  val opCode: ScriptOpCode
+  val stack: Seq[ScriptElement]
   val description: String
 
   super.initCause(new Throwable(s"$description\nopCode: $opCode\nstack: $stack"))
 }
 
-case class NotEnoughElementsInStack(opCode: OpCode, stack: Seq[OpCode]) extends InterpreterError {
+case class NotEnoughElementsInStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
   val description = "Not enough elements in the stack"
 }
 
-case class NotEnoughElementsInAltStack(opCode: OpCode, stack: Seq[OpCode]) extends InterpreterError {
+case class NotEnoughElementsInAltStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
   val description = "Not enough elements in the alternative stack"
 }
 
+case class NumberElementRequired(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  val description = "Number element required"
+}
 
-@typeclass trait Interpreter[A <: OpCode] {
+
+@typeclass trait Interpreter[A <: ScriptOpCode] {
   def interpret(opCode: A, context: InterpreterContext): InterpreterContext
 }

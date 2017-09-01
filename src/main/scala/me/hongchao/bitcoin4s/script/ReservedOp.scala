@@ -1,6 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait ReservedOp extends OpCode
+sealed trait ReservedOp extends ScriptOpCode
 
 case object OP_RESERVED extends ReservedOp { val value = 80 }
 case object OP_VER extends ReservedOp { val value = 98 }
