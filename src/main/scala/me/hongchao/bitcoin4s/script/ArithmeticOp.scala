@@ -38,10 +38,11 @@ object ArithmeticOp {
     OP_GREATERTHAN, OP_LESSTHANOREQUAL, OP_GREATERTHANOREQUAL, OP_MIN, OP_MAX, OP_WITHIN
   )
 
-/*  implicit val interpreter = new Interpreter[ArithmeticOp] {
+  implicit val interpreter = new Interpreter[ArithmeticOp] {
     def interpret(opCode: ArithmeticOp, context: InterpreterContext): InterpreterContext = {
       val script = context.script
       val stack = context.stack
+      val flags = context.flags
 
       opCode match {
         case OP_ADD =>
@@ -55,5 +56,5 @@ object ArithmeticOp {
           )
       }
     }
-  }*/
+  }
 }

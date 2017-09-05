@@ -1,16 +1,20 @@
 package me.hongchao.bitcoin4s.script
 
+import me.hongchao.bitcoin4s.Utils._
 // Reference: https://en.bitcoin.it/wiki/Script
 
-sealed trait ScriptElement extends Product
+sealed trait ScriptElement extends Product {
+  val bytes: Seq[Byte]
+}
 
-case class ScriptNumber(value: Long) extends ScriptElement
-case class ScriptString(value: String) extends ScriptElement
+
+trait ScriptConstant extends ScriptElement
 
 trait ScriptOpCode extends ScriptElement {
-  val value: Int
-  val hex: String = value.toHexString
+  val value: Long
+  val hex: String = value.toHex
   val name: String = productPrefix
+  override val bytes = Seq() // FIXME: decode hex
 }
 
 object OpCodes {

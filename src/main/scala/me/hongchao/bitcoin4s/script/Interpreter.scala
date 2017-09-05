@@ -6,6 +6,7 @@ case class InterpreterContext(
   script: Seq[ScriptElement],
   stack: Seq[ScriptElement],
   altStack: Seq[ScriptElement],
+  flags: Seq[ScriptFlag],
   opCount: Int
 )
 

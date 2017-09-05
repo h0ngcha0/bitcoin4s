@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   "com.iheart" %% "ficus" % "1.4.1",
   "org.typelevel" %% "cats-core" % "1.0.0-MF",
   "com.github.mpilquist" %% "simulacrum" % "0.10.0",
+  "eu.timepit" %% "refined" % "0.8.2",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
 
