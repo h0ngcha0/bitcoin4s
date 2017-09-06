@@ -15,8 +15,8 @@ object ScriptConstant {
 }
 
 // Reference: https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L205
-case class ScriptNum(value: Long) extends ScriptConstant {
-  override val bytes = ???
+trait ScriptNum extends ScriptConstant {
+  val value: Long
 
   def == (that: ScriptNum) = value == that.value
   def != (that: ScriptNum) = value != that.value
@@ -29,19 +29,25 @@ case class ScriptNum(value: Long) extends ScriptConstant {
   def +  (that: Long) = ScriptNum(value + that)
   def -  (that: ScriptNum) = ScriptNum(value - that.value)
   def -  (that: Long) = ScriptNum(value - that)
-  def *  (that: ScriptNum) = ScriptNum(value * that.value)
-  def *  (that: Long) = ScriptNum(value * that)
 }
 
 object ScriptNum {
   val DefaultMaxNumSize = 4
 
+  def apply(valueIn: Long) = new ScriptNum {
+    override val value: Long = valueIn
+    override val bytes = Seq.empty // FIXME: convert from value
+  }
+
   // Does not accept byte array with more than 4 bytes
-  def apply(bytes: Seq[Byte], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
-    require(bytes.length <= DefaultMaxNumSize, s"bytes length exceeds maxNumSize $maxNumSize")
-    val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytes)
+  def apply(bytesIn: Seq[Byte], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
+    require(bytesIn.length <= DefaultMaxNumSize, s"bytes length exceeds maxNumSize $maxNumSize")
+    val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytesIn)
     require(!violateMinimalEncoding, "non-minimally encoded script number")
-    ScriptNum(toLong(bytes))
+    new ScriptNum {
+      override val value = toLong(bytesIn)
+      override val bytes = bytesIn
+    }
   }
 
   private def minimallyEncoded(bytes: Seq[Byte]): Boolean = {

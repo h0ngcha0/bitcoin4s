@@ -1,6 +1,9 @@
 package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.script.ScriptFlag.SCRIPT_VERIFY_MINIMALDATA
+import me.hongchao.bitcoin4s.Utils._
+import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
+import cats.implicits._
 
 sealed trait ArithmeticOp extends ScriptOpCode
 
@@ -44,30 +47,115 @@ object ArithmeticOp {
 
   implicit val interpreter = new Interpreter[ArithmeticOp] {
     def interpret(opCode: ArithmeticOp, context: InterpreterContext): InterpreterContext = {
+      val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
 
       opCode match {
         case opc if disabled.contains(opc) =>
           throw new OpcodeDisabled(opc, context.stack)
 
         case OP_1ADD =>
-          oneOperant(OP_1SUB, context, (number: ScriptNum) => number + 1)
+          oneOperant(opCode, context, (number: ScriptNum) => number + 1)
 
         case OP_1SUB =>
-          oneOperant(OP_1SUB, context, (number: ScriptNum) => number - 1)
+          oneOperant(opCode, context, (number: ScriptNum) => number - 1)
 
-        case OP_2MUL =>
-          twoOperants(OP_ADD, context, (first: ScriptNum, second: ScriptNum) => first * second)
+        case OP_NEGATE =>
+          oneOperant(opCode, context, (number: ScriptNum) => ScriptNum(-number.value))
+
+        case OP_ABS =>
+          oneOperant(opCode, context, (number: ScriptNum) => ScriptNum(Math.abs(number.value)))
+
+        case OP_NOT =>
+          oneOperant(opCode, context, (number: ScriptNum) => {
+            (number.value == 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_0NOTEQUAL =>
+          oneOperant(opCode, context, (number: ScriptNum) => {
+            (number.value == 0).option(ScriptNum(0)).getOrElse(ScriptNum(1))
+          })
 
         case OP_ADD =>
-          twoOperants(OP_ADD, context, (first: ScriptNum, second: ScriptNum) => first + second)
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => first + second)
+
+        case OP_SUB =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => first - second)
+
+        case OP_BOOLAND =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first.value =!= 0 && second.value =!= 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_BOOLOR =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first.value =!= 0 || second.value =!= 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_NUMEQUAL =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_NUMEQUALVERIFY =>
+          // OP_NUMEQUAL + OP_VERIFY
+          val updatedContext = twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+          updatedContext.copy(script = OP_VERIFY +: updatedContext.script)
+
+        case OP_NUMNOTEQUAL =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first.value =!= second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_LESSTHAN =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first < second).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_GREATERTHAN =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first > second).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_GREATERTHANOREQUAL =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            (first >= second).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_MIN =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            ScriptNum(Math.min(first.value, second.value))
+          })
+
+        case OP_MAX =>
+          twoOperants(opCode, context, (first: ScriptNum, second: ScriptNum) => {
+            ScriptNum(Math.max(first.value, second.value))
+          })
+
+        case OP_WITHIN =>
+          context.stack match {
+            case (first: ScriptConstant) :: (second: ScriptConstant) :: (third: ScriptConstant) :: rest =>
+              val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
+              val secondNumber = ScriptNum(second.bytes, requireMinimalEncoding)
+              val thirdNumber = ScriptNum(third.bytes, requireMinimalEncoding)
+              val isWithin = (thirdNumber < firstNumber && thirdNumber > secondNumber)
+
+              context.copy(
+                script = context.script.tail,
+                stack = isWithin.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: rest,
+                opCount = context.opCount + 1
+              )
+            case _ :: _ :: _ :: _ =>
+              throw NotAllOperantsAreConstant(opCode, context.stack)
+            case _ =>
+              throw NotEnoughElementsInStack(opCode, context.stack)
+          }
       }
     }
 
-    private def oneOperant(
-      opCode: ArithmeticOp,
-      context: InterpreterContext,
-      convert: (ScriptNum) => ScriptNum
-    ): InterpreterContext = {
+    private def oneOperant(opCode: ArithmeticOp, context: InterpreterContext, convert: (ScriptNum) => ScriptNum): InterpreterContext = {
       val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
       context.stack match {
         case (first: ScriptConstant) :: rest =>
@@ -84,11 +172,7 @@ object ArithmeticOp {
       }
     }
 
-    private def twoOperants(
-      opCode: ArithmeticOp,
-      context: InterpreterContext,
-      convert: (ScriptNum, ScriptNum) => ScriptNum
-    ): InterpreterContext = {
+    private def twoOperants(opCode: ArithmeticOp, context: InterpreterContext, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterContext = {
       val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
       context.stack match {
         case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>

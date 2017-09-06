@@ -162,7 +162,7 @@ object StackOp {
 
         case OP_IFDUP =>
           val updatedStack = stack match {
-            case ScriptNum(0) :: rest =>
+            case (number: ScriptNum) :: rest if (number.value == 0)=>
               ScriptNum(0) :: ScriptNum(0) :: rest
             case first :: rest =>
               first :: rest
@@ -188,9 +188,9 @@ object StackOp {
 
         case OP_PICK =>
           val updatedStack = stack match {
-            case ScriptNum(n) :: rest if rest.length >= n =>
-              rest(n.toInt) :: rest
-            case ScriptNum(n) :: rest if rest.length < n =>
+            case (number: ScriptNum) :: rest if rest.length >= number.value =>
+              rest(number.value.toInt) :: rest
+            case (number: ScriptNum) :: rest if rest.length < number.value =>
               throw new NotEnoughElementsInStack(OP_PICK, stack)
             case _ :: rest =>
               throw new OperantMustBeScriptNum(OP_PICK, stack)
@@ -202,9 +202,9 @@ object StackOp {
 
         case OP_ROLL =>
           val updatedStack = stack match {
-            case ScriptNum(n) :: rest if rest.length >= n =>
-              rest(n.toInt) :: (rest.take(n.toInt) ++ rest.drop(n.toInt+1))
-            case ScriptNum(n) :: rest if rest.length < n =>
+            case (number: ScriptNum) :: rest if rest.length >= number.value =>
+              rest(number.value.toInt) :: (rest.take(number.value.toInt) ++ rest.drop(number.value.toInt+1))
+            case (number: ScriptNum) :: rest if rest.length < number.value =>
               throw new NotEnoughElementsInStack(OP_ROLL, stack)
             case _ :: rest =>
               throw new OperantMustBeScriptNum(OP_ROLL, stack)

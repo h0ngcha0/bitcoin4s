@@ -16,6 +16,12 @@ package object Utils {
     def toHex: String = bytes.map(_.toHex).mkString
   }
 
+  implicit class RichBoolean(b: Boolean) {
+    def option[T](f: => T): Option[T] = {
+      if (b) Some(f) else None
+    }
+  }
+
   def toUInt8(bytes: Seq[Byte] Refined Size[Equal[_1]]): Int = {
     bytes.value.head.toShort
   }
