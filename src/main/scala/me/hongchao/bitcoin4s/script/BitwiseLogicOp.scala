@@ -44,7 +44,6 @@ object BitwiseLogicOp {
 
         case _ =>
           throw NotEnoughElementsInStack(OP_EQUAL, context.stack)
-
       }
     }
   }
