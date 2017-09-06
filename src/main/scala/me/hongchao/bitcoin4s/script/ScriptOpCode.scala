@@ -9,6 +9,7 @@ sealed trait ScriptElement extends Product {
 
 
 trait ScriptConstant extends ScriptElement
+case class ScriptBytes(bytes: Seq[Byte]) extends ScriptConstant
 
 trait ScriptOpCode extends ScriptElement {
   val value: Long

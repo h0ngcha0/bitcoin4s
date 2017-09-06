@@ -1,7 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
+import eu.timepit.refined.api.Refined
 import shapeless.nat._
-import shapeless.tag.@@
 import eu.timepit.refined.collection.MaxSize
 
 // Reference: https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L205
@@ -23,10 +23,10 @@ object ScriptNum {
   val DefaultMaxNumSize = 4
 
   // Does not accept byte array with more than 4 bytes
-  def apply(bytes: Seq[Byte] @@ MaxSize[_4], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
-    val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytes)
+  def apply(bytes: Seq[Byte] Refined MaxSize[_4], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
+    val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytes.value)
     require(!violateMinimalEncoding, "non-minimally encoded script number")
-    ScriptNum(toLong(bytes))
+    ScriptNum(toLong(bytes.value))
   }
 
   def serialize(value: Long): Seq[Byte] = {
