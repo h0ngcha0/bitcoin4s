@@ -1,5 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
+import me.hongchao.bitcoin4s.Utils._
+import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
+
 sealed trait BitwiseLogicOp extends ScriptOpCode
 
 object BitwiseLogicOp {
@@ -12,4 +15,37 @@ object BitwiseLogicOp {
 
   val all = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR, OP_EQUAL, OP_EQUALVERIFY)
   val disabled = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR)
+
+  implicit val interpreter = new Interpreter[BitwiseLogicOp] {
+    def interpret(opCode: BitwiseLogicOp, context: InterpreterContext): InterpreterContext = {
+      opCode match {
+        case opc if disabled.contains(opc) =>
+          throw new OpcodeDisabled(opc, context.stack)
+
+        case OP_EQUAL =>
+          onOpEqual(context)
+
+        case OP_EQUALVERIFY =>
+          val updatedContext = onOpEqual(context)
+          updatedContext.copy(script = OP_VERIFY +: updatedContext.script)
+      }
+    }
+
+    private def onOpEqual(context: InterpreterContext): InterpreterContext = {
+      context.stack match {
+        case first :: second :: rest =>
+          val result = (first.bytes == second.bytes).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+
+          context.copy(
+            script = context.script.tail,
+            stack = result +: rest,
+            opCount = context.opCount + 1
+          )
+
+        case _ =>
+          throw NotEnoughElementsInStack(OP_EQUAL, context.stack)
+
+      }
+    }
+  }
 }
