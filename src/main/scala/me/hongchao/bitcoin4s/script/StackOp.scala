@@ -193,7 +193,7 @@ object StackOp {
             case ScriptNum(n) :: rest if rest.length < n =>
               throw new NotEnoughElementsInStack(OP_PICK, stack)
             case _ :: rest =>
-              throw new NumberElementRequired(OP_PICK, stack)
+              throw new OperantMustBeScriptNum(OP_PICK, stack)
             case _ =>
               throw new NotEnoughElementsInStack(OP_PICK, stack)
           }
@@ -207,7 +207,7 @@ object StackOp {
             case ScriptNum(n) :: rest if rest.length < n =>
               throw new NotEnoughElementsInStack(OP_ROLL, stack)
             case _ :: rest =>
-              throw new NumberElementRequired(OP_ROLL, stack)
+              throw new OperantMustBeScriptNum(OP_ROLL, stack)
             case _ =>
               throw new NotEnoughElementsInStack(OP_ROLL, stack)
           }

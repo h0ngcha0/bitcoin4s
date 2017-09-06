@@ -11,4 +11,5 @@ object BitwiseLogicOp {
   case object OP_EQUALVERIFY extends BitwiseLogicOp { val value = 136 }
 
   val all = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR, OP_EQUAL, OP_EQUALVERIFY)
+  val disabled = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR)
 }

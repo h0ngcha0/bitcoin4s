@@ -10,4 +10,5 @@ object SpliceOp {
   case object OP_SIZE extends SpliceOp { val value = 130 }
 
   val all = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT, OP_SIZE)
+  val disabled = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT)
 }

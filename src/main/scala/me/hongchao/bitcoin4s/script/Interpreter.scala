@@ -10,6 +10,7 @@ case class InterpreterContext(
   opCount: Int
 )
 
+
 sealed trait InterpreterError extends RuntimeException {
   val opCode: ScriptOpCode
   val stack: Seq[ScriptElement]
@@ -26,11 +27,20 @@ case class NotEnoughElementsInAltStack(opCode: ScriptOpCode, stack: Seq[ScriptEl
   val description = "Not enough elements in the alternative stack"
 }
 
-case class NumberElementRequired(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Number element required"
+case class NotAllOperantsAreConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  val description = "Not all operants are constant"
+}
+
+case class OperantMustBeScriptNum(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  val description = "Operant must be ScriptNum"
+}
+
+case class OpcodeDisabled(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  val description = "Opcode is disabled"
 }
 
 
 @typeclass trait Interpreter[A <: ScriptOpCode] {
+  // def interpret[A](opCode: A): State[InterpreterContext, Either[String, Boolean]]
   def interpret(opCode: A, context: InterpreterContext): InterpreterContext
 }

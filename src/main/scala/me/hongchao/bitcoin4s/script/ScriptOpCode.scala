@@ -1,9 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.Utils._
-import eu.timepit.refined.api.Refined
-import shapeless.nat._
-import eu.timepit.refined.collection.MaxSize
 
 // Reference: https://en.bitcoin.it/wiki/Script
 
@@ -19,7 +16,7 @@ object ScriptConstant {
 
 // Reference: https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L205
 case class ScriptNum(value: Long) extends ScriptConstant {
-  override val bytes = ScriptNum.serialize(value)
+  override val bytes = ???
 
   def == (that: ScriptNum) = value == that.value
   def != (that: ScriptNum) = value != that.value
@@ -29,21 +26,22 @@ case class ScriptNum(value: Long) extends ScriptConstant {
   def >  (that: ScriptNum) = value > that.value
 
   def +  (that: ScriptNum) = ScriptNum(value + that.value)
+  def +  (that: Long) = ScriptNum(value + that)
   def -  (that: ScriptNum) = ScriptNum(value - that.value)
+  def -  (that: Long) = ScriptNum(value - that)
+  def *  (that: ScriptNum) = ScriptNum(value * that.value)
+  def *  (that: Long) = ScriptNum(value * that)
 }
 
 object ScriptNum {
   val DefaultMaxNumSize = 4
 
   // Does not accept byte array with more than 4 bytes
-  def apply(bytes: Seq[Byte] Refined MaxSize[_4], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
-    val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytes.value)
+  def apply(bytes: Seq[Byte], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
+    require(bytes.length <= DefaultMaxNumSize, s"bytes length exceeds maxNumSize $maxNumSize")
+    val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytes)
     require(!violateMinimalEncoding, "non-minimally encoded script number")
-    ScriptNum(toLong(bytes.value))
-  }
-
-  def serialize(value: Long): Seq[Byte] = {
-    ???
+    ScriptNum(toLong(bytes))
   }
 
   private def minimallyEncoded(bytes: Seq[Byte]): Boolean = {
@@ -86,8 +84,7 @@ trait ScriptOpCode extends ScriptElement with Product {
 }
 
 object OpCodes {
-  val all =
-    ArithmeticOp.all ++
+  val all = ArithmeticOp.all ++
     BitwiseLogicOp.all ++
     ConstantOp.all ++
     CryptoOp.all ++
@@ -97,4 +94,8 @@ object OpCodes {
     ReservedOp.all ++
     SpliceOp.all ++
     StackOp.all
+
+  val disabled = SpliceOp.disabled ++
+    BitwiseLogicOp.disabled ++
+    ArithmeticOp.disabled
 }

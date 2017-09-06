@@ -1,5 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
+import me.hongchao.bitcoin4s.script.ScriptFlag.SCRIPT_VERIFY_MINIMALDATA
+
 sealed trait ArithmeticOp extends ScriptOpCode
 
 object ArithmeticOp {
@@ -38,23 +40,71 @@ object ArithmeticOp {
     OP_GREATERTHAN, OP_LESSTHANOREQUAL, OP_GREATERTHANOREQUAL, OP_MIN, OP_MAX, OP_WITHIN
   )
 
+  val disabled = Seq(OP_2MUL, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
+
   implicit val interpreter = new Interpreter[ArithmeticOp] {
     def interpret(opCode: ArithmeticOp, context: InterpreterContext): InterpreterContext = {
-      val script = context.script
-      val stack = context.stack
-      val flags = context.flags
 
       opCode match {
-        case OP_ADD =>
-          val firstTwoElements = stack match {
-            case first :: second :: _ => Seq(first, second)
-            case _ => throw NotEnoughElementsInStack(OP_1ADD, stack)
-          }
+        case opc if disabled.contains(opc) =>
+          throw new OpcodeDisabled(opc, context.stack)
 
-          context.copy(
-            script = script.tail
-          )
+        case OP_1ADD =>
+          oneOperant(OP_1SUB, context, (number: ScriptNum) => number + 1)
+
+        case OP_1SUB =>
+          oneOperant(OP_1SUB, context, (number: ScriptNum) => number - 1)
+
+        case OP_2MUL =>
+          twoOperants(OP_ADD, context, (first: ScriptNum, second: ScriptNum) => first * second)
+
+        case OP_ADD =>
+          twoOperants(OP_ADD, context, (first: ScriptNum, second: ScriptNum) => first + second)
       }
+    }
+
+    private def oneOperant(
+      opCode: ArithmeticOp,
+      context: InterpreterContext,
+      convert: (ScriptNum) => ScriptNum
+    ): InterpreterContext = {
+      val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
+      context.stack match {
+        case (first: ScriptConstant) :: rest =>
+          val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
+          context.copy(
+            script = context.script.tail,
+            stack = convert(firstNumber) +: rest,
+            opCount = context.opCount + 1
+          )
+        case _ :: _ =>
+          throw NotAllOperantsAreConstant(opCode, context.stack)
+        case _ =>
+          throw NotEnoughElementsInStack(opCode, context.stack)
+      }
+    }
+
+    private def twoOperants(
+      opCode: ArithmeticOp,
+      context: InterpreterContext,
+      convert: (ScriptNum, ScriptNum) => ScriptNum
+    ): InterpreterContext = {
+      val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
+      context.stack match {
+        case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>
+          val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
+          val secondNumber = ScriptNum(second.bytes, requireMinimalEncoding)
+          context.copy(
+            script = context.script.tail,
+            stack = convert(firstNumber, secondNumber) +: rest,
+            opCount = context.opCount + 1
+          )
+        case _ :: _ :: _ =>
+          throw NotAllOperantsAreConstant(opCode, context.stack)
+        case _ =>
+          throw NotEnoughElementsInStack(opCode, context.stack)
+      }
+
     }
   }
 }
