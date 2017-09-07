@@ -19,38 +19,43 @@ sealed trait InterpreterError extends RuntimeException {
   super.initCause(new Throwable(s"$description\nopCode: $opCode\nstack: $stack"))
 }
 
-case class NotEnoughElementsInStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Not enough elements in the stack"
-}
+object InterpreterError {
+  case class NotEnoughElementsInStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Not enough elements in the stack"
+  }
 
-case class NotEnoughElementsInAltStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Not enough elements in the alternative stack"
-}
+  case class NotEnoughElementsInAltStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Not enough elements in the alternative stack"
+  }
 
-case class NotAllOperantsAreConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Not all operants are constant"
-}
+  case class NotAllOperantsAreConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Not all operants are constant"
+  }
 
-case class OperantMustBeScriptNum(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Operant must be ScriptNum"
-}
+  case class OperantMustBeScriptNum(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Operant must be ScriptNum"
+  }
 
-case class OperantMustBeScriptConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Operant must be ScriptConstant"
-}
+  case class OperantMustBeScriptConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Operant must be ScriptConstant"
+  }
 
-case class OpcodeDisabled(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Opcode is disabled"
-}
+  case class OpcodeDisabled(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Opcode is disabled"
+  }
 
-case class NotExecutableReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Found not executable reserved opcode"
-}
+  case class NotExecutableReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Found not executable reserved opcode"
+  }
 
-case class InValidReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-  val description = "Found executable reserved opcode that invalidates the transaction"
-}
+  case class InValidReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Found executable reserved opcode that invalidates the transaction"
+  }
 
+  case class VerificationFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Verification on top of the stack failed"
+  }
+}
 
 @typeclass trait Interpreter[A <: ScriptOpCode] {
   // def interpret[A](opCode: A): State[InterpreterContext, Either[String, Boolean]]

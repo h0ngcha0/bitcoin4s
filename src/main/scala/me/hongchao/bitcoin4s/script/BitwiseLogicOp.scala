@@ -2,6 +2,7 @@ package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
+import me.hongchao.bitcoin4s.script.InterpreterError._
 
 sealed trait BitwiseLogicOp extends ScriptOpCode
 

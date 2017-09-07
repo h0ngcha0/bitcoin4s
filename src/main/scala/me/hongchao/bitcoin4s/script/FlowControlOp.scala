@@ -3,6 +3,7 @@ package me.hongchao.bitcoin4s.script
 import scala.annotation.tailrec
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.ScriptFlag.SCRIPT_VERIFY_MINIMALDATA
+import me.hongchao.bitcoin4s.script.InterpreterError._
 
 sealed trait FlowControlOp extends ScriptOpCode
 
@@ -25,9 +26,9 @@ object FlowControlOp {
         case OP_NOP =>
           context.copy(opCount = context.opCount + 1)
 
-        case OP_IF =>
+        case OP_IF | OP_NOTIF =>
           val ConditionalBranchSplitResult(trueBranch, falseBranch, rest) = splitScriptOnConditional(
-            script = OP_IF +: context.script,
+            script = context.script,
             nestedDepth = 0,
             onTrueBranch = true,
             acc = ConditionalBranchSplitResult()
@@ -50,7 +51,26 @@ object FlowControlOp {
           throw new RuntimeException(s"$opCode should not be consumed when interpreting OP_IF")
 
         case OP_VERIFY =>
-          ???
+          context.stack match {
+            case first :: tail =>
+              val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
+              if (firstNumber == 0) {
+                throw VerificationFailed(OP_VERIFY, context.stack)
+              } else {
+                context.copy(
+                  script = context.script.tail,
+                  stack = tail,
+                  opCount = context.opCount + 1
+                )
+              }
+            case _ =>
+              throw NotEnoughElementsInStack(OP_VERIFY, context.stack)
+          }
+
+
+        case OP_RETURN =>
+          // FIXME: better error handling
+          throw new RuntimeException("OP_RETURN is evaluated")
       }
     }
 

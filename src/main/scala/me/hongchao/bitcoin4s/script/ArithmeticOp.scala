@@ -3,6 +3,7 @@ package me.hongchao.bitcoin4s.script
 import me.hongchao.bitcoin4s.script.ScriptFlag.SCRIPT_VERIFY_MINIMALDATA
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
+import me.hongchao.bitcoin4s.script.InterpreterError._
 import cats.implicits._
 
 sealed trait ArithmeticOp extends ScriptOpCode

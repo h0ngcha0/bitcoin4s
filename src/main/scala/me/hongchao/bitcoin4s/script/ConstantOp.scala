@@ -1,5 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
+import me.hongchao.bitcoin4s.script.InterpreterError._
+
 sealed trait ConstantOp extends ScriptOpCode
 
 object ConstantOp {
