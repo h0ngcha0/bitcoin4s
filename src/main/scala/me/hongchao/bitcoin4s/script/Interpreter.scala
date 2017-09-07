@@ -35,6 +35,10 @@ case class OperantMustBeScriptNum(opCode: ScriptOpCode, stack: Seq[ScriptElement
   val description = "Operant must be ScriptNum"
 }
 
+case class OperantMustBeScriptConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  val description = "Operant must be ScriptConstant"
+}
+
 case class OpcodeDisabled(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
   val description = "Opcode is disabled"
 }
