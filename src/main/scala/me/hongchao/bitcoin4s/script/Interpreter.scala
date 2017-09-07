@@ -43,6 +43,14 @@ case class OpcodeDisabled(opCode: ScriptOpCode, stack: Seq[ScriptElement]) exten
   val description = "Opcode is disabled"
 }
 
+case class NotExecutableReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  val description = "Found not executable reserved opcode"
+}
+
+case class InValidReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  val description = "Found executable reserved opcode that invalidates the transaction"
+}
+
 
 @typeclass trait Interpreter[A <: ScriptOpCode] {
   // def interpret[A](opCode: A): State[InterpreterContext, Either[String, Boolean]]

@@ -22,4 +22,19 @@ object ReservedOp {
     OP_RESERVED, OP_VER, OP_VERIF, OP_VERNOTIF, OP_RESERVED1, OP_RESERVED2,
     OP_NOP1, OP_NOP4, OP_NOP5, OP_NOP6, OP_NOP7, OP_NOP8, OP_NOP9, OP_NOP10
   )
+
+  implicit val interpreter = new Interpreter[ReservedOp] {
+    def interpret(opCode: ReservedOp, context: InterpreterContext): InterpreterContext = {
+      opCode match {
+        case OP_NOP1 | OP_NOP4 | OP_NOP5 | OP_NOP6 | OP_NOP7 | OP_NOP8 | OP_NOP9 | OP_NOP10 =>
+          context.copy(opCount = context.opCount + 1)
+        case OP_RESERVED | OP_VER | OP_RESERVED1 | OP_RESERVED2 =>
+          throw NotExecutableReservedOpcode(opCode, context.stack)
+        case OP_VERIF | OP_VERNOTIF =>
+          // These two OpCodes should be checked before script is executed. If found, entire
+          // transaction should be invalid.
+          throw InValidReservedOpcode(opCode, context.stack)
+      }
+    }
+  }
 }

@@ -19,6 +19,7 @@ trait ScriptNum extends ScriptConstant {
   val value: Long
 
   def == (that: ScriptNum) = value == that.value
+  def == (that: Long) = value == that
   def != (that: ScriptNum) = value != that.value
   def <= (that: ScriptNum) = value <= that.value
   def <  (that: ScriptNum) = value < that.value
