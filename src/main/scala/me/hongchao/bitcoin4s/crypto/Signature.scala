@@ -31,7 +31,7 @@ case class Signature(bytes: Array[Byte]) {
 
   private def checkHeadTypeIsInt(bytesIn: Seq[Byte]): Option[Unit] = {
     bytesIn.headOption.map { rType =>
-      if (rType != 0x02) throw new RuntimeException("type must be int")
+      require(rType == 0x02, "type must be int")
     }
   }
 
@@ -42,13 +42,15 @@ case class Signature(bytes: Array[Byte]) {
           Some((head, tail))
         } else {
           val lengthBytesNumber: Int = head - 0x80
-          require(tail.length > lengthBytesNumber, "not enough bytes for length")
-          val (lengthBytes, restOfBytes) = tail.splitAt(lengthBytesNumber)
-          val length = lengthBytes.foldLeft(0) {
-            case (acc, byte) => (acc << 8) + byte
-          }
 
-          Some((length, restOfBytes))
+          tail.splitAtOpt(lengthBytesNumber).map {
+            case (lengthBytes, restOfBytes) =>
+              val length = lengthBytes.foldLeft(0) {
+                case (acc, byte) => (acc << 8) + byte
+              }
+
+              (length, restOfBytes)
+          }
         }
       case Nil =>
         None
