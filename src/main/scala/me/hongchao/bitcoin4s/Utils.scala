@@ -25,29 +25,17 @@ package object Utils {
   implicit class RichSeq[T](seq: Seq[T]) {
     def takeOpt(n: Int): Option[Seq[T]] = {
       val maybeNElements = seq.take(n)
-      if (maybeNElements.length == n) {
-        Some(maybeNElements)
-      } else {
-        None
-      }
+      (maybeNElements.length == n).option(maybeNElements)
     }
 
     def dropOpt(n: Int): Option[Seq[T]] = {
       val (maybeNElements, rest) = seq.splitAt(n)
-      if (maybeNElements.length == n) {
-        Some(rest)
-      } else {
-        None
-      }
+      (maybeNElements.length == n).option(rest)
     }
 
     def splitAtOpt(n: Int): Option[(Seq[T], Seq[T])] = {
       val (maybeNElements, rest) = seq.splitAt(n)
-      if (maybeNElements.length == n) {
-        Some((maybeNElements, rest))
-      } else {
-        None
-      }
+      (maybeNElements.length == n).option((maybeNElements, rest))
     }
   }
 
