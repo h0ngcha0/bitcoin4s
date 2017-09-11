@@ -1,4 +1,4 @@
-package me.hongchao.bitcoin4s
+package me.hongchao.bitcoin4s.crypto
 
 import scala.annotation.tailrec
 

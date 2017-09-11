@@ -22,6 +22,35 @@ package object Utils {
     }
   }
 
+  implicit class RichSeq[T](seq: Seq[T]) {
+    def takeOpt(n: Int): Option[Seq[T]] = {
+      val maybeNElements = seq.take(n)
+      if (maybeNElements.length == n) {
+        Some(maybeNElements)
+      } else {
+        None
+      }
+    }
+
+    def dropOpt(n: Int): Option[Seq[T]] = {
+      val (maybeNElements, rest) = seq.splitAt(n)
+      if (maybeNElements.length == n) {
+        Some(rest)
+      } else {
+        None
+      }
+    }
+
+    def splitAtOpt(n: Int): Option[(Seq[T], Seq[T])] = {
+      val (maybeNElements, rest) = seq.splitAt(n)
+      if (maybeNElements.length == n) {
+        Some((maybeNElements, rest))
+      } else {
+        None
+      }
+    }
+  }
+
   def toUInt8(bytes: Seq[Byte] Refined Size[Equal[_1]]): Int = {
     bytes.value.head.toShort
   }

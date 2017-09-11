@@ -1,5 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
+import io.github.yzernik.bitcoinscodec.messages.Tx
+import io.github.yzernik.bitcoinscodec.structures.TxIn
 import simulacrum._
 
 case class InterpreterContext(
@@ -7,8 +9,29 @@ case class InterpreterContext(
   stack: Seq[ScriptElement],
   altStack: Seq[ScriptElement],
   flags: Seq[ScriptFlag],
-  opCount: Int
-)
+  opCount: Int,
+  transaction: Tx,
+  inputIndex: Int,
+  scriptPubKey: Seq[ScriptElement],
+  signatureVersion: Int // FIXME: use ADT
+) {
+  // Execute one OpCode, which takes the stack top element and and produce a new
+  // value. The new value it put on top of the stack
+  def replaceStackTopElement(scriptElement: ScriptElement): InterpreterContext = {
+    copy(
+      script = script.tail,
+      stack = scriptElement +: stack.tail,
+      opCount = opCount + 1
+    )
+  }
+
+  def transactionInput: TxIn = {
+    require(inputIndex >= 0 && inputIndex < transaction.tx_in.length, "Transation input index must be within range.")
+    transaction.tx_in(inputIndex)
+  }
+
+  def scriptSignature: Seq[Byte] = transactionInput.sig_script.toSeq
+}
 
 
 sealed trait InterpreterError extends RuntimeException {
@@ -54,6 +77,10 @@ object InterpreterError {
 
   case class VerificationFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
     val description = "Verification on top of the stack failed"
+  }
+
+  case class NotImplemented(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Not implemented"
   }
 }
 

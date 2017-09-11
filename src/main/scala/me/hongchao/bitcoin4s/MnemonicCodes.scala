@@ -1,5 +1,6 @@
 package me.hongchao.bitcoin4s
 
+import me.hongchao.bitcoin4s.crypto.Hash._
 import me.hongchao.bitcoin4s.Config.MnemonicCodesConfig
 
 import scala.util.Try

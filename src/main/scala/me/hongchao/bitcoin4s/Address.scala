@@ -1,6 +1,9 @@
 package me.hongchao.bitcoin4s
 
-import me.hongchao.bitcoin4s.Base58Check.VersionPrefix
+import me.hongchao.bitcoin4s.crypto.Hash._
+import me.hongchao.bitcoin4s.crypto.PublicKey
+import me.hongchao.bitcoin4s.crypto.Base58Check
+import me.hongchao.bitcoin4s.crypto.Base58Check.VersionPrefix
 
 sealed trait Address {
   val value: String

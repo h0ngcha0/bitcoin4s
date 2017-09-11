@@ -1,4 +1,4 @@
-package me.hongchao.bitcoin4s
+package me.hongchao.bitcoin4s.crypto
 
 import java.security.SecureRandom
 import org.spongycastle.crypto.generators.ECKeyPairGenerator

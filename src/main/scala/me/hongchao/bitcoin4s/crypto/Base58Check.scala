@@ -1,5 +1,6 @@
-package me.hongchao.bitcoin4s
+package me.hongchao.bitcoin4s.crypto
 
+import me.hongchao.bitcoin4s.crypto.Hash._
 
 object Base58Check {
   def checksum(input: Array[Byte]) = Sha256(Sha256(input)).take(4)

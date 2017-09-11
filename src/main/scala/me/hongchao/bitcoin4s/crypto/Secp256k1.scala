@@ -1,4 +1,4 @@
-package me.hongchao.bitcoin4s
+package me.hongchao.bitcoin4s.crypto
 
 import org.spongycastle.asn1.sec.SECNamedCurves
 import org.spongycastle.crypto.params.ECDomainParameters
