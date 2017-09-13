@@ -2,7 +2,7 @@ package me.hongchao.bitcoin4s.script
 
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
-import scodec.bits.{BitVector, ByteVector}
+import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.Utils._
 
 object TransactionOps {
@@ -51,7 +51,6 @@ object TransactionOps {
           )
         )
         .getOrElse(updatedTx1)
-
 
       Tx.codec(codecVersion).encode(updatedTx).toEither match {
         case Left(error) =>

@@ -4,13 +4,13 @@ import me.hongchao.bitcoin4s.Utils._
 
 import java.math.BigInteger
 
-case class Signature(bytes: Array[Byte]) {
+case class Signature(bytes: Seq[Byte]) {
   // Signature is DER encoded
   // structure: `sequence (r, s)`
   // `sequence`, `r`, and `s` are structured as `tlv` format respectively
   // Reference: https://msdn.microsoft.com/en-us/library/windows/desktop/bb648640(v=vs.85).aspx
   def decode(): Option[(BigInteger, BigInteger)] = {
-    bytes.toSeq match {
+    bytes match {
       case 0x30 :: tail =>
         for {
           (_, restOfBytesAfterRlength) <- getLength(tail)

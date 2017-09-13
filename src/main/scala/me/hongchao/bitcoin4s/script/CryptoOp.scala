@@ -1,7 +1,11 @@
 package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.crypto.Hash._
+import me.hongchao.bitcoin4s.crypto.{PublicKey, Signature}
+import me.hongchao.bitcoin4s.Utils._
+import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError.{NotEnoughElementsInStack, NotImplemented}
+import me.hongchao.bitcoin4s.script.TransactionOps._
 
 sealed trait CryptoOp extends ScriptOpCode
 
@@ -25,8 +29,12 @@ object CryptoOp {
   implicit val interpreter = new Interpreter[CryptoOp] {
     def interpret(opCode: CryptoOp, context: InterpreterContext): InterpreterContext = {
       val stack = context.stack
+      val transaction = context.transaction
 
       opCode match {
+        case OP_RIPEMD160 =>
+          onOpHash(opCode, RipeMD160.apply _, context)
+
         case OP_SHA1 =>
           onOpHash(opCode, Sha1.apply _, context)
 
@@ -44,14 +52,34 @@ object CryptoOp {
 
         case OP_CHECKSIG =>
           stack match {
-            case publicKey :: signature :: tail =>
-              throw NotImplemented(opCode, stack)
+            case encodedPublicKey :: encodedSignature :: tail =>
+              val pubKey = PublicKey.decode(encodedPublicKey.bytes)
+              val signature = Signature(encodedSignature.bytes)
+
+              val hashedTransaction = transaction.hash(
+                pubKeyScript = context.scriptPubKey,
+                inputIndex = context.inputIndex,
+                sigHashType = SignatureHashType(1),
+                sigVersion = SIGVERSION_BASE
+              )
+
+              val checkResult = pubKey.verify(hashedTransaction, signature)
+
+              context.copy(
+                script = context.script.tail,
+                stack = ScriptConstant(checkResult.option(Seq(1.toByte)).getOrElse(Seq(0.toByte))) +: tail,
+                opCount = context.opCount + 1
+              )
+
             case _ =>
               throw NotEnoughElementsInStack(opCode, stack)
           }
 
         case OP_CHECKSIGVERIFY =>
-          throw NotImplemented(opCode, stack)
+          context.copy(
+            script = OP_CHECKSIG +: OP_VERIFY +: context.script.tail,
+            opCount = context.opCount - 1
+          )
 
         case OP_CHECKMULTISIG =>
           throw NotImplemented(opCode, stack)

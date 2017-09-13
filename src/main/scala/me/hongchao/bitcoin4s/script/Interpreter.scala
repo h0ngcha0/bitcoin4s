@@ -13,7 +13,7 @@ case class InterpreterContext(
   transaction: Tx,
   inputIndex: Int,
   scriptPubKey: Seq[ScriptElement],
-  signatureVersion: Int // FIXME: use ADT
+  sigVersion: SigVersion
 ) {
   // Execute one OpCode, which takes the stack top element and and produce a new
   // value. The new value it put on top of the stack
