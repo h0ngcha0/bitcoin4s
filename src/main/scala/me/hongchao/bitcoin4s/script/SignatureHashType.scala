@@ -1,13 +1,28 @@
 package me.hongchao.bitcoin4s.script
 
-sealed trait SignatureHashType extends Product {
-  val value: Int
-  val name = productPrefix
-}
+import me.hongchao.bitcoin4s.Utils._
 
-object SignatureHashType {
-  case object SIGHASH_ALL extends SignatureHashType { val value = 1 }
-  case object SIGHASH_NONE extends SignatureHashType { val value = 2 }
-  case object SIGHASH_SINGLE extends SignatureHashType { val value = 3 }
-  case object SIGHASH_ANYONECANPAY extends SignatureHashType { val value = 0x80 }
+case class SignatureHashType(value: Int) {
+
+  def SIGHASH_ANYONECANPAY(): Boolean = {
+    (value & 0x80) == 0x80
+  }
+
+  def SIGHASH_ALL(): Boolean = {
+    SIGHASH_ANYONECANPAY()
+      .option((value & 0x7f) == 0x01)
+      .getOrElse(value == 0x01)
+  }
+
+  def SIGHASH_NONE(): Boolean = {
+    SIGHASH_ANYONECANPAY()
+      .option((value & 0x7f) == 0x02)
+      .getOrElse(value == 0x02)
+  }
+
+  def SIGHASH_SINGLE(): Boolean = {
+    SIGHASH_ANYONECANPAY()
+      .option((value & 0x7f) == 0x03)
+      .getOrElse(value == 0x03)
+  }
 }
