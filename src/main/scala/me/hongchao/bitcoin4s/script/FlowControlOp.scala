@@ -19,7 +19,7 @@ object FlowControlOp {
   val all = Seq(OP_NOP, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, OP_VERIFY, OP_RETURN)
 
   implicit val interpreter = new Interpreter[FlowControlOp] {
-    def interpret(opCode: FlowControlOp, context: InterpreterContext): InterpreterContext = {
+    def interpret(opCode: FlowControlOp, context: InterpreterState): InterpreterState = {
       val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
 
       opCode match {

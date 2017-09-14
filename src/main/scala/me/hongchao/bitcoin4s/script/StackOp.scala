@@ -32,7 +32,7 @@ object StackOp {
   )
 
   implicit val interpreter = new Interpreter[StackOp] {
-    def interpret(opCode: StackOp, context: InterpreterContext): InterpreterContext = {
+    def interpret(opCode: StackOp, context: InterpreterState): InterpreterState = {
       val stack = context.stack
       val altStack = context.altStack
       val opCount = context.opCount

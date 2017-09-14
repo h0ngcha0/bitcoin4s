@@ -1,10 +1,14 @@
 package me.hongchao.bitcoin4s.script
 
+import cats.Eval
+import cats.data.{State, StateT}
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
+import me.hongchao.bitcoin4s.script.Interpreter.InterpreterContext
+import me.hongchao.bitcoin4s.script.InterpreterError.NotImplemented
 import simulacrum._
 
-case class InterpreterContext(
+case class InterpreterState(
   script: Seq[ScriptElement],
   stack: Seq[ScriptElement],
   altStack: Seq[ScriptElement],
@@ -17,7 +21,7 @@ case class InterpreterContext(
 ) {
   // Execute one OpCode, which takes the stack top element and and produce a new
   // value. The new value it put on top of the stack
-  def replaceStackTopElement(scriptElement: ScriptElement): InterpreterContext = {
+  def replaceStackTopElement(scriptElement: ScriptElement): InterpreterState = {
     copy(
       script = script.tail,
       stack = scriptElement +: stack.tail,
@@ -84,7 +88,17 @@ object InterpreterError {
   }
 }
 
-@typeclass trait Interpreter[A <: ScriptOpCode] {
-  // def interpret[A](opCode: A): State[InterpreterContext, Either[String, Boolean]]
-  def interpret(opCode: A, context: InterpreterContext): InterpreterContext
+object Interpreter {
+  type InterpreterResult = Either[InterpreterError, Option[Boolean]]
+  type InterpreterContext = State[InterpreterState, InterpreterResult]
+
+  def continue: InterpreterContext  = State.pure(Right(None))
+  def abort(error: InterpreterError): InterpreterContext = State.pure(Left(error))
+}
+
+@typeclass trait Interpretable[A <: ScriptOpCode] {
+  def interpret(opCodes: A): InterpreterContext
+}
+
+trait Interpreter[A <: ScriptOpCode] {
 }

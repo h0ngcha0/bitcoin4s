@@ -44,7 +44,7 @@ object ConstantOp {
   // How does this work?
 
   implicit val interpreter = new Interpreter[ConstantOp] {
-    def interpret(opCode: ConstantOp, context: InterpreterContext): InterpreterContext = {
+    def interpret(opCode: ConstantOp, context: InterpreterState): InterpreterState = {
       opCode match {
         case opc if opc.value >= 79 && opc.value <= 96 =>
           // from OP_1NEGATE to OP_16

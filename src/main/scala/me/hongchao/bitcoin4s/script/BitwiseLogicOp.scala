@@ -18,7 +18,7 @@ object BitwiseLogicOp {
   val disabled = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR)
 
   implicit val interpreter = new Interpreter[BitwiseLogicOp] {
-    def interpret(opCode: BitwiseLogicOp, context: InterpreterContext): InterpreterContext = {
+    def interpret(opCode: BitwiseLogicOp, context: InterpreterState): InterpreterState = {
       opCode match {
         case opc if disabled.contains(opc) =>
           throw new OpcodeDisabled(opc, context.stack)
@@ -32,7 +32,7 @@ object BitwiseLogicOp {
       }
     }
 
-    private def onOpEqual(context: InterpreterContext): InterpreterContext = {
+    private def onOpEqual(context: InterpreterState): InterpreterState = {
       context.stack match {
         case first :: second :: rest =>
           val result = (first.bytes == second.bytes).option(ScriptNum(1)).getOrElse(ScriptNum(0))

@@ -15,7 +15,7 @@ object SpliceOp {
   val disabled = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT)
 
   implicit val interpreter = new Interpreter[SpliceOp] {
-    def interpret(opCode: SpliceOp, context: InterpreterContext): InterpreterContext = {
+    def interpret(opCode: SpliceOp, context: InterpreterState): InterpreterState = {
       opCode match {
         case opc if disabled.contains(opc) =>
           throw new OpcodeDisabled(opc, context.stack)

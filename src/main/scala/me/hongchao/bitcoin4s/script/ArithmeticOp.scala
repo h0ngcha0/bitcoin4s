@@ -47,7 +47,7 @@ object ArithmeticOp {
   val disabled = Seq(OP_2MUL, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
 
   implicit val interpreter = new Interpreter[ArithmeticOp] {
-    def interpret(opCode: ArithmeticOp, context: InterpreterContext): InterpreterContext = {
+    def interpret(opCode: ArithmeticOp, context: InterpreterState): InterpreterState = {
       val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
 
       opCode match {
@@ -156,7 +156,7 @@ object ArithmeticOp {
       }
     }
 
-    private def oneOperant(opCode: ArithmeticOp, context: InterpreterContext, convert: (ScriptNum) => ScriptNum): InterpreterContext = {
+    private def oneOperant(opCode: ArithmeticOp, context: InterpreterState, convert: (ScriptNum) => ScriptNum): InterpreterState = {
       val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
       context.stack match {
         case (first: ScriptConstant) :: rest =>
@@ -173,7 +173,7 @@ object ArithmeticOp {
       }
     }
 
-    private def twoOperants(opCode: ArithmeticOp, context: InterpreterContext, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterContext = {
+    private def twoOperants(opCode: ArithmeticOp, context: InterpreterState, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterState = {
       val requireMinimalEncoding: Boolean = context.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
       context.stack match {
         case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>
