@@ -1,6 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
+import cats.Eval
+import cats.data.{State, StateT}
 import me.hongchao.bitcoin4s.crypto.Hash._
 import me.hongchao.bitcoin4s.crypto.{PublicKey, Signature}
 import me.hongchao.bitcoin4s.Utils._
@@ -50,7 +51,7 @@ object CryptoOp {
           notImplemented(opCode)
 
         case OP_CHECKSIG =>
-          State.get[InterpreterState].flatMap[InterpreterResult] { state =>
+          State.get.flatMap { state =>
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
                 val pubKey = PublicKey.decode(encodedPublicKey.bytes)
@@ -65,7 +66,7 @@ object CryptoOp {
 
                 val checkResult = pubKey.verify(hashedTransaction, signature)
 
-                State.set[InterpreterState](
+                State.set(
                   state.copy(
                     script = state.script.tail,
                     stack = ScriptConstant(checkResult.option(Seq(1.toByte)).getOrElse(Seq(0.toByte))) +: tail,
@@ -80,8 +81,8 @@ object CryptoOp {
 
         case OP_CHECKSIGVERIFY =>
           for {
-            state <- State.get[InterpreterState]
-            _ <- State.set[InterpreterState](
+            state <- State.get
+            _ <- State.set(
               state.copy(
                 script = OP_CHECKSIG +: OP_VERIFY +: state.script.tail,
                 opCount = state.opCount - 1
@@ -109,12 +110,12 @@ object CryptoOp {
           abort(NotEnoughElementsInStack(opCode, state.stack))
       }
 
-      State.get[InterpreterState].flatMap(hashTopElement)
+      State.get.flatMap(hashTopElement)
     }
 
-    private def notImplemented(opCode: ScriptOpCode) = {
-      State.get[InterpreterState].flatMap { context =>
-        abort(NotImplemented(opCode, context.stack))
+    private def notImplemented(opCode: ScriptOpCode): State[InterpreterState, InterpreterResult] = {
+      State.get.flatMap { state =>
+        abort(NotImplemented(opCode, state.stack))
       }
     }
   }
