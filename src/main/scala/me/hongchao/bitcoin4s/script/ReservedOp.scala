@@ -1,6 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
+import cats.data.State
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import me.hongchao.bitcoin4s.script.Interpreter._
 
 sealed trait ReservedOp extends ScriptOpCode
 
@@ -25,17 +27,20 @@ object ReservedOp {
     OP_NOP1, OP_NOP4, OP_NOP5, OP_NOP6, OP_NOP7, OP_NOP8, OP_NOP9, OP_NOP10
   )
 
-  implicit val interpreter = new Interpreter[ReservedOp] {
-    def interpret(opCode: ReservedOp, context: InterpreterState): InterpreterState = {
-      opCode match {
-        case OP_NOP1 | OP_NOP4 | OP_NOP5 | OP_NOP6 | OP_NOP7 | OP_NOP8 | OP_NOP9 | OP_NOP10 =>
-          context.copy(opCount = context.opCount + 1)
-        case OP_RESERVED | OP_VER | OP_RESERVED1 | OP_RESERVED2 =>
-          throw NotExecutableReservedOpcode(opCode, context.stack)
-        case OP_VERIF | OP_VERNOTIF =>
-          // These two OpCodes should be checked before script is executed. If found, entire
-          // transaction should be invalid.
-          throw InValidReservedOpcode(opCode, context.stack)
+  implicit val interpreter = new Interpretable[ReservedOp] {
+    def interpret(opCode: ReservedOp): InterpreterContext = {
+      State.get[InterpreterState].flatMap { state =>
+        opCode match {
+          case OP_NOP1 | OP_NOP4 | OP_NOP5 | OP_NOP6 | OP_NOP7 | OP_NOP8 | OP_NOP9 | OP_NOP10 =>
+            val newState = state.copy(opCount = state.opCount + 1)
+            State.set(newState).flatMap(continue)
+          case OP_RESERVED | OP_VER | OP_RESERVED1 | OP_RESERVED2 =>
+            abort(NotExecutableReservedOpcode(opCode, state.stack))
+          case OP_VERIF | OP_VERNOTIF =>
+            // These two OpCodes should be checked before script is executed. If found, entire
+            // transaction should be invalid.
+            abort(InValidReservedOpcode(opCode, state.stack))
+        }
       }
     }
   }

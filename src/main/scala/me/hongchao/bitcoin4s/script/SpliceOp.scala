@@ -1,5 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
+import cats.data.State
+import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 
 sealed trait SpliceOp extends ScriptOpCode
@@ -14,23 +16,27 @@ object SpliceOp {
   val all = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT, OP_SIZE)
   val disabled = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT)
 
-  implicit val interpreter = new Interpreter[SpliceOp] {
-    def interpret(opCode: SpliceOp, context: InterpreterState): InterpreterState = {
-      opCode match {
-        case opc if disabled.contains(opc) =>
-          throw new OpcodeDisabled(opc, context.stack)
+  implicit val interpreter = new Interpretable[SpliceOp] {
+    def interpret(opCode: SpliceOp): InterpreterContext = {
+      State.get[InterpreterState].flatMap { state =>
+        opCode match {
+          case opc if disabled.contains(opc) =>
+            abort(OpcodeDisabled(opc, state.stack))
 
-        case OP_SIZE =>
-          context.stack match {
-            case head :: tail =>
-              context.copy(
-                script = context.script.tail,
-                stack = ScriptNum(head.bytes.length) +: context.stack,
-                opCount = context.opCount + 1
-              )
-            case _ =>
-              throw NotEnoughElementsInStack(OP_SIZE, context.stack)
-          }
+          case OP_SIZE =>
+            state.stack match {
+              case head :: tail =>
+                val newState = state.copy(
+                  script = state.script.tail,
+                  stack = ScriptNum(head.bytes.length) +: state.stack,
+                  opCount = state.opCount + 1
+                )
+
+                State.set(newState).flatMap(continue)
+              case _ =>
+                abort(NotEnoughElementsInStack(OP_SIZE, state.stack))
+            }
+        }
       }
     }
   }

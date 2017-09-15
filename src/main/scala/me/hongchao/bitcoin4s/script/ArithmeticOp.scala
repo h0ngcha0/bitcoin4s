@@ -102,13 +102,12 @@ object ArithmeticOp {
         case OP_NUMEQUALVERIFY =>
           // OP_NUMEQUAL + OP_VERIFY
           for {
-            _ <- twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
+            result <- twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
               (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
             })
             state <- State.get
             _ <- State.set[InterpreterState](state.copy(script = OP_VERIFY +: state.script))
-            result <- continue
-          } yield result
+          } yield result // FIXME: should abort earlier if result isn't successful
 
         case OP_NUMNOTEQUAL =>
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
@@ -157,7 +156,7 @@ object ArithmeticOp {
                   opCount = state.opCount + 1
                 )
 
-                State.set(newState).flatMap(_ => continue)
+                State.set(newState).flatMap(continue)
               case _ :: _ :: _ :: _ =>
                 abort(NotAllOperantsAreConstant(opCode, state.stack))
               case _ =>
@@ -178,7 +177,7 @@ object ArithmeticOp {
               stack = convert(firstNumber) +: rest,
               opCount = state.opCount + 1
             )
-            State.set(newState).flatMap(_ => continue)
+            State.set(newState).flatMap(continue)
           case _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state.stack))
           case _ =>
@@ -200,7 +199,7 @@ object ArithmeticOp {
               opCount = state.opCount + 1
             )
 
-            State.set(newState).flatMap(_ => continue)
+            State.set(newState).flatMap(continue)
           case _ :: _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state.stack))
           case _ =>

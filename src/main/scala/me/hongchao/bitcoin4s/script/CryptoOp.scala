@@ -72,7 +72,7 @@ object CryptoOp {
                     stack = ScriptConstant(checkResult.option(Seq(1.toByte)).getOrElse(Seq(0.toByte))) +: tail,
                     opCount = state.opCount + 1
                   )
-                ).flatMap(_ => continue)
+                ).flatMap(continue)
 
               case _ =>
                 abort(NotEnoughElementsInStack(opCode, state.stack))
@@ -80,16 +80,16 @@ object CryptoOp {
           }
 
         case OP_CHECKSIGVERIFY =>
-          for {
-            state <- State.get
-            _ <- State.set(
-              state.copy(
-                script = OP_CHECKSIG +: OP_VERIFY +: state.script.tail,
-                opCount = state.opCount - 1
+          State.get[InterpreterState]
+            .flatMap { state =>
+              State.set(
+                state.copy(
+                  script = OP_CHECKSIG +: OP_VERIFY +: state.script.tail,
+                  opCount = state.opCount - 1
+                )
               )
-            )
-            result <- continue
-          } yield result
+            }
+            .flatMap(continue)
 
         case OP_CHECKMULTISIG =>
           notImplemented(opCode)
@@ -105,7 +105,7 @@ object CryptoOp {
           val hashed = hash(head.bytes.toArray)
           State
             .set(state.replaceStackTopElement(ScriptConstant(hashed)))
-            .flatMap(_ => continue)
+            .flatMap(continue)
         case _ =>
           abort(NotEnoughElementsInStack(opCode, state.stack))
       }

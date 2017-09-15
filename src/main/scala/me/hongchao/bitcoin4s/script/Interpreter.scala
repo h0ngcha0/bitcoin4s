@@ -86,13 +86,17 @@ object InterpreterError {
   case class NotImplemented(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
     val description = "Not implemented"
   }
+
+  case class UnbalancedCondition(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description: String = "Unbalanced condition"
+  }
 }
 
 object Interpreter {
   type InterpreterResult = Either[InterpreterError, Option[Boolean]]
   type InterpreterContext = State[InterpreterState, InterpreterResult]
 
-  def continue: InterpreterContext  = State.pure(Right(None))
+  def continue: Any => InterpreterContext  = _ => State.pure(Right(None))
   def abort(error: InterpreterError): InterpreterContext = State.pure(Left(error))
 }
 

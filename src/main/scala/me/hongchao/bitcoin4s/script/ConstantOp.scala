@@ -1,5 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
+import cats.data.State
+import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 
 sealed trait ConstantOp extends ScriptOpCode
@@ -43,38 +45,49 @@ object ConstantOp {
   // https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki#numbers
   // How does this work?
 
-  implicit val interpreter = new Interpreter[ConstantOp] {
-    def interpret(opCode: ConstantOp, context: InterpreterState): InterpreterState = {
+  val interpreter = new Interpretable[ConstantOp] {
+    override def interpret(opCode: ConstantOp): InterpreterContext = {
       opCode match {
         case opc if opc.value >= 79 && opc.value <= 96 =>
-          // from OP_1NEGATE to OP_16
-          context.copy(
-            script = context.script.tail,
-            stack = ScriptNum(opc.value - 80) +: context.stack,
-            opCount = context.opCount + 1
-          )
+          State.get[InterpreterState]
+            .flatMap { state =>
+              // from OP_1NEGATE to OP_16
+              State.set(state.copy(
+                script = state.script.tail,
+                stack = ScriptNum(opc.value - 80) +: state.stack,
+                opCount = state.opCount + 1
+              ))
+            }
+            .flatMap(continue)
 
         case OP_0 | OP_FALSE =>
-          // Push empty byte array to the stack
-          context.copy(
-            script = context.script.tail,
-            stack = ScriptConstant(Seq.empty[Byte]) +: context.stack,
-            opCount = context.opCount + 1
-          )
+          State.get[InterpreterState]
+            .flatMap { state =>
+              // Push empty byte array to the stack
+              State.set(state.copy(
+                script = state.script.tail,
+                stack = ScriptConstant(Seq.empty[Byte]) +: state.stack,
+                opCount = state.opCount + 1
+              ))
+            }
+            .flatMap(continue)
 
         case _: OP_PUSHDATA | OP_PUSHDATA1 | OP_PUSHDATA2 | OP_PUSHDATA4 =>
-          context.script match {
-            case `opCode` :: (dataToPush: ScriptConstant) :: rest =>
-              context.copy(
-                script = rest,
-                stack = dataToPush +: context.stack,
-                opCount = context.opCount + 1
-              )
-            case `opCode` :: _ :: _ =>
-              throw new OperantMustBeScriptConstant(opCode, context.stack)
-            case _ =>
-              throw new NotEnoughElementsInStack(opCode, context.stack)
-          }
+          State.get[InterpreterState]
+            .flatMap { state =>
+              state.script match {
+                case `opCode` :: (dataToPush: ScriptConstant) :: rest =>
+                  State.set(state.copy(
+                    script = rest,
+                    stack = dataToPush +: state.stack,
+                    opCount = state.opCount + 1
+                  )).flatMap(continue)
+                case `opCode` :: _ :: _ =>
+                  abort(OperantMustBeScriptConstant(opCode, state.stack))
+                case _ =>
+                  abort(NotEnoughElementsInStack(opCode, state.stack))
+              }
+            }
       }
     }
   }
