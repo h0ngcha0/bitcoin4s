@@ -1,11 +1,9 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.Eval
-import cats.data.{State, StateT}
+import cats.data.State
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterContext
-import me.hongchao.bitcoin4s.script.InterpreterError.NotImplemented
 import simulacrum._
 
 case class InterpreterState(

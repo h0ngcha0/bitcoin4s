@@ -1,5 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
+import cats.Eval
+import cats.data.{State, StateT}
+import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 
 sealed trait StackOp extends ScriptOpCode
@@ -31,200 +34,178 @@ object StackOp {
     OP_PICK, OP_ROLL, OP_ROT, OP_SWAP, OP_TUCK
   )
 
-  implicit val interpreter = new Interpreter[StackOp] {
-    def interpret(opCode: StackOp, context: InterpreterState): InterpreterState = {
-      val stack = context.stack
-      val altStack = context.altStack
-      val opCount = context.opCount
-
+  implicit val interpreter = new Interpretable[StackOp] {
+    def interpret(opCode: StackOp): InterpreterContext = {
       opCode match {
         case OP_DUP =>
-          val stackHead = stack.headOption.getOrElse(throw new NotEnoughElementsInStack(OP_DUP, stack))
-
-          context.copy(
-            stack = stackHead +: stack,
-            opCount = opCount + 1
-          )
+          onStackOp(OP_DUP) {
+            case head :: rest =>
+              head :: head :: rest
+          }
 
         case OP_TOALTSTACK =>
-          val stackHead = stack.headOption.getOrElse(throw new NotEnoughElementsInStack(OP_TOALTSTACK, stack))
+          State.get[InterpreterState].flatMap { state =>
+            val stack = state.stack
 
-          context.copy(
-            stack = stack.tail,
-            altStack = stackHead +: altStack
-          )
+            stack match {
+              case head :: _ =>
+                val newState = state.copy(
+                  stack = state.stack.tail,
+                  altStack = head +: state.altStack,
+                  opCount = state.opCount + 1
+                )
+                State.set(newState).flatMap(continue)
+              case _ =>
+                abort(NotEnoughElementsInStack(OP_TOALTSTACK, stack))
+
+            }
+          }
 
         case OP_FROMALTSTACK =>
-          val altStackHead = altStack.headOption.getOrElse(throw new NotEnoughElementsInAltStack(OP_FROMALTSTACK, stack))
+          State.get[InterpreterState].flatMap { state =>
+            state.altStack match {
+              case head :: _ =>
+                val newState = state.copy(
+                  stack = head +: state.stack,
+                  altStack = state.altStack.tail
+                )
 
-          context.copy(
-            stack = altStackHead +: stack,
-            altStack = altStack.tail
-          )
+                State.set(newState).flatMap(continue)
+              case _ =>
+                abort(NotEnoughElementsInAltStack(OP_FROMALTSTACK, state.stack))
+            }
+          }
 
         case OP_DROP =>
-          val updatedStack = stack match {
+          onStackOp(OP_2DROP) {
             case _ :: rest =>
               rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_DROP, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_2DROP =>
-          val updatedStack = stack match {
+          onStackOp(OP_2DROP) {
             case _ :: _ :: rest =>
               rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_2DROP, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_2DUP =>
-          val updatedStack = stack match {
+          onStackOp(OP_2DUP) {
             case first :: second :: rest =>
               first :: second :: first :: second :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_2DUP, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_3DUP =>
-          val updatedStack = stack match {
+          onStackOp(OP_3DUP) {
             case first :: second :: third :: rest =>
               first :: second :: third :: first :: second :: third :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_3DUP, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_OVER =>
-          val updatedStack = stack match {
+          onStackOp(OP_OVER) {
             case first :: second :: rest =>
               second :: first :: second :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_OVER, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_2OVER =>
-          val updatedStack = stack match {
+          onStackOp(OP_2OVER) {
             case first :: second :: third :: fourth :: rest =>
               third :: fourth :: first :: second :: third :: fourth :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_2OVER, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_ROT =>
-          val updatedStack = stack match {
+          onStackOp(OP_ROT) {
             case first :: second :: third :: rest =>
               third :: first :: second :: third :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_ROT, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_2ROT =>
-          val updatedStack = stack match {
+          onStackOp(OP_2ROT) {
             case first :: second :: third :: fourth :: fifth :: sixth :: rest =>
               fifth :: sixth :: first :: second :: third :: fourth :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_2ROT, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_SWAP =>
-          val updatedStack = stack match {
+          onStackOp(OP_SWAP) {
             case first :: second :: rest =>
               second :: first :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_SWAP, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_2SWAP =>
-          val updatedStack = stack match {
+          onStackOp(OP_2SWAP) {
             case first :: second :: third :: fourth :: rest =>
               third :: fourth :: first :: second :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_2SWAP, stack)
           }
 
-          context.copy(stack = updatedStack, opCount = opCount + 1)
-
         case OP_IFDUP =>
-          val updatedStack = stack match {
+          onStackOp(OP_IFDUP) {
             case (number: ScriptNum) :: rest if (number.value == 0)=>
               ScriptNum(0) :: ScriptNum(0) :: rest
             case first :: rest =>
               first :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_IFDUP, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_DEPTH =>
-          val updatedStack = ScriptNum(stack.length) +: stack
-          context.copy(stack = updatedStack, opCount = opCount + 1)
+          State.get[InterpreterState].flatMap { state =>
+            val newStack = ScriptNum(state.stack.length) +: state.stack
+            State.set(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
+          }
 
         case OP_NIP =>
-          val updatedStack = stack match {
+          onStackOp(OP_NIP) {
             case first :: second :: rest =>
               first :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_NIP, stack)
           }
-
-          context.copy(stack = updatedStack, opCount = opCount + 1)
 
         case OP_PICK =>
-          val updatedStack = stack match {
-            case (number: ScriptNum) :: rest if rest.length >= number.value =>
-              rest(number.value.toInt) :: rest
-            case (number: ScriptNum) :: rest if rest.length < number.value =>
-              throw new NotEnoughElementsInStack(OP_PICK, stack)
-            case _ :: rest =>
-              throw new OperantMustBeScriptNum(OP_PICK, stack)
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_PICK, stack)
-          }
+          State.get[InterpreterState].flatMap { state =>
+            val stack = state.stack
 
-          context.copy(stack = updatedStack, opCount = opCount + 1)
+            stack match {
+              case (number: ScriptNum) :: rest if rest.length >= number.value =>
+                val newState = rest(number.value.toInt) :: rest
+                State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+              case (number: ScriptNum) :: rest if rest.length < number.value =>
+                abort(NotEnoughElementsInStack(OP_PICK, stack))
+              case _ :: rest =>
+                abort(OperantMustBeScriptNum(OP_PICK, stack))
+              case _ =>
+                abort(NotEnoughElementsInStack(OP_PICK, stack))
+            }
+          }
 
         case OP_ROLL =>
-          val updatedStack = stack match {
-            case (number: ScriptNum) :: rest if rest.length >= number.value =>
-              rest(number.value.toInt) :: (rest.take(number.value.toInt) ++ rest.drop(number.value.toInt+1))
-            case (number: ScriptNum) :: rest if rest.length < number.value =>
-              throw new NotEnoughElementsInStack(OP_ROLL, stack)
-            case _ :: rest =>
-              throw new OperantMustBeScriptNum(OP_ROLL, stack)
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_ROLL, stack)
-          }
+          State.get[InterpreterState].flatMap { state =>
+            val stack = state.stack
 
-          context.copy(stack = updatedStack, opCount = opCount + 1)
+            stack match {
+              case (number: ScriptNum) :: rest if rest.length >= number.value =>
+                val newState = rest(number.value.toInt) :: (rest.take(number.value.toInt) ++ rest.drop(number.value.toInt+1))
+                State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+              case (number: ScriptNum) :: rest if rest.length < number.value =>
+                abort(NotEnoughElementsInStack(OP_ROLL, stack))
+              case _ :: rest =>
+                abort(OperantMustBeScriptNum(OP_ROLL, stack))
+              case _ =>
+                abort(NotEnoughElementsInStack(OP_ROLL, stack))
+            }
+          }
 
         case OP_TUCK =>
-          val updatedStack = stack match {
+          onStackOp(OP_TUCK) {
             case first :: second :: rest =>
               first :: second :: first :: rest
-            case _ =>
-              throw new NotEnoughElementsInStack(OP_TUCK, stack)
           }
+      }
+    }
 
-          context.copy(stack = updatedStack, opCount = opCount + 1)
+    def onStackOp(opCode: ScriptOpCode)(stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]): InterpreterContext = {
+      State.get[InterpreterState].flatMap { state =>
+        if (stackConvertFunction.isDefinedAt(state.stack)) {
+          val newStack = stackConvertFunction(state.stack)
+          State.set(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
+        } else {
+          abort(NotEnoughElementsInStack(opCode, state.stack))
+        }
       }
     }
   }
