@@ -1,7 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.Eval
-import cats.data.{State, StateT}
+import cats.data.State
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 

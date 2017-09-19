@@ -88,6 +88,10 @@ object InterpreterError {
   case class UnbalancedCondition(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
     val description: String = "Unbalanced condition"
   }
+
+  case class UnexpectedOpCode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description: String = "Unexpected op code encountered"
+  }
 }
 
 object Interpreter {
@@ -100,7 +104,4 @@ object Interpreter {
 
 @typeclass trait Interpretable[A <: ScriptOpCode] {
   def interpret(opCodes: A): InterpreterContext
-}
-
-trait Interpreter[A <: ScriptOpCode] {
 }
