@@ -105,4 +105,8 @@ object OpCodes {
   val disabled = SpliceOp.disabled ++
     BitwiseLogicOp.disabled ++
     ArithmeticOp.disabled
+
+  def fromString(str: String): Option[ScriptOpCode] = {
+    all.find(_.name.replace("OP_", "") == str)
+  }
 }

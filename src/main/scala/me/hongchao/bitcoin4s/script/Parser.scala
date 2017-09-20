@@ -10,6 +10,8 @@ import shapeless.nat._
 import scala.annotation.tailrec
 
 class Parser {
+
+
   def parse(bytes: Seq[Byte]): Seq[ScriptElement] = {
     parse(bytes, Seq.empty[ScriptElement])
   }
