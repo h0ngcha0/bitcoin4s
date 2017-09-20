@@ -29,7 +29,7 @@ object CryptoOp {
     OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_CHECKMULTISIG, OP_CHECKMULTISIGVERIFY
   )
 
-  val interpreter = new Interpretable[CryptoOp] {
+  implicit val interpreter = new Interpretable[CryptoOp] {
     def interpret(opCode: CryptoOp): InterpreterContext = {
       opCode match {
         case OP_RIPEMD160 =>

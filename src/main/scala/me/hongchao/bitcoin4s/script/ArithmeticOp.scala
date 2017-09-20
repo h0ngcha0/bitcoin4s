@@ -48,7 +48,7 @@ object ArithmeticOp {
 
   val disabled = Seq(OP_2MUL, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
 
-  val interpreter = new Interpretable[ArithmeticOp] {
+  implicit val interpreter = new Interpretable[ArithmeticOp] {
     def interpret(opCode: ArithmeticOp): InterpreterContext = {
       opCode match {
         case opc if disabled.contains(opc) =>

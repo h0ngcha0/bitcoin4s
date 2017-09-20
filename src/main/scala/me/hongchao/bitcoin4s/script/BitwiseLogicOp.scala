@@ -19,7 +19,7 @@ object BitwiseLogicOp {
   val all = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR, OP_EQUAL, OP_EQUALVERIFY)
   val disabled = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR)
 
-  val interpreter = new Interpretable[BitwiseLogicOp] {
+  implicit val interpreter = new Interpretable[BitwiseLogicOp] {
     override def interpret(opCode: BitwiseLogicOp): InterpreterContext = {
       opCode match {
         case opc if disabled.contains(opc) =>

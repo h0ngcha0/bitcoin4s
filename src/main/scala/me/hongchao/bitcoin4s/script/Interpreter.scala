@@ -94,14 +94,58 @@ object InterpreterError {
   }
 }
 
+@typeclass trait Interpretable[A <: ScriptOpCode] {
+  def interpret(opCode: A): InterpreterContext
+}
+
 object Interpreter {
   type InterpreterResult = Either[InterpreterError, Option[Boolean]]
   type InterpreterContext = State[InterpreterState, InterpreterResult]
 
   def continue: Any => InterpreterContext  = _ => State.pure(Right(None))
   def abort(error: InterpreterError): InterpreterContext = State.pure(Left(error))
+
+  import me.hongchao.bitcoin4s.script.Interpretable.ops._
+  def interpret(result: InterpreterResult = Right(None)): InterpreterContext = {
+    State.get[InterpreterState].flatMap { state =>
+      result match {
+        case Right(None) =>
+          state.script match {
+            case head :: _ =>
+              head match {
+                case op: ArithmeticOp =>
+                  runOp(op.interpret, state)
+                case op: BitwiseLogicOp =>
+                  runOp(op.interpret, state)
+                case op: ConstantOp =>
+                  runOp(op.interpret, state)
+                case op: CryptoOp =>
+                  runOp(op.interpret, state)
+                case op: FlowControlOp =>
+                  runOp(op.interpret, state)
+                case op: LocktimeOp =>
+                  runOp(op.interpret, state)
+                case op: PseudoOp =>
+                  runOp(op.interpret, state)
+                case op: ReservedOp =>
+                  runOp(op.interpret, state)
+                case op: SpliceOp =>
+                  runOp(op.interpret, state)
+                case op: StackOp =>
+                  runOp(op.interpret, state)
+              }
+            case _ =>
+              interpret(Right(Some(true)))
+          }
+        case other =>
+          State.pure(other)
+      }
+    }
+  }
+
+  private def runOp(context: InterpreterContext, state: InterpreterState): InterpreterContext = {
+    val (newState, result) = context.run(state.copy(script = state.script.tail)).value
+    State.set(newState).flatMap(_ => interpret(result))
+  }
 }
 
-@typeclass trait Interpretable[A <: ScriptOpCode] {
-  def interpret(opCodes: A): InterpreterContext
-}

@@ -45,7 +45,7 @@ object ConstantOp {
   // https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki#numbers
   // How does this work?
 
-  val interpreter = new Interpretable[ConstantOp] {
+  implicit val interpreter = new Interpretable[ConstantOp] {
     override def interpret(opCode: ConstantOp): InterpreterContext = {
       opCode match {
         case opc if opc.value >= 79 && opc.value <= 96 =>
