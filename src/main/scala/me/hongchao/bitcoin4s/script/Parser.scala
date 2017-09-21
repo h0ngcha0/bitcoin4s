@@ -5,15 +5,40 @@ import me.hongchao.bitcoin4s.script.ConstantOp._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.Size
 import eu.timepit.refined.generic.Equal
+import org.spongycastle.util.encoders.Hex
 import shapeless.nat._
 
+import scala.util.control.Exception.allCatch
 import scala.annotation.tailrec
 
 class Parser {
 
-
   def parse(bytes: Seq[Byte]): Seq[ScriptElement] = {
     parse(bytes, Seq.empty[ScriptElement])
+  }
+
+  // * example: "OP_DUP OP_HASH160 e2e7c1ab3f807151e832dd1accb3d4f5d7d19b4b OP_EQUALVERIFY OP_CHECKSIG"
+  // * example: ["0", "IF 0x50 ENDIF 1", "P2SH,STRICTENC", "0x50 is reserved (ok if not executed)"] (from script_valid.json) */
+  def parse(str: String): Seq[Byte] = {
+    val stringTokens = str.split(" ").toList
+
+    def isNumber(str: String) = allCatch.opt(str.toLong).isDefined
+    def isHex(str: String) = allCatch.opt {
+      assume(str.substring(0, 2) == "0x")
+      Hex.decode(str.drop(2))
+    }.isDefined
+    def isOpCode(str: String) = OpCodes.fromString(str).isDefined
+
+    stringTokens.foldLeft(Seq.empty[Byte])((acc, token) => {
+      token match {
+        case t if isNumber(t) =>
+        case t if isHex(t) =>
+        case t if isOpCode(t) =>
+        case t =>
+          // normal data, push
+      }
+      acc
+    })
   }
 
   @tailrec

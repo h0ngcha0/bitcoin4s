@@ -1,6 +1,9 @@
 package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.Utils._
+import org.spongycastle.util.encoders.Hex
+
+import scala.collection.mutable.ArrayBuffer
 
 // Reference: https://en.bitcoin.it/wiki/Script
 
@@ -51,6 +54,43 @@ object ScriptNum {
     }
   }
 
+  // copied from bitcoin-core code.
+  def encode(value: Long): Seq[Byte] = {
+    if (value == 0) {
+      Seq.empty[Byte]
+    } else {
+      val result = ArrayBuffer.empty[Byte]
+      val neg = value < 0
+      var absoluteValue = Math.abs(value)
+
+      while (absoluteValue > 0) {
+        result += (absoluteValue & 0xff).toByte
+        absoluteValue >>= 8
+      }
+
+      //    - If the most significant byte is >= 0x80 and the value is positive, push a
+      //    new zero-byte to make the significant byte < 0x80 again.
+
+      //    - If the most significant byte is >= 0x80 and the value is negative, push a
+      //    new 0x80 byte that will be popped off when converting to an integral.
+
+      //    - If the most significant byte is < 0x80 and the value is negative, add
+      //    0x80 to it, since it will be subtracted and interpreted as a negative when
+      //    converting to an integral.
+
+      if ((result.last & 0x80) != 0) {
+        result += {
+          if (neg) 0x80.toByte else 0
+        }
+      }
+      else if (neg) {
+        result(result.length - 1) = (result(result.length - 1) | 0x80).toByte
+      }
+
+      result
+    }
+  }
+
   private def minimallyEncoded(bytes: Seq[Byte]): Boolean = {
     bytes.reverse match {
       case Nil =>
@@ -87,7 +127,7 @@ trait ScriptOpCode extends ScriptElement with Product {
   val value: Long
   val hex: String = value.toHex
   val name: String = productPrefix
-  override val bytes = Seq() // FIXME: decode hex
+  override val bytes = Hex.decode(hex.stripPrefix("0x"))
 }
 
 object OpCodes {
@@ -106,7 +146,9 @@ object OpCodes {
     BitwiseLogicOp.disabled ++
     ArithmeticOp.disabled
 
+  // e.g. `OP_DUP` or `DUP`
   def fromString(str: String): Option[ScriptOpCode] = {
-    all.find(_.name.replace("OP_", "") == str)
+    all.find(_.name == str)
+      .orElse(all.find(_.name.replace("OP_", "") == str))
   }
 }
