@@ -22,23 +22,38 @@ class Parser {
   def parse(str: String): Seq[Byte] = {
     val stringTokens = str.split(" ").toList
 
-    def isNumber(str: String) = allCatch.opt(str.toLong).isDefined
-    def isHex(str: String) = allCatch.opt {
-      assume(str.substring(0, 2) == "0x")
-      Hex.decode(str.drop(2))
-    }.isDefined
-    def isOpCode(str: String) = OpCodes.fromString(str).isDefined
+    parseTokens(stringTokens)
+  }
 
-    stringTokens.foldLeft(Seq.empty[Byte])((acc, token) => {
-      token match {
-        case t if isNumber(t) =>
-        case t if isHex(t) =>
-        case t if isOpCode(t) =>
-        case t =>
-          // normal data, push
-      }
-      acc
-    })
+  @tailrec
+  private def parseTokens(tokens: List[String], acc: Seq[Byte] = Seq.empty): Seq[Byte] = {
+    tokens match {
+      case head :: tail =>
+        head match {
+          case "0" =>
+            parseTokens(tail, OP_0.bytes ++ acc)
+          case "" =>
+            parseTokens(tail, acc)
+          case "-1" =>
+            parseTokens(tail, OP_1NEGATE.bytes ++ acc)
+          case t if isNumber(t) =>
+            val dataBytes: Seq[Byte] = ScriptNum.encode(t.toLong)
+            parseTokens(tail, bytesAndLength(dataBytes) ++ acc)
+          case t if isHex(t) =>
+            parseTokens(tail, Hex.decode(t.drop(2)) ++ acc)
+          case t if isOpCode(t) =>
+            val opCode = OpCodes.fromString(t).get // FIXME: remove .get
+            parseTokens(tail, opCode.bytes ++ acc)
+          case t if t.length >= 2 && t.head == '\'' && t.last == '\'' =>
+            val unquotedString = t.tail.dropRight(1)
+            parseTokens(unquotedString :: tail, acc)
+          case t =>
+            val dataBytes = Hex.decode(t)
+            parseTokens(tail, bytesAndLength(dataBytes) ++ acc)
+        }
+      case Nil =>
+        acc
+    }
   }
 
   @tailrec
@@ -88,5 +103,45 @@ class Parser {
       }
 
       parse(restOfBytes, newAcc)
+  }
+
+  private def bytesAndLength(dataBytes: Seq[Byte]): Seq[Byte] = {
+    val dataBytesLength = dataBytes.length
+
+    val lengthBytes: Seq[Byte] = if (dataBytesLength <= 75) {
+      OP_PUSHDATA(dataBytesLength).bytes
+    } else {
+      val numberOfBytesToPush = ScriptNum.encode(dataBytesLength)
+
+      val pushOpCode: ConstantOp =
+        if (dataBytesLength < Byte.MaxValue) {
+          OP_PUSHDATA1
+        } else if (dataBytesLength < Short.MaxValue) {
+          OP_PUSHDATA2
+        } else if (dataBytesLength < Int.MaxValue) {
+          OP_PUSHDATA4
+        } else {
+          throw new RuntimeException(s"Can not push $dataBytesLength bytes")
+        }
+
+      numberOfBytesToPush ++ pushOpCode.bytes
+    }
+
+    lengthBytes ++ dataBytes
+  }
+
+  private def isNumber(str: String) = {
+    allCatch.opt(str.toLong).isDefined
+  }
+
+  private def isHex(str: String) = {
+    allCatch.opt {
+      assume(str.substring(0, 2) == "0x")
+      Hex.decode(str.drop(2))
+    }.isDefined
+  }
+
+  private def isOpCode(str: String) = {
+    OpCodes.fromString(str).isDefined
   }
 }

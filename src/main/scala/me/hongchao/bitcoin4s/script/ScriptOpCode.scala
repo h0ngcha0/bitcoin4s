@@ -40,7 +40,7 @@ object ScriptNum {
 
   def apply(valueIn: Long) = new ScriptNum {
     override val value: Long = valueIn
-    override val bytes = Seq.empty // FIXME: convert from value
+    override val bytes = encode(valueIn)
   }
 
   // Does not accept byte array with more than 4 bytes
