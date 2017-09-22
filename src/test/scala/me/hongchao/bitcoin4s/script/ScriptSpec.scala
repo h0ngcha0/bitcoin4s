@@ -1,9 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
-import com.typesafe.config.ConfigList
+import com.typesafe.config._
 
 import scala.collection.JavaConverters._
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import me.hongchao.bitcoin4s.Spec
 import me.hongchao.bitcoin4s.Utils._
 
@@ -11,8 +10,8 @@ import scala.io.Source
 
 class ScriptSpec extends Spec {
   case class TestCase(
-    scriptSig: String,
-    scriptPubKey: String,
+    scriptSig: Seq[ScriptElement],
+    scriptPubKey: Seq[ScriptElement],
     scriptFlags: String,
     expectedResult: String,
     comments: String,
@@ -39,28 +38,51 @@ class ScriptSpec extends Spec {
       .toList
       .map(_.toList)
 
-    val scriptTests = scriptTestsConfig.filter(_.length > 3).collect {
+    val rawScriptTests = scriptTestsConfig.filter(_.length > 3).take(1)
+    println(s"rawScriptTests: $rawScriptTests")
+
+    val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>
         if (head.isInstanceOf[ConfigList]) {
           val witnessElement = head.toList.map(_.render)
           val amount = (BigDecimal(witnessElement.last) * 10000000).toBigInt
           val witnesses = witnessElement.reverse.tail
           val stringTail = tail.map(_.render)
-
           val List(scriptSig, scriptPubKey, scriptFlags, expectedResult) = stringTail.take(4)
           val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
-          TestCase(scriptSig, scriptPubKey, scriptFlags, expectedResult, comments, Some((witnesses, amount)))
-        } else {
-          val stringElements = elements.map(_.render)
 
+          TestCase(
+            scriptSig = Parser.parse(scriptSig),
+            scriptPubKey = Parser.parse(scriptPubKey),
+            scriptFlags = scriptFlags,
+            expectedResult = expectedResult,
+            comments = comments,
+            witness = Some((witnesses, amount))
+          )
+        } else {
+          val stringElements = elements.map(_.render(ConfigRenderOptions.concise())).map(_.drop(1).dropRight(1))
+          println(s"stringElements: $stringElements")
           val List(scriptSig, scriptPubKey, scriptFlags, expectedResult) = stringElements.take(4)
           val comments = (stringElements.length == 5).option(stringElements.last).getOrElse("")
-          TestCase(scriptSig, scriptPubKey, scriptFlags, expectedResult, comments, None)
+
+          println(s"scriptSig: $scriptSig, ${scriptSig.length}")
+          val parsedScriptSig = Parser.parse(scriptSig)
+          println(s"parsedScriptSig: $parsedScriptSig")
+
+          val parsedScriptPubKey = Parser.parse(scriptPubKey)
+          println(s"parsedScriptPubKey: $parsedScriptPubKey")
+
+          TestCase(
+            scriptSig = parsedScriptSig,
+            scriptPubKey = parsedScriptPubKey,
+            scriptFlags = scriptFlags,
+            expectedResult = expectedResult,
+            comments = comments,
+            witness = None
+          )
         }
     }
 
-    println(scriptTests)
+    println(s"scriptTests: $scriptTests")
   }
-
-
 }

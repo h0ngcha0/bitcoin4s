@@ -11,7 +11,7 @@ import shapeless.nat._
 import scala.util.control.Exception.allCatch
 import scala.annotation.tailrec
 
-class Parser {
+object Parser {
 
   def parse(bytes: Seq[Byte]): Seq[ScriptElement] = {
     parse(bytes, Seq.empty[ScriptElement])
@@ -19,37 +19,37 @@ class Parser {
 
   // * example: "OP_DUP OP_HASH160 e2e7c1ab3f807151e832dd1accb3d4f5d7d19b4b OP_EQUALVERIFY OP_CHECKSIG"
   // * example: ["0", "IF 0x50 ENDIF 1", "P2SH,STRICTENC", "0x50 is reserved (ok if not executed)"] (from script_valid.json) */
-  def parse(str: String): Seq[Byte] = {
+  def parse(str: String): Seq[ScriptElement] = {
     val stringTokens = str.split(" ").toList
-
-    parseTokens(stringTokens)
+    val bytes: Seq[Byte] = parseTokensToBytes(stringTokens)
+    parse(bytes)
   }
 
   @tailrec
-  private def parseTokens(tokens: List[String], acc: Seq[Byte] = Seq.empty): Seq[Byte] = {
+  private def parseTokensToBytes(tokens: List[String], acc: Seq[Byte] = Seq.empty): Seq[Byte] = {
     tokens match {
       case head :: tail =>
         head match {
           case "0" =>
-            parseTokens(tail, OP_0.bytes ++ acc)
+            parseTokensToBytes(tail, OP_0.bytes ++ acc)
           case "" =>
-            parseTokens(tail, acc)
+            parseTokensToBytes(tail, acc)
           case "-1" =>
-            parseTokens(tail, OP_1NEGATE.bytes ++ acc)
+            parseTokensToBytes(tail, OP_1NEGATE.bytes ++ acc)
           case t if isNumber(t) =>
             val dataBytes: Seq[Byte] = ScriptNum.encode(t.toLong)
-            parseTokens(tail, bytesAndLength(dataBytes) ++ acc)
+            parseTokensToBytes(tail, bytesAndLength(dataBytes) ++ acc)
           case t if isHex(t) =>
-            parseTokens(tail, Hex.decode(t.drop(2)) ++ acc)
+            parseTokensToBytes(tail, Hex.decode(t.drop(2)) ++ acc)
           case t if isOpCode(t) =>
             val opCode = OpCodes.fromString(t).get // FIXME: remove .get
-            parseTokens(tail, opCode.bytes ++ acc)
+            parseTokensToBytes(tail, opCode.bytes ++ acc)
           case t if t.length >= 2 && t.head == '\'' && t.last == '\'' =>
             val unquotedString = t.tail.dropRight(1)
-            parseTokens(unquotedString :: tail, acc)
+            parseTokensToBytes(unquotedString :: tail, acc)
           case t =>
-            val dataBytes = Hex.decode(t)
-            parseTokens(tail, bytesAndLength(dataBytes) ++ acc)
+            val dataBytes = t.getBytes()
+            parseTokensToBytes(tail, bytesAndLength(dataBytes) ++ acc)
         }
       case Nil =>
         acc

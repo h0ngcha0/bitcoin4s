@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 // Reference: https://en.bitcoin.it/wiki/Script
 
 trait ScriptElement {
-  val bytes: Seq[Byte]
+  def bytes: Seq[Byte]
 }
 
 trait ScriptConstant extends ScriptElement
@@ -125,9 +125,9 @@ object ScriptNum {
 
 trait ScriptOpCode extends ScriptElement with Product {
   val value: Long
-  val hex: String = value.toHex
+  def hex: String = value.toHex
   val name: String = productPrefix
-  override val bytes = Hex.decode(hex.stripPrefix("0x"))
+  override def bytes = Hex.decode(hex.stripPrefix("0x")).toList
 }
 
 object OpCodes {
