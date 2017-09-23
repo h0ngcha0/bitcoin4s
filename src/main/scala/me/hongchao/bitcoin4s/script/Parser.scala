@@ -22,8 +22,6 @@ object Parser {
   def parse(str: String): Seq[ScriptElement] = {
     val stringTokens = str.split(" ").toList
     val bytes: Seq[Byte] = parseTokensToBytes(stringTokens).reverse.flatten
-    println(s"\nbytes: $bytes\n")
-
     parse(bytes)
   }
 
