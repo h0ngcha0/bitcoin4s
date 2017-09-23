@@ -6,13 +6,14 @@ import scala.collection.JavaConverters._
 import me.hongchao.bitcoin4s.Spec
 import me.hongchao.bitcoin4s.Utils._
 
+import scala.collection.immutable
 import scala.io.Source
 
 class ScriptSpec extends Spec {
   case class TestCase(
     scriptSig: Seq[ScriptElement],
     scriptPubKey: Seq[ScriptElement],
-    scriptFlags: String,
+    scriptFlags: Seq[ScriptFlag],
     expectedResult: String,
     comments: String,
     witness: Option[(List[String], BigInt)]

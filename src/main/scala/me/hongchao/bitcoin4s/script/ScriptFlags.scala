@@ -3,6 +3,8 @@ package me.hongchao.bitcoin4s.script
 sealed trait ScriptFlag extends Product {
   val value: Int
   val name = productPrefix
+
+  override def toString: String = name
 }
 
 object ScriptFlag {
@@ -106,6 +108,6 @@ object ScriptFlag {
   )
 
   def fromString(str: String): Option[ScriptFlag] = {
-    all.find(_.name.stripPrefix("SCRIPT_VERIFY_") == str)
+    all.find(_.name == str) orElse all.find(_.name.stripPrefix("SCRIPT_VERIFY_") == str)
   }
 }

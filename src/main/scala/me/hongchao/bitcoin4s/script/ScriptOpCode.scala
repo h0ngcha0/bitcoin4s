@@ -11,7 +11,9 @@ trait ScriptElement {
   def bytes: Seq[Byte]
 }
 
-trait ScriptConstant extends ScriptElement
+trait ScriptConstant extends ScriptElement {
+  override def toString: String = s"ScriptConstant: $bytes"
+}
 
 object ScriptConstant {
   def apply(bytesIn: Seq[Byte]) = new ScriptConstant { override val bytes = bytesIn }
@@ -33,6 +35,8 @@ trait ScriptNum extends ScriptConstant {
   def +  (that: Long) = ScriptNum(value + that)
   def -  (that: ScriptNum) = ScriptNum(value - that.value)
   def -  (that: Long) = ScriptNum(value - that)
+
+  override def toString: String = s"ScriptNum($value)"
 }
 
 object ScriptNum {

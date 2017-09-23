@@ -23,6 +23,14 @@ package object Utils {
   }
 
   implicit class RichSeq[T](seq: Seq[T]) {
+    def forceTake(n: Int): Seq[T] = {
+      val maybeNElements = seq.take(n)
+      (maybeNElements.length == n)
+        .option(maybeNElements)
+        .getOrElse(throw new RuntimeException(s"Not enough elements in $seq to take $n."))
+    }
+
+
     def takeOpt(n: Int): Option[Seq[T]] = {
       val maybeNElements = seq.take(n)
       (maybeNElements.length == n).option(maybeNElements)
@@ -39,17 +47,17 @@ package object Utils {
     }
   }
 
-  def toUInt8(bytes: Seq[Byte] Refined Size[Equal[_1]]): Int = {
-    bytes.value.head.toShort
+  def toUInt8(bytes: Seq[Byte]): Int = {
+    bytes.head.toShort
   }
 
-  def toUInt16(bytes: Seq[Byte] Refined Size[Equal[_2]]): Int = {
-    val byteBuffer = ByteBuffer.wrap(bytes.value.toArray).order(ByteOrder.LITTLE_ENDIAN)
+  def toUInt16(bytes: Seq[Byte]): Int = {
+    val byteBuffer = ByteBuffer.wrap(bytes.toArray).order(ByteOrder.LITTLE_ENDIAN)
     byteBuffer.getShort & 0xFFFF
   }
 
-  def toUInt32(bytes: Seq[Byte] Refined Size[Equal[_4]]): Long = {
-    val byteBuffer = ByteBuffer.wrap(bytes.value.toArray).order(ByteOrder.LITTLE_ENDIAN)
-    byteBuffer.getInt & 0xFFFFFFFFL
+  def toUInt32(bytes: Seq[Byte]): Int = {
+    val byteBuffer = ByteBuffer.wrap(bytes.toArray).order(ByteOrder.LITTLE_ENDIAN)
+    byteBuffer.getInt & 0xFFFFFFFF
   }
 }

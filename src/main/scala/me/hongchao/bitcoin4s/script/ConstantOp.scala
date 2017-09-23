@@ -4,7 +4,9 @@ import cats.data.State
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 
-sealed trait ConstantOp extends ScriptOpCode
+sealed trait ConstantOp extends ScriptOpCode {
+  override def toString: String = name
+}
 
 object ConstantOp {
   case object OP_FALSE extends ConstantOp { val value = 0 }
@@ -33,11 +35,13 @@ object ConstantOp {
 
   // OpCode 1-75: The next opcode bytes is data to be pushed onto the stack
   // Reference: https://en.bitcoin.it/wiki/Script
-  case class OP_PUSHDATA(val value: Long) extends ConstantOp
+  case class OP_PUSHDATA(val value: Long) extends ConstantOp {
+    override def toString: String = s"OP_PUSHDATA($value)"
+  }
   val ops_pushdata = for (i <- 1 to 75) yield OP_PUSHDATA(i)
 
   val all = Seq(
-    OP_FALSE, OP_0, OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4, OP_1NEGATE,
+    OP_0, OP_FALSE, OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4, OP_1NEGATE,
     OP_1, OP_TRUE, OP_2, OP_3, OP_4, OP_5, OP_6, OP_7, OP_8, OP_9, OP_10,
     OP_11, OP_12, OP_13, OP_14, OP_15, OP_16
   ) ++ ops_pushdata

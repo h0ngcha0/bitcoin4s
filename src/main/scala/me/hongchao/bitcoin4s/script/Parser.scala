@@ -14,42 +14,44 @@ import scala.annotation.tailrec
 object Parser {
 
   def parse(bytes: Seq[Byte]): Seq[ScriptElement] = {
-    parse(bytes, Seq.empty[ScriptElement])
+    parse(bytes, Seq.empty).reverse.flatten
   }
 
   // * example: "OP_DUP OP_HASH160 e2e7c1ab3f807151e832dd1accb3d4f5d7d19b4b OP_EQUALVERIFY OP_CHECKSIG"
   // * example: ["0", "IF 0x50 ENDIF 1", "P2SH,STRICTENC", "0x50 is reserved (ok if not executed)"] (from script_valid.json) */
   def parse(str: String): Seq[ScriptElement] = {
     val stringTokens = str.split(" ").toList
-    val bytes: Seq[Byte] = parseTokensToBytes(stringTokens)
+    val bytes: Seq[Byte] = parseTokensToBytes(stringTokens).reverse.flatten
+    println(s"\nbytes: $bytes\n")
+
     parse(bytes)
   }
 
   @tailrec
-  private def parseTokensToBytes(tokens: List[String], acc: Seq[Byte] = Seq.empty): Seq[Byte] = {
+  private def parseTokensToBytes(tokens: List[String], acc: Seq[Seq[Byte]] = Seq.empty): Seq[Seq[Byte]] = {
     tokens match {
       case head :: tail =>
         head match {
           case "0" =>
-            parseTokensToBytes(tail, OP_0.bytes ++ acc)
+            parseTokensToBytes(tail, OP_0.bytes +: acc)
           case "" =>
             parseTokensToBytes(tail, acc)
           case "-1" =>
-            parseTokensToBytes(tail, OP_1NEGATE.bytes ++ acc)
+            parseTokensToBytes(tail, OP_1NEGATE.bytes +: acc)
           case t if isNumber(t) =>
             val dataBytes: Seq[Byte] = ScriptNum.encode(t.toLong)
-            parseTokensToBytes(tail, bytesAndLength(dataBytes) ++ acc)
+            parseTokensToBytes(tail, bytesAndLength(dataBytes) +: acc)
           case t if isHex(t) =>
-            parseTokensToBytes(tail, Hex.decode(t.drop(2)) ++ acc)
+            parseTokensToBytes(tail, Hex.decode(t.drop(2)).toSeq +: acc)
           case t if isOpCode(t) =>
             val opCode = OpCodes.fromString(t).get // FIXME: remove .get
-            parseTokensToBytes(tail, opCode.bytes ++ acc)
+            parseTokensToBytes(tail, opCode.bytes +: acc)
           case t if t.length >= 2 && t.head == '\'' && t.last == '\'' =>
             val unquotedString = t.tail.dropRight(1)
             parseTokensToBytes(unquotedString :: tail, acc)
           case t =>
             val dataBytes = t.getBytes()
-            parseTokensToBytes(tail, bytesAndLength(dataBytes) ++ acc)
+            parseTokensToBytes(tail, bytesAndLength(dataBytes) +: acc)
         }
       case Nil =>
         acc
@@ -57,7 +59,7 @@ object Parser {
   }
 
   @tailrec
-  private def parse(bytes: Seq[Byte], acc: Seq[ScriptElement]): Seq[ScriptElement] = bytes match {
+  private def parse(bytes: Seq[Byte], acc: Seq[Seq[ScriptElement]]): Seq[Seq[ScriptElement]] = bytes match {
     case Nil => acc
     case head :: tail =>
       val opCode = OpCodes.all.find(_.hex == head.toHex).getOrElse {
@@ -65,41 +67,32 @@ object Parser {
         throw new RuntimeException(s"No opcode found: $bytes")
       }
 
-      def pushData(opCode: ScriptOpCode, maybeNumberOfBytesToPush: Either[String, Int]): (Seq[Byte], Seq[ScriptElement]) = {
-        val numberOfBytesToPush = maybeNumberOfBytesToPush match {
-          case Right(number) => number
-          case Left(error) => throw new RuntimeException(error)
-        }
+      def pushData(opCode: ScriptOpCode, numberOfBytesToPush: Int, restOfData: Seq[Byte]): (Seq[Byte], Seq[Seq[ScriptElement]]) = {
+        val bytesToPush = restOfData.take(numberOfBytesToPush)
+        val restOfBytes = restOfData.drop(numberOfBytesToPush)
 
-        // FIXME: Perhaps not enough bytes
-        val bytesToPush = tail.drop(numberOfBytesToPush).take(numberOfBytesToPush)
-        val restOfBytes = tail.drop(numberOfBytesToPush).drop(numberOfBytesToPush)
-
-        (restOfBytes, opCode +: ScriptConstant(bytesToPush) +: acc)
+        val constantToBePushed = (bytesToPush.isEmpty).option(OP_0).getOrElse(ScriptConstant(bytesToPush))
+        (restOfBytes, Seq(opCode, constantToBePushed) +: acc)
       }
 
       val (restOfBytes, newAcc) = opCode match {
         case OP_PUSHDATA(value) =>
-          val numberOfBytesToPush = Right(value.toInt)
-          pushData(opCode, numberOfBytesToPush)
+          pushData(opCode, value.toInt, tail)
 
         case OP_PUSHDATA1 =>
-          val numberBytes: Seq[Byte] = tail.take(1)
-          val numberOfBytesToPush = refineV[Size[Equal[_1]]](numberBytes).map(toUInt8)
-          pushData(opCode, numberOfBytesToPush)
+          val numberOfBytesToPush = toUInt8(tail.forceTake(1))
+          pushData(opCode, numberOfBytesToPush, tail.drop(1))
 
         case OP_PUSHDATA2 =>
-          val numberBytes: Seq[Byte] = tail.take(2)
-          val numberOfBytesToPush = refineV[Size[Equal[_2]]](numberBytes).map(toUInt16)
-          pushData(opCode, numberOfBytesToPush)
+          val numberOfBytesToPush = toUInt16(tail.forceTake(2))
+          pushData(opCode, numberOfBytesToPush, tail.drop(2))
 
         case OP_PUSHDATA4 =>
-          val numberBytes: Seq[Byte] = tail.take(4)
-          val numberOfBytesToPush = refineV[Size[Equal[_4]]](numberBytes).map(toUInt32).map(_.toInt)
-          pushData(opCode,numberOfBytesToPush)
+          val numberOfBytesToPush = toUInt32(tail.forceTake(4))
+          pushData(opCode, numberOfBytesToPush, tail.drop(4))
 
         case otherOpCode =>
-          (tail,  otherOpCode +: acc)
+          (tail,  Seq(otherOpCode) +: acc)
       }
 
       parse(restOfBytes, newAcc)
