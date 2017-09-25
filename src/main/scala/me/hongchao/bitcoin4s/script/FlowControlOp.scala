@@ -74,7 +74,6 @@ object FlowControlOp {
                   abort(VerificationFailed(OP_VERIFY, state.stack))
                 } else {
                   val newState = state.copy(
-                    script = state.script.tail,
                     stack = tail,
                     opCount = state.opCount + 1
                   )

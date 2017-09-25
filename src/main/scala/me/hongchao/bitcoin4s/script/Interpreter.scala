@@ -6,6 +6,8 @@ import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterContext
 import simulacrum._
 
+import com.typesafe.scalalogging.StrictLogging
+
 case class InterpreterState(
   script: Seq[ScriptElement],
   stack: Seq[ScriptElement],

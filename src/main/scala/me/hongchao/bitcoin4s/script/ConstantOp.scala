@@ -80,13 +80,13 @@ object ConstantOp {
           State.get[InterpreterState]
             .flatMap { state =>
               state.script match {
-                case `opCode` :: (dataToPush: ScriptConstant) :: rest =>
+                case (dataToPush: ScriptConstant) :: rest =>
                   State.set(state.copy(
                     script = rest,
                     stack = dataToPush +: state.stack,
                     opCount = state.opCount + 1
                   )).flatMap(continue)
-                case `opCode` :: _ :: _ =>
+                case _ :: _ =>
                   abort(OperantMustBeScriptConstant(opCode, state.stack))
                 case _ =>
                   abort(NotEnoughElementsInStack(opCode, state.stack))

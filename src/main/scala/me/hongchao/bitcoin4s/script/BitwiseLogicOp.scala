@@ -46,7 +46,6 @@ object BitwiseLogicOp {
             val result = (first.bytes == second.bytes).option(ScriptNum(1)).getOrElse(ScriptNum(0))
 
             val newState = state.copy(
-              script = state.script.tail,
               stack = result +: rest,
               opCount = state.opCount + 1
             )

@@ -30,7 +30,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
-      .take(4)
+      .take(10)
 
     val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>
@@ -74,9 +74,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK)
 
-    okScriptTests.foreach { test =>
-      run(test)
-    }
+    okScriptTests.foreach(run)
   }
 
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {

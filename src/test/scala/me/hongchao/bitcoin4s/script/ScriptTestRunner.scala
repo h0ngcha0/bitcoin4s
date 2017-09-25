@@ -81,6 +81,8 @@ trait ScriptTestRunner { self: Spec =>
 
 
   def run(test: TestCase) = {
+    info(s"test: $test")
+
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes))
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes))
     val initialState = InterpreterState(
@@ -95,12 +97,17 @@ trait ScriptTestRunner { self: Spec =>
       sigVersion = SigVersion.SIGVERSION_BASE // FIXME: not dealing with witness for now
     )
 
-    val (finalState, result) = Interpreter.interpret().run(initialState).value
+    val (finalState, interpretResult) = Interpreter.interpret().run(initialState).value
 
     test.expectedResult match {
       case ExpectedResult.OK =>
         withClue(test.comments) {
-          result shouldEqual Right(Some(true))
+          interpretResult match {
+            case Left(error) =>
+              throw error
+            case Right(result) =>
+              result shouldEqual Some(true)
+          }
         }
       case _ =>
         throw new NotImplementedError()
