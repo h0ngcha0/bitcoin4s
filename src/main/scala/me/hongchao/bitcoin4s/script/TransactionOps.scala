@@ -4,24 +4,34 @@ import io.github.yzernik.bitcoinscodec.messages.Tx
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.Utils._
+import me.hongchao.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 
 object TransactionOps {
   val codecVersion = 1
 
   implicit class RichTx(tx: Tx) {
-    def hash(
+    def transactionId(): ByteVector = {
+      Tx.codec(codecVersion).encode(tx).toEither match {
+        case Left(error) =>
+          throw new RuntimeException(error.messageWithContext)
+        case Right(v) =>
+          v.toByteVector
+      }
+    }
+
+    def signingHash(
       pubKeyScript: Seq[ScriptElement],
       inputIndex: Int,
       sigHashType: SignatureHashType,
       sigVersion: SigVersion
     ): Seq[Byte] = sigVersion match {
       case SIGVERSION_BASE =>
-        normalHash(pubKeyScript, inputIndex, sigHashType)
+        normalSigningHash(pubKeyScript, inputIndex, sigHashType)
       case SIGVERSION_WITNESS_V0 =>
-        segwitHash()
+        segwitSigningHash()
     }
 
-    def normalHash(pubKeyScript: Seq[ScriptElement], inputIndex: Int, sigHashType: SignatureHashType): Seq[Byte] = {
+    def normalSigningHash(pubKeyScript: Seq[ScriptElement], inputIndex: Int, sigHashType: SignatureHashType): Seq[Byte] = {
       val updatedTx0 = tx
         .removeSigScript()
         .updateTxInWithPubKeyScript(pubKeyScript, inputIndex)
@@ -60,7 +70,7 @@ object TransactionOps {
       }
     }
 
-    def segwitHash(): Seq[Byte] = {
+    def segwitSigningHash(): Seq[Byte] = {
       throw new NotImplementedError("Segwit hashing for transaction is not implemented")
     }
 

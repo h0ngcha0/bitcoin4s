@@ -9,6 +9,7 @@ import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError.{NotEnoughElementsInStack, NotImplemented}
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.script.Interpreter._
+import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
 
 sealed trait CryptoOp extends ScriptOpCode
 
@@ -57,7 +58,7 @@ object CryptoOp {
                 val pubKey = PublicKey.decode(encodedPublicKey.bytes)
                 val signature = Signature(encodedSignature.bytes)
 
-                val hashedTransaction = state.transaction.hash(
+                val hashedTransaction = state.transaction.signingHash(
                   pubKeyScript = state.scriptPubKey,
                   inputIndex = state.inputIndex,
                   sigHashType = SignatureHashType(1),
