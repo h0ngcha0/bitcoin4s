@@ -36,7 +36,7 @@ object FlowControlOp {
             Try {
               splitScriptOnConditional(
                 script = state.script,
-                nestedDepth = 0,
+                nestedDepth = 1,
                 onTrueBranch = true,
                 acc = ConditionalBranchSplitResult()
               )
@@ -103,19 +103,10 @@ object FlowControlOp {
       acc: ConditionalBranchSplitResult
     ): ConditionalBranchSplitResult = {
       script match {
-        case Nil =>
-          acc
         case opCode :: tail if opCode == OP_IF || opCode == OP_NOTIF =>
           val newNestedDepth = nestedDepth + 1
 
-          if (newNestedDepth == 1) {
-            splitScriptOnConditional(
-              script = tail,
-              nestedDepth = newNestedDepth,
-              onTrueBranch = onTrueBranch,
-              acc = acc
-            )
-          } else if (newNestedDepth > 1){
+          if (newNestedDepth > 1){
             splitScriptOnConditional(
               script = tail,
               nestedDepth = newNestedDepth,
@@ -127,19 +118,12 @@ object FlowControlOp {
           }
 
         case OP_ENDIF :: tail =>
-          val newNestedDepth = nestedDepth - 1
-
-          if (newNestedDepth == 0) {
+          if (nestedDepth == 1) {
+            acc.copy(rest = tail)
+          } else if (nestedDepth > 1) {
             splitScriptOnConditional(
               script = tail,
-              nestedDepth = newNestedDepth,
-              onTrueBranch = onTrueBranch,
-              acc = acc
-            )
-          } else if (newNestedDepth > 0) {
-            splitScriptOnConditional(
-              script = tail,
-              nestedDepth = nestedDepth,
+              nestedDepth = nestedDepth - 1,
               onTrueBranch = onTrueBranch,
               acc = pushToBranch(OP_ENDIF, onTrueBranch, acc)
             )
@@ -165,6 +149,14 @@ object FlowControlOp {
           } else {
             throw new RuntimeException("Unbalanced conditionals")
           }
+
+        case element :: tail if nestedDepth >= 1 =>
+          splitScriptOnConditional(
+            script = tail,
+            nestedDepth = nestedDepth,
+            onTrueBranch = onTrueBranch,
+            acc = pushToBranch(element, onTrueBranch, acc)
+          )
       }
     }
 

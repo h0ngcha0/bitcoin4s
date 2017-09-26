@@ -109,8 +109,12 @@ object ScriptNum {
   }
 
   private def setPositive(bytes : Seq[Byte]): Seq[Byte] = {
-    val newByte : Byte = (bytes.head & 0x7F).toByte
-    (newByte +: bytes.tail)
+    bytes match {
+      case head +: tail =>
+        (head & 0x7F).toByte +: tail
+      case Nil =>
+        Nil
+    }
   }
 
   private def parseLong(bytes : Seq[Byte]): Long = {
