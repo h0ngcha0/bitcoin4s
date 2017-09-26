@@ -1,0 +1,31 @@
+<configuration>
+    <property name="consolePattern"
+              value="%date{ISO8601} %-5level [%cyan(%logger{36})] %msg %n"/>
+    <property name="filePattern"
+              value="%date{ISO8601} %-5level [%logger{36}] [%X{akkaSource}] %msg %n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${consolePattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/bitcoin4s.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/bitcoin4s.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>365</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${filePattern}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="akka" level="INFO"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

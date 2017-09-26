@@ -4,3 +4,4 @@ project/target/
 .ensime
 .idea
 .idea_modules/
+logs/

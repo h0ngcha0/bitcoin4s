@@ -5,7 +5,6 @@ import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterContext
 import simulacrum._
-
 import com.typesafe.scalalogging.StrictLogging
 
 case class InterpreterState(
@@ -96,8 +95,27 @@ object InterpreterError {
   }
 }
 
-@typeclass trait Interpretable[A <: ScriptOpCode] {
+@typeclass trait Interpretable[A <: ScriptOpCode] extends StrictLogging {
   def interpret(opCode: A): InterpreterContext
+
+  def interpret(opCode: A, verbose: Boolean): InterpreterContext = {
+    if (verbose) {
+      for {
+        oldState <- State.get[InterpreterState]
+        newContext <- interpret(opCode)
+        newState <- State.get[InterpreterState]
+      } yield {
+        logger.info("~~~~~~~~~~~~~~~~~~~~~")
+        logger.info(s"old State\nscript: ${opCode +: oldState.script}\nstack: ${oldState.stack}\naltstack: ${oldState.altStack}")
+        logger.info("---------------------")
+        logger.info(s"new State\nscript: ${newState.script}\nstack: ${newState.stack}\naltstack: ${newState.altStack}")
+        logger.info("~~~~~~~~~~~~~~~~~~~~~")
+        newContext
+      }
+    } else {
+      interpret(opCode)
+    }
+  }
 }
 
 object Interpreter {
@@ -109,6 +127,7 @@ object Interpreter {
 
   import me.hongchao.bitcoin4s.script.Interpretable.ops._
   def interpret(result: InterpreterResult = Right(None)): InterpreterContext = {
+    val verbose = false
     State.get[InterpreterState].flatMap { state =>
       result match {
         case Right(None) =>
@@ -116,25 +135,25 @@ object Interpreter {
             case head :: _ =>
               head match {
                 case op: ArithmeticOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: BitwiseLogicOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: ConstantOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: CryptoOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: FlowControlOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: LocktimeOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: PseudoOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: ReservedOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: SpliceOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
                 case op: StackOp =>
-                  runOp(op.interpret, state)
+                  runOp(op.interpret(verbose), state)
               }
             case _ =>
               interpret(Right(Some(true)))

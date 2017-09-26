@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
   "com.github.mpilquist" %% "simulacrum" % "0.10.0",
   "eu.timepit" %% "refined" % "0.8.2",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
 

@@ -29,8 +29,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       .map(_.toList)
 
     val rawScriptTests = scriptTestsConfig
-      .filter(_.length > 3)
-      .take(10)
+      .filter(_.length > 3).take(21)
 
     val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>
@@ -50,7 +49,8 @@ class ScriptSpec extends Spec with ScriptTestRunner {
             scriptFlags = scriptFlags,
             expectedResult = expectedResult,
             comments = comments,
-            witness = Some((witnesses, amount))
+            witness = Some((witnesses, amount)),
+            raw = elements.toString
           )
         } else {
           val stringElements = elements.map(stripDoubleQuotes)
@@ -67,14 +67,18 @@ class ScriptSpec extends Spec with ScriptTestRunner {
             scriptFlags = scriptFlags,
             expectedResult = expectedResult,
             comments = comments,
-            witness = None
+            witness = None,
+            raw = elements.toString
           )
         }
     }
 
     val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK)
 
-    okScriptTests.foreach(run)
+    okScriptTests.zipWithIndex.foreach {
+      case (test, index) =>
+        run(test, index)
+    }
   }
 
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {

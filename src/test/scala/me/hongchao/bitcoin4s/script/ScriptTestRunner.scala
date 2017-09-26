@@ -76,12 +76,13 @@ trait ScriptTestRunner { self: Spec =>
     scriptFlags: Seq[ScriptFlag],
     expectedResult: ExpectedResult,
     comments: String,
-    witness: Option[(List[String], BigInt)]
+    witness: Option[(List[String], BigInt)],
+    raw: String
   )
 
 
-  def run(test: TestCase) = {
-    info(s"test: $test")
+  def run(test: TestCase, testNumber: Int) = {
+    info(s"Test $testNumber: $test")
 
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes))
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes))
