@@ -29,7 +29,8 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       .map(_.toList)
 
     val rawScriptTests = scriptTestsConfig
-      .filter(_.length > 3).take(21)
+      .filter(_.length > 3)
+      .take(44)
 
     val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>

@@ -166,9 +166,9 @@ object FlowControlOp {
       currentResult: ConditionalBranchSplitResult
     ): ConditionalBranchSplitResult = {
       onTrueBranch.option {
-        currentResult.copy(trueBranch = element +: currentResult.trueBranch)
+        currentResult.copy(trueBranch = currentResult.trueBranch :+ element)
       } getOrElse {
-        currentResult.copy(falseBranch = element +: currentResult.falseBranch)
+        currentResult.copy(falseBranch = currentResult.falseBranch :+ element)
       }
     }
   }
