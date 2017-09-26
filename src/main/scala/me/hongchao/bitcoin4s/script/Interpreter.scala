@@ -127,7 +127,7 @@ object Interpreter {
 
   import me.hongchao.bitcoin4s.script.Interpretable.ops._
   def interpret(result: InterpreterResult = Right(None)): InterpreterContext = {
-    val verbose = false
+    val verbose = true
     State.get[InterpreterState].flatMap { state =>
       result match {
         case Right(None) =>

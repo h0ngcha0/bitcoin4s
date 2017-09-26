@@ -194,7 +194,7 @@ object ArithmeticOp {
             val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
             val secondNumber = ScriptNum(second.bytes, requireMinimalEncoding)
             val newState = state.copy(
-              script = state.script.tail,
+              script = state.script,
               stack = convert(firstNumber, secondNumber) +: rest,
               opCount = state.opCount + 1
             )
