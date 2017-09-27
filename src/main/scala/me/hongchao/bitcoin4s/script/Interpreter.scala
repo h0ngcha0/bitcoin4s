@@ -4,8 +4,9 @@ import cats.data.State
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterContext
-import simulacrum._
+import me.hongchao.bitcoin4s.Utils._
 import com.typesafe.scalalogging.StrictLogging
+import simulacrum._
 
 case class InterpreterState(
   script: Seq[ScriptElement],
@@ -22,7 +23,6 @@ case class InterpreterState(
   // value. The new value it put on top of the stack
   def replaceStackTopElement(scriptElement: ScriptElement): InterpreterState = {
     copy(
-      script = script.tail,
       stack = scriptElement +: stack.tail,
       opCount = opCount + 1
     )
@@ -155,8 +155,9 @@ object Interpreter {
                 case op: StackOp =>
                   runOp(op.interpret(verbose), state)
               }
-            case _ =>
-              interpret(Right(Some(true)))
+            case Nil =>
+              val result = state.stack.headOption.map(_.bytes).exists(_.toBoolean)
+              interpret(Right(Some(result)))
           }
         case other =>
           State.pure(other)

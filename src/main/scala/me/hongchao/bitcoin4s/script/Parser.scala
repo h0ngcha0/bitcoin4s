@@ -46,7 +46,13 @@ object Parser {
             parseTokensToBytes(tail, opCode.bytes +: acc)
           case t if t.length >= 2 && t.head == '\'' && t.last == '\'' =>
             val unquotedString = t.tail.dropRight(1)
-            parseTokensToBytes(unquotedString :: tail, acc)
+
+            if (unquotedString == "") {
+              parseTokensToBytes(tail, OP_0.bytes +: acc)
+            } else {
+              parseTokensToBytes(unquotedString :: tail, acc)
+            }
+
           case t =>
             val dataBytes = t.getBytes()
             parseTokensToBytes(tail, bytesAndLength(dataBytes) +: acc)

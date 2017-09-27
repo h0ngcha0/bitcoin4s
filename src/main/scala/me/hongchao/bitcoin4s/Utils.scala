@@ -14,6 +14,13 @@ package object Utils {
 
   implicit class RichSeqByte(bytes: Seq[Byte]) {
     def toHex: String = bytes.map(_.toHex).mkString
+
+    def toBoolean(): Boolean = bytes.reverse match {
+      case head +: tail if head == 0x80.toByte =>
+        tail.exists(_ != 0)
+      case other =>
+        other.exists(_ != 0)
+    }
   }
 
   implicit class RichBoolean(b: Boolean) {
