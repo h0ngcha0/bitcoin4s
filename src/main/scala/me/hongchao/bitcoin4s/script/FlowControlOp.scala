@@ -37,21 +37,24 @@ object FlowControlOp {
               splitScriptOnConditional(
                 script = state.script,
                 nestedDepth = 1,
-                onTrueBranch = true,
                 acc = ConditionalBranchSplitResult()
               )
             } match {
-              case Success(ConditionalBranchSplitResult(trueBranch, falseBranch, rest)) =>
+              case Success(ConditionalBranchSplitResult(branches, rest)) =>
                 state.stack match {
                   case first :: tail =>
                     val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
-                    val newScript = (firstNumber == 0).option(falseBranch ++ rest).getOrElse(trueBranch ++ rest)
-                    val newState = state.copy(
-                      script = newScript,
+                    val positiveBranches = branches.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
+                    val negativeBranches = branches.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
+                    val updatedScript = (firstNumber == 0)
+                      .option(negativeBranches.flatten ++ rest)
+                      .getOrElse(positiveBranches.flatten ++ rest)
+                    val updatedState = state.copy(
+                      script = updatedScript,
                       stack = tail,
                       opCount = state.opCount + 1
                     )
-                    State.set(newState).flatMap(continue)
+                    State.set(updatedState).flatMap(continue)
                   case _ =>
                     throw NotEnoughElementsInStack(opCode, state.stack)
                 }
@@ -89,9 +92,11 @@ object FlowControlOp {
       }
     }
 
+    // There could be mulitple of OP_ELSE, e.g.:
+    // ["1", "IF 1 ELSE 0 ELSE 1 ENDIF ADD 2 EQUAL", "P2SH,STRICTENC", "OK"]
+    // Each of the OP_ELSE could be executed depending on if the previous branch is executed
     case class ConditionalBranchSplitResult(
-      trueBranch: Seq[ScriptElement] = Seq.empty,
-      falseBranch: Seq[ScriptElement] = Seq.empty,
+      branches: Seq[Seq[ScriptElement]] = Seq(Seq.empty),
       rest: Seq[ScriptElement] = Seq.empty
     )
 
@@ -99,7 +104,6 @@ object FlowControlOp {
     private def splitScriptOnConditional(
       script: Seq[ScriptElement],
       nestedDepth: Int = 0,
-      onTrueBranch: Boolean = true,
       acc: ConditionalBranchSplitResult
     ): ConditionalBranchSplitResult = {
       script match {
@@ -110,8 +114,7 @@ object FlowControlOp {
             splitScriptOnConditional(
               script = tail,
               nestedDepth = newNestedDepth,
-              onTrueBranch = onTrueBranch,
-              acc = pushToBranch(opCode, onTrueBranch, acc)
+              acc = pushToBranch(opCode, acc)
             )
           } else {
             throw new RuntimeException("Unbalanced conditionals")
@@ -124,8 +127,7 @@ object FlowControlOp {
             splitScriptOnConditional(
               script = tail,
               nestedDepth = nestedDepth - 1,
-              onTrueBranch = onTrueBranch,
-              acc = pushToBranch(OP_ENDIF, onTrueBranch, acc)
+              acc = pushToBranch(OP_ENDIF, acc)
             )
           } else {
             throw new RuntimeException("Unbalanced conditionals")
@@ -136,15 +138,13 @@ object FlowControlOp {
             splitScriptOnConditional(
               script = tail,
               nestedDepth = nestedDepth,
-              onTrueBranch = !onTrueBranch,  // invert the onTrueBranch value
-              acc = acc
+              acc = acc.copy(branches = acc.branches :+ Seq.empty) // add a new empty branch
             )
           } else if (nestedDepth > 1){
             splitScriptOnConditional(
               script = tail,
               nestedDepth = nestedDepth,
-              onTrueBranch = onTrueBranch,
-              acc = pushToBranch(OP_ELSE, onTrueBranch, acc)
+              acc = pushToBranch(OP_ELSE, acc)
             )
           } else {
             throw new RuntimeException("Unbalanced conditionals")
@@ -154,22 +154,21 @@ object FlowControlOp {
           splitScriptOnConditional(
             script = tail,
             nestedDepth = nestedDepth,
-            onTrueBranch = onTrueBranch,
-            acc = pushToBranch(element, onTrueBranch, acc)
+            acc = pushToBranch(element, acc)
           )
       }
     }
 
     private def pushToBranch(
       element: ScriptElement,
-      onTrueBranch: Boolean,
       currentResult: ConditionalBranchSplitResult
     ): ConditionalBranchSplitResult = {
-      onTrueBranch.option {
-        currentResult.copy(trueBranch = currentResult.trueBranch :+ element)
-      } getOrElse {
-        currentResult.copy(falseBranch = currentResult.falseBranch :+ element)
-      }
+      val currentBranches = currentResult.branches
+      val currentBranch = currentBranches.last
+      val updatedCurrentBranch = currentBranch :+ element
+      val updatedCurrentBranches = currentBranches.dropRight(1) :+ updatedCurrentBranch
+
+      currentResult.copy(branches = updatedCurrentBranches)
     }
   }
 }
