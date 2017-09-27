@@ -49,7 +49,7 @@ object ScriptNum {
 
   // Does not accept byte array with more than 4 bytes
   def apply(bytesIn: Seq[Byte], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
-    require(bytesIn.length <= DefaultMaxNumSize, s"bytes length exceeds maxNumSize $maxNumSize")
+    require(bytesIn.length <= maxNumSize, s"bytes length exceeds maxNumSize $maxNumSize")
     val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytesIn)
     require(!violateMinimalEncoding, "non-minimally encoded script number")
     new ScriptNum {

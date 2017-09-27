@@ -73,7 +73,7 @@ object FlowControlOp {
           case OP_VERIFY =>
             state.stack match {
               case first :: tail =>
-                val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
+                val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding, first.bytes.size)
                 if (firstNumber == 0) {
                   abort(VerificationFailed(OP_VERIFY, state.stack))
                 } else {

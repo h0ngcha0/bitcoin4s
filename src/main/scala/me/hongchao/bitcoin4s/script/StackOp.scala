@@ -114,7 +114,7 @@ object StackOp {
         case OP_ROT =>
           onStackOp(OP_ROT) {
             case first :: second :: third :: rest =>
-              third :: first :: second :: third :: rest
+              third :: first :: second :: rest
           }
 
         case OP_2ROT =>
@@ -137,8 +137,8 @@ object StackOp {
 
         case OP_IFDUP =>
           onStackOp(OP_IFDUP) {
-            case (number: ScriptNum) :: rest if (number.value == 0)=>
-              ScriptNum(0) :: ScriptNum(0) :: rest
+            case (number: ScriptConstant) :: rest if (ScriptNum.toLong(number.bytes) != 0)=>
+              number :: number :: rest
             case first :: rest =>
               first :: rest
           }
@@ -160,11 +160,14 @@ object StackOp {
             val stack = state.stack
 
             stack match {
-              case (number: ScriptNum) :: rest if rest.length >= number.value =>
-                val newState = rest(number.value.toInt) :: rest
-                State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
-              case (number: ScriptNum) :: rest if rest.length < number.value =>
-                abort(NotEnoughElementsInStack(OP_PICK, stack))
+              case (constant: ScriptConstant) :: rest =>
+                val nth = ScriptNum.toLong(constant.bytes).toInt
+                if (rest.length >= nth) {
+                  val newState = rest(nth) :: rest
+                  State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                } else {
+                  abort(NotEnoughElementsInStack(OP_PICK, stack))
+                }
               case _ :: rest =>
                 abort(OperantMustBeScriptNum(OP_PICK, stack))
               case _ =>
@@ -177,11 +180,14 @@ object StackOp {
             val stack = state.stack
 
             stack match {
-              case (number: ScriptNum) :: rest if rest.length >= number.value =>
-                val newState = rest(number.value.toInt) :: (rest.take(number.value.toInt) ++ rest.drop(number.value.toInt+1))
-                State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
-              case (number: ScriptNum) :: rest if rest.length < number.value =>
-                abort(NotEnoughElementsInStack(OP_ROLL, stack))
+              case (constant: ScriptConstant) :: rest =>
+                val nth = ScriptNum.toLong(constant.bytes).toInt
+                if (rest.length >= nth) {
+                  val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
+                  State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                } else {
+                  abort(NotEnoughElementsInStack(OP_ROLL, stack))
+                }
               case _ :: rest =>
                 abort(OperantMustBeScriptNum(OP_ROLL, stack))
               case _ =>

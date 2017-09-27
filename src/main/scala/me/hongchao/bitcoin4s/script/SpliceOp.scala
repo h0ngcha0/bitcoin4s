@@ -25,15 +25,15 @@ object SpliceOp {
 
           case OP_SIZE =>
             state.stack match {
-              case head :: tail =>
+              case head :: _ =>
                 val newState = state.copy(
-                  script = state.script.tail,
+                  script = state.script,
                   stack = ScriptNum(head.bytes.length) +: state.stack,
                   opCount = state.opCount + 1
                 )
 
                 State.set(newState).flatMap(continue)
-              case _ =>
+              case Nil =>
                 abort(NotEnoughElementsInStack(OP_SIZE, state.stack))
             }
         }

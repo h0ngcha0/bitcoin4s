@@ -103,12 +103,8 @@ object InterpreterError {
       for {
         oldState <- State.get[InterpreterState]
         newContext <- interpret(opCode)
-        newState <- State.get[InterpreterState]
       } yield {
-        logger.info("~~~~~~~~~~~~~~~~~~~~~")
-        logger.info(s"old State\nscript: ${opCode +: oldState.script}\nstack: ${oldState.stack}\naltstack: ${oldState.altStack}")
-        logger.info("---------------------")
-        logger.info(s"new State\nscript: ${newState.script}\nstack: ${newState.stack}\naltstack: ${newState.altStack}")
+        logger.info(s"State\nscript: ${opCode +: oldState.script}\nstack: ${oldState.stack}\naltstack: ${oldState.altStack}")
         logger.info("~~~~~~~~~~~~~~~~~~~~~")
         newContext
       }
