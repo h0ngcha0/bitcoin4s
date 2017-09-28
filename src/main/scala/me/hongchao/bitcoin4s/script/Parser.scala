@@ -2,11 +2,9 @@ package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.ConstantOp._
-import eu.timepit.refined._
-import eu.timepit.refined.collection.Size
-import eu.timepit.refined.generic.Equal
+import me.hongchao.bitcoin4s.script.PseudoOp.OP_INVALIDOPCODE
+import me.hongchao.bitcoin4s.script.ReservedOp.OP_NOP10
 import org.spongycastle.util.encoders.Hex
-import shapeless.nat._
 
 import scala.util.control.Exception.allCatch
 import scala.annotation.tailrec
@@ -66,10 +64,17 @@ object Parser {
   private def parse(bytes: Seq[Byte], acc: Seq[Seq[ScriptElement]]): Seq[Seq[ScriptElement]] = bytes match {
     case Nil => acc
     case head :: tail =>
-      val opCode = OpCodes.all.find(_.hex == head.toHex).getOrElse {
-        // FIXME: better exception
-        throw new RuntimeException(s"No opcode found: $bytes")
-      }
+      val opCode = OpCodes.all
+        .find(_.hex == head.toHex)
+        .orElse {
+          val opCodeValue = Integer.parseInt(head.toHex, 16)
+          val isInvalidOpCode = (opCodeValue > OP_NOP10.value) && (opCodeValue < OP_INVALIDOPCODE.value)
+          isInvalidOpCode.option(OP_INVALIDOPCODE)
+        }
+        .getOrElse {
+          // FIXME: better exception
+          throw new RuntimeException(s"No opcode found: $bytes")
+        }
 
       def pushData(opCode: ScriptOpCode, numberOfBytesToPush: Int, restOfData: Seq[Byte]): (Seq[Byte], Seq[Seq[ScriptElement]]) = {
         val bytesToPush = restOfData.take(numberOfBytesToPush)

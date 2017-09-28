@@ -30,7 +30,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
-      .take(100)
+      .take(278)
 
     val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>
@@ -78,7 +78,12 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     okScriptTests.zipWithIndex.foreach {
       case (test, index) =>
-        run(test, index)
+        if (test.raw.contains("CHECKLOCKTIMEVERIFY")) {
+          info(s"Test $index: [Skip] $test because CHECKLOCKTIMEVERIFY is not implemented")
+        } else {
+          run(test, index)
+        }
+
     }
   }
 

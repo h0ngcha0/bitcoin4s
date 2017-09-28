@@ -82,7 +82,7 @@ object ArithmeticOp {
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => first + second)
 
         case OP_SUB =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => first - second)
+          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => second - first)
 
         case OP_BOOLAND =>
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
@@ -116,17 +116,22 @@ object ArithmeticOp {
 
         case OP_LESSTHAN =>
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (first < second).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            (second < first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
           })
 
         case OP_GREATERTHAN =>
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (first > second).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            (second > first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
           })
 
         case OP_GREATERTHANOREQUAL =>
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (first >= second).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            (second >= first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+          })
+
+        case OP_LESSTHANOREQUAL =>
+          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
+            (second <= first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
           })
 
         case OP_MIN =>
@@ -148,10 +153,10 @@ object ArithmeticOp {
                 val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
                 val secondNumber = ScriptNum(second.bytes, requireMinimalEncoding)
                 val thirdNumber = ScriptNum(third.bytes, requireMinimalEncoding)
-                val isWithin = (thirdNumber < firstNumber && thirdNumber > secondNumber)
+                val isWithin = (thirdNumber < firstNumber && thirdNumber >= secondNumber)
 
                 val newState = state.copy(
-                  script = state.script.tail,
+                  script = state.script,
                   stack = isWithin.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: rest,
                   opCount = state.opCount + 1
                 )
@@ -173,7 +178,7 @@ object ArithmeticOp {
           case (first: ScriptConstant) :: rest =>
             val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
             val newState = state.copy(
-              script = state.script.tail,
+              script = state.script,
               stack = convert(firstNumber) +: rest,
               opCount = state.opCount + 1
             )
