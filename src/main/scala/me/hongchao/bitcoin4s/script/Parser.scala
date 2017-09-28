@@ -126,7 +126,7 @@ object Parser {
           throw new RuntimeException(s"Can not push $dataBytesLength bytes")
         }
 
-      numberOfBytesToPush ++ pushOpCode.bytes
+      pushOpCode.bytes ++ numberOfBytesToPush
     }
 
     lengthBytes ++ dataBytes
