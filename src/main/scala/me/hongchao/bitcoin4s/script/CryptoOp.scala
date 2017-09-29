@@ -64,12 +64,10 @@ object CryptoOp {
                   sigHashType = SignatureHashType(1),
                   sigVersion = SIGVERSION_BASE
                 )
-
-                val checkResult = pubKey.verify(hashedTransaction, signature)
-
+                val checkResult = pubKey.exists(_.verify(hashedTransaction, signature))
                 State.set(
                   state.copy(
-                    script = state.script.tail,
+                    script = state.script,
                     stack = ScriptConstant(checkResult.option(Seq(1.toByte)).getOrElse(Seq(0.toByte))) +: tail,
                     opCount = state.opCount + 1
                   )

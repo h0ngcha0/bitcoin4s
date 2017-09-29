@@ -21,16 +21,18 @@ case class PublicKey(point: ECPoint, compressed: Boolean) {
 }
 
 object PublicKey {
-  def decode(data: Seq[Byte]): PublicKey = {
+  def decode(data: Seq[Byte]): Option[PublicKey] = {
     def toECPoint = Secp256k1.curve.getCurve.decodePoint(data.toArray)
 
     data.length match {
       case 65 if data.head == 4 =>
-        PublicKey(toECPoint, false)
+        Some(PublicKey(toECPoint, false))
       case 65 if data.head == 6 || data.head == 7 =>
-        PublicKey(toECPoint, false)
+        Some(PublicKey(toECPoint, false))
       case 33 if data.head == 2 || data.head == 3 =>
-        PublicKey(toECPoint, true)
+        Some(PublicKey(toECPoint, true))
+      case _ =>
+        None
     }
   }
 }

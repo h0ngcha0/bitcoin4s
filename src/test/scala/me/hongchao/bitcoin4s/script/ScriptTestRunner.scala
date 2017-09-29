@@ -136,7 +136,7 @@ trait ScriptTestRunner { self: Spec =>
 
   // FIXME: witness to be implemented
   def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte]) = {
-    val maxSequence = 0xffffffff
+    val maxSequence = 0x7fffffff
     val txIn = TxIn(
       previous_output = OutPoint(Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray))), 0),
       sig_script = ByteVector(scriptSig),

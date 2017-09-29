@@ -30,7 +30,6 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
-      .take(500)
 
     val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>
@@ -74,7 +73,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
         }
     }
 
-    val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK)
+    val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK).take(567)
 
     val notImplementedOpCodes = Seq("CODESEPARATOR", "CHECKLOCKTIMEVERIFY", "CHECKSEQUENCEVERIFY", "CHECKMULTISIG")
     okScriptTests.zipWithIndex.foreach {
