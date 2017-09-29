@@ -118,7 +118,9 @@ object ScriptNum {
   }
 
   private def parseLong(bytes : Seq[Byte]): Long = {
-    java.lang.Long.parseLong(bytes.toHex,16)
+    (bytes.isEmpty).option(0L).getOrElse {
+      java.lang.Long.parseLong(bytes.toHex,16)
+    }
   }
 
   // Check the byte - excluding the sign bit - is zero
