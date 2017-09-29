@@ -30,7 +30,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
-      .take(376)
+      .take(463)
 
     val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>
@@ -76,10 +76,11 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK)
 
+    val notImplementedOpCodes = Seq("CODESEPARATOR", "CHECKLOCKTIMEVERIFY", "CHECKSEQUENCEVERIFY", "CHECKMULTISIG")
     okScriptTests.zipWithIndex.foreach {
       case (test, index) =>
-        if (test.raw.contains("CHECKLOCKTIMEVERIFY")) {
-          info(s"Test $index: [Skip] $test because CHECKLOCKTIMEVERIFY is not implemented")
+        if (notImplementedOpCodes.exists(test.raw.contains)) {
+          info(s"Test $index: [Skip] $test, one of the op code is not implemented yet")
         } else {
           run(test, index)
         }

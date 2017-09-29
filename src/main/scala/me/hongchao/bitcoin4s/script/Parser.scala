@@ -35,8 +35,15 @@ object Parser {
           case "-1" =>
             parseTokensToBytes(tail, OP_1NEGATE.bytes +: acc)
           case t if isNumber(t) =>
-            val dataBytes: Seq[Byte] = ScriptNum.encode(t.toLong)
-            parseTokensToBytes(tail, bytesAndLength(dataBytes) +: acc)
+            val number = t.toLong
+            val bytes: Seq[Byte] =
+              if (number >= 1 && number < 16) {
+                val opValue = OP_1.value + number - 1
+                ConstantOp.all.find(_.value == opValue).map(_.bytes).get // Must exist
+              } else {
+                bytesAndLength(ScriptNum.encode(number))
+              }
+            parseTokensToBytes(tail, bytes +: acc)
           case t if isHex(t) =>
             parseTokensToBytes(tail, Hex.decode(t.drop(2)).toSeq +: acc)
           case t if isOpCode(t) =>
