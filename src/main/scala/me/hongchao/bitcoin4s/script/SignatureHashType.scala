@@ -25,4 +25,8 @@ case class SignatureHashType(value: Int) {
       .option((value & 0x7f) == 0x03)
       .getOrElse(value == 0x03)
   }
+
+  def isValid(): Boolean = {
+    SIGHASH_ALL() || SIGHASH_NONE() || SIGHASH_SINGLE()
+  }
 }

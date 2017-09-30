@@ -46,10 +46,8 @@ object TransactionOps {
           updatedTx0
             .resetSequence(inputIndex)
             .setAllTxOutputExceptOne(inputIndex)
-        } else if (sigHashType.SIGHASH_ALL()) {
-          updatedTx0
         } else {
-          throw new RuntimeException(s"Invalid sigHashType: $sigHashType")
+          updatedTx0
         }
 
       val updatedTx = sigHashType.SIGHASH_ANYONECANPAY()

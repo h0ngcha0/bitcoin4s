@@ -59,11 +59,17 @@ object CryptoOp {
                   pubKey <- PublicKey.decode(encodedPublicKey.bytes)
                   (signature, sigHashFlagBytes) <- Signature.decode(encodedSignature.bytes)
                 } yield {
-                  val sigHashFlag = SignatureHashType(sigHashFlagBytes.headOption.map(_ & 0xff).getOrElse(1))
+                  val sigHashType = SignatureHashType(sigHashFlagBytes.headOption.map(_ & 0xff).getOrElse(1))
+
+                  // FIXME: better error handling
+                  if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_STRICTENC) && !sigHashType.isValid()) {
+                    throw new RuntimeException(s"Invalid sigHashType: $sigHashType")
+                  }
+
                   val hashedTransaction = state.transaction.signingHash(
                     pubKeyScript = state.scriptPubKey,
                     inputIndex = state.inputIndex,
-                    sigHashType = sigHashFlag,
+                    sigHashType = sigHashType,
                     sigVersion = SIGVERSION_BASE
                   )
                   pubKey.verify(hashedTransaction, signature)
