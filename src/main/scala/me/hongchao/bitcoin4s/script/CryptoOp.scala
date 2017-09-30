@@ -49,7 +49,7 @@ object CryptoOp {
           onOpHash(opCode, Hash256.apply _)
 
         case OP_CODESEPARATOR =>
-          notImplemented(opCode)
+          continue(OP_CODESEPARATOR)
 
         case OP_CHECKSIG =>
           State.get.flatMap { state =>
