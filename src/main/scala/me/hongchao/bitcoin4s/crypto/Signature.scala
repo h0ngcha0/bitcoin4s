@@ -1,15 +1,15 @@
 package me.hongchao.bitcoin4s.crypto
 
-import me.hongchao.bitcoin4s.Utils._
 
+import me.hongchao.bitcoin4s.Utils._
 import java.math.BigInteger
 
-case class Signature(bytes: Seq[Byte]) {
+object Signature {
   // Signature is DER encoded
   // structure: `sequence (r, s)`
   // `sequence`, `r`, and `s` are structured as `tlv` format respectively
   // Reference: https://msdn.microsoft.com/en-us/library/windows/desktop/bb648640(v=vs.85).aspx
-  def decode(): Option[(BigInteger, BigInteger)] = {
+  def decode(bytes: Seq[Byte]): Option[(Signature, Seq[Byte])] = {
     bytes match {
       case 0x30 :: tail =>
         for {
@@ -21,8 +21,7 @@ case class Signature(bytes: Seq[Byte]) {
           (sLength, restOfBytesAfterSLength) <- getLength(restOfBytesAfterR.tail)
           (s, restOfBytesAfterS) <- restOfBytesAfterSLength.splitAtOpt(sLength)
         } yield {
-          require(restOfBytesAfterS.isEmpty, "Not all bytes are consumed while decoding the signature")
-          (new BigInteger(1, r.toArray), new BigInteger(1, s.toArray))
+          (Signature(new BigInteger(1, r.toArray), new BigInteger(1, s.toArray)), restOfBytesAfterS)
         }
       case _ =>
         None
@@ -57,3 +56,5 @@ case class Signature(bytes: Seq[Byte]) {
     }
   }
 }
+
+case class Signature(r: BigInteger, s: BigInteger)

@@ -4,14 +4,15 @@ import io.github.yzernik.bitcoinscodec.messages.Tx
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.Utils._
+import me.hongchao.bitcoin4s.crypto.Hash
 import me.hongchao.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 
 object TransactionOps {
-  val codecVersion = 1
+  val transactionVersion = 1
 
   implicit class RichTx(tx: Tx) {
     def transactionId(): ByteVector = {
-      Tx.codec(codecVersion).encode(tx).toEither match {
+      Tx.codec(transactionVersion).encode(tx).toEither match {
         case Left(error) =>
           throw new RuntimeException(error.messageWithContext)
         case Right(v) =>
@@ -62,12 +63,14 @@ object TransactionOps {
         )
         .getOrElse(updatedTx1)
 
-      Tx.codec(codecVersion).encode(updatedTx).toEither match {
+      val serialisedTx = Tx.codec(transactionVersion).compact.encode(updatedTx).toEither match {
         case Left(error) =>
           throw new RuntimeException(error.messageWithContext)
         case Right(v) =>
           v.toByteArray
       }
+
+      Hash.Hash256(serialisedTx ++ uint32ToBytes(sigHashType.value))
     }
 
     def segwitSigningHash(): Seq[Byte] = {

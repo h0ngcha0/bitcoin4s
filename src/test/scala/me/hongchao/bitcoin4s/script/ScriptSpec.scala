@@ -73,7 +73,8 @@ class ScriptSpec extends Spec with ScriptTestRunner {
         }
     }
 
-    val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK).take(567)
+    val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK)
+      .take(595)
 
     val notImplementedOpCodes = Seq("CODESEPARATOR", "CHECKLOCKTIMEVERIFY", "CHECKSEQUENCEVERIFY", "CHECKMULTISIG")
     okScriptTests.zipWithIndex.foreach {

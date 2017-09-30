@@ -117,8 +117,8 @@ trait ScriptTestRunner { self: Spec =>
 
   def creditingTransaction(scriptPubKey: Seq[Byte], amount: Option[Long] = None) = {
     val emptyTxId = Array.fill[Byte](32)(0)
-    val emptyOutpoint = OutPoint(Hash(ByteVector(Hash256(emptyTxId))), 0)
-    val maxSequence = 0x7fffffff
+    val emptyOutpoint = OutPoint(Hash.NULL, -1)
+    val maxSequence = 0xffffffff
     val txIn = TxIn(
       previous_output = emptyOutpoint,
       sig_script = ByteVector(Seq(OP_0, OP_0).flatMap(_.bytes)),
@@ -136,9 +136,9 @@ trait ScriptTestRunner { self: Spec =>
 
   // FIXME: witness to be implemented
   def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte]) = {
-    val maxSequence = 0x7fffffff
+    val maxSequence = 0xffffffff
     val txIn = TxIn(
-      previous_output = OutPoint(Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray))), 0),
+      previous_output = OutPoint(Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray)).reverse), 0),
       sig_script = ByteVector(scriptSig),
       sequence = maxSequence
     )

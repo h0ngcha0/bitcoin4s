@@ -54,17 +54,26 @@ package object Utils {
     }
   }
 
-  def toUInt8(bytes: Seq[Byte]): Int = {
+  def bytesToUInt8(bytes: Seq[Byte]): Int = {
     bytes.head.toShort
   }
 
-  def toUInt16(bytes: Seq[Byte]): Int = {
+  def bytesToUInt16(bytes: Seq[Byte]): Int = {
     val byteBuffer = ByteBuffer.wrap(bytes.toArray).order(ByteOrder.LITTLE_ENDIAN)
     byteBuffer.getShort & 0xFFFF
   }
 
-  def toUInt32(bytes: Seq[Byte]): Int = {
+  def bytesToUInt32(bytes: Seq[Byte]): Int = {
     val byteBuffer = ByteBuffer.wrap(bytes.toArray).order(ByteOrder.LITTLE_ENDIAN)
     byteBuffer.getInt & 0xFFFFFFFF
+  }
+
+  def uint32ToBytes(input: Long): Seq[Byte] = uint32ToBytes(input, ByteOrder.LITTLE_ENDIAN)
+
+  def uint32ToBytes(input: Long, order: ByteOrder): Seq[Byte] = {
+    val bin = new Array[Byte](4)
+    val buffer = ByteBuffer.wrap(bin).order(order)
+    buffer.putInt((input & 0xffffffff).toInt)
+    bin
   }
 }

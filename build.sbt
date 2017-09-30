@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "com.madgag.spongycastle" % "core" % "1.52.0.0",
   "com.chuusai" %% "shapeless" % "2.3.2",
   "org.scodec" %% "scodec-core" % "1.10.3",
-  "io.github.yzernik" %% "bitcoin-scodec" % "0.2.9-hc",
+  "io.github.yzernik" %% "bitcoin-scodec" % "0.2.9-hc-3",
   "com.iheart" %% "ficus" % "1.4.1",
   "org.typelevel" %% "cats-core" % "1.0.0-MF",
   "com.github.mpilquist" %% "simulacrum" % "0.10.0",

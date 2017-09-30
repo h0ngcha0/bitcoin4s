@@ -55,16 +55,20 @@ object CryptoOp {
           State.get.flatMap { state =>
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
-                val pubKey = PublicKey.decode(encodedPublicKey.bytes)
-                val signature = Signature(encodedSignature.bytes)
+                val checkResult = (for {
+                  pubKey <- PublicKey.decode(encodedPublicKey.bytes)
+                  (signature, sigHashFlagBytes) <- Signature.decode(encodedSignature.bytes)
+                } yield {
+                  val sigHashFlag = SignatureHashType(sigHashFlagBytes.headOption.map(_ & 0xff).getOrElse(1))
+                  val hashedTransaction = state.transaction.signingHash(
+                    pubKeyScript = state.scriptPubKey,
+                    inputIndex = state.inputIndex,
+                    sigHashType = sigHashFlag,
+                    sigVersion = SIGVERSION_BASE
+                  )
+                  pubKey.verify(hashedTransaction, signature)
+                }).exists(identity)
 
-                val hashedTransaction = state.transaction.signingHash(
-                  pubKeyScript = state.scriptPubKey,
-                  inputIndex = state.inputIndex,
-                  sigHashType = SignatureHashType(1),
-                  sigVersion = SIGVERSION_BASE
-                )
-                val checkResult = pubKey.exists(_.verify(hashedTransaction, signature))
                 State.set(
                   state.copy(
                     script = state.script,

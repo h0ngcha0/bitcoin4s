@@ -96,15 +96,15 @@ object Parser {
           pushData(opCode, value.toInt, tail)
 
         case OP_PUSHDATA1 =>
-          val numberOfBytesToPush = toUInt8(tail.forceTake(1))
+          val numberOfBytesToPush = bytesToUInt8(tail.forceTake(1))
           pushData(opCode, numberOfBytesToPush, tail.drop(1))
 
         case OP_PUSHDATA2 =>
-          val numberOfBytesToPush = toUInt16(tail.forceTake(2))
+          val numberOfBytesToPush = bytesToUInt16(tail.forceTake(2))
           pushData(opCode, numberOfBytesToPush, tail.drop(2))
 
         case OP_PUSHDATA4 =>
-          val numberOfBytesToPush = toUInt32(tail.forceTake(4))
+          val numberOfBytesToPush = bytesToUInt32(tail.forceTake(4))
           pushData(opCode, numberOfBytesToPush, tail.drop(4))
 
         case otherOpCode =>
