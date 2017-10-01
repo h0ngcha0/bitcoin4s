@@ -11,6 +11,8 @@ import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
 
+import scala.annotation.tailrec
+
 sealed trait CryptoOp extends ScriptOpCode
 
 object CryptoOp {
@@ -55,30 +57,12 @@ object CryptoOp {
           State.get.flatMap { state =>
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
-                val checkResult = (for {
-                  pubKey <- PublicKey.decode(encodedPublicKey.bytes)
-                  (signature, sigHashFlagBytes) <- Signature.decode(encodedSignature.bytes)
-                } yield {
-                  val sigHashType = SignatureHashType(sigHashFlagBytes.headOption.map(_ & 0xff).getOrElse(1))
-
-                  // FIXME: better error handling
-                  if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_STRICTENC) && !sigHashType.isValid()) {
-                    throw new RuntimeException(s"Invalid sigHashType: $sigHashType")
-                  }
-
-                  val hashedTransaction = state.transaction.signingHash(
-                    pubKeyScript = state.scriptPubKey,
-                    inputIndex = state.inputIndex,
-                    sigHashType = sigHashType,
-                    sigVersion = SIGVERSION_BASE
-                  )
-                  pubKey.verify(hashedTransaction, signature)
-                }).exists(identity)
+                val checkResult = checkSignature(encodedPublicKey, encodedSignature, state)
 
                 State.set(
                   state.copy(
                     script = state.script,
-                    stack = ScriptConstant(checkResult.option(Seq(1.toByte)).getOrElse(Seq(0.toByte))) +: tail,
+                    stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
                     opCount = state.opCount + 1
                   )
                 ).flatMap(continue)
@@ -93,7 +77,7 @@ object CryptoOp {
             .flatMap { state =>
               State.set(
                 state.copy(
-                  script = OP_CHECKSIG +: OP_VERIFY +: state.script.tail,
+                  script = OP_CHECKSIG +: OP_VERIFY +: state.script,
                   opCount = state.opCount - 1
                 )
               )
@@ -101,10 +85,50 @@ object CryptoOp {
             .flatMap(continue)
 
         case OP_CHECKMULTISIG =>
-          notImplemented(opCode)
+          State.get[InterpreterState].flatMap { state =>
+            val maybeSplitStack = for {
+              (ms, rest0)         <- state.stack.splitAtOpt(1)
+              numberOfPubKeys     <- ms.headOption.flatMap { m =>
+                val numOfPubKeys = ScriptNum.toLong(m.bytes).toInt
+                (numOfPubKeys >= 0 && numOfPubKeys <= 20).option(numOfPubKeys)
+              }
+              (pubKeys, rest1)    <- rest0.splitAtOpt(numberOfPubKeys)
+              (ns, rest2)         <- rest1.splitAtOpt(1)
+              numberOfSignatures  <- ns.headOption.flatMap { n =>
+                val numOfSignatures = ScriptNum.toLong(n.bytes).toInt
+                (numOfSignatures >= 0 && numberOfPubKeys <= numberOfPubKeys).option(numOfSignatures)
+              }
+              (signatures, rest)  <- rest2.splitAtOpt(numberOfSignatures)
+            } yield (pubKeys, signatures, rest)
+
+            maybeSplitStack match {
+              case Some((pubKeys, signatures, rest)) =>
+                val checkResult = checkSignatures(pubKeys, signatures, state)
+
+                val oneMorePop = rest.tail // Due to the bug in the reference client
+
+                State.set[InterpreterState](
+                  state.copy(
+                    stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
+                    opCount = state.opCount + 1 + pubKeys.length
+                  )
+                ).flatMap(continue)
+              case None =>
+                abort(NotEnoughElementsInStack(opCode, state.stack))
+            }
+          }
 
         case OP_CHECKMULTISIGVERIFY =>
-          notImplemented(opCode)
+          State.get[InterpreterState]
+            .flatMap { state =>
+              State.set(
+                state.copy(
+                  script = OP_CHECKMULTISIG +: OP_VERIFY +: state.script,
+                  opCount = state.opCount - 1
+                )
+              )
+            }
+            .flatMap(continue)
       }
     }
 
@@ -121,11 +145,48 @@ object CryptoOp {
 
       State.get.flatMap(hashTopElement)
     }
+  }
 
-    private def notImplemented(opCode: ScriptOpCode): State[InterpreterState, InterpreterResult] = {
-      State.get.flatMap { state =>
-        abort(NotImplemented(opCode, state.stack))
-      }
+  @tailrec
+  def checkSignatures(encodedPublicKeys: Seq[ScriptElement], encodedSignatures: Seq[ScriptElement], state: InterpreterState): Boolean = {
+    encodedSignatures match {
+      case encodedSignature :: tail =>
+        val maybeEncodedPubKeyWithSigature = encodedPublicKeys.find { encodedPubKey =>
+          checkSignature(encodedPubKey, encodedSignature, state)
+        }
+
+        maybeEncodedPubKeyWithSigature match {
+          case Some(encodedPubKey) =>
+            val newEncodedPublicKeys = encodedPublicKeys.takeWhile(_ != encodedPubKey) ++ encodedPublicKeys.dropWhile(_ != encodedPubKey).tail
+            checkSignatures(newEncodedPublicKeys, tail, state)
+          case None =>
+            false
+        }
+
+      case Nil =>
+        true
     }
+  }
+
+  def checkSignature(encodedPublicKey: ScriptElement, encodedSignature: ScriptElement, state: InterpreterState): Boolean = {
+    (for {
+      pubKey <- PublicKey.decode(encodedPublicKey.bytes)
+      (signature, sigHashFlagBytes) <- Signature.decode(encodedSignature.bytes)
+    } yield {
+      val sigHashType = SignatureHashType(sigHashFlagBytes.headOption.map(_ & 0xff).getOrElse(1))
+
+      // FIXME: better error handling
+      if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_STRICTENC) && !sigHashType.isValid()) {
+        throw new RuntimeException(s"Invalid sigHashType: $sigHashType")
+      }
+
+      val hashedTransaction = state.transaction.signingHash(
+        pubKeyScript = state.scriptPubKey,
+        inputIndex = state.inputIndex,
+        sigHashType = sigHashType,
+        sigVersion = SIGVERSION_BASE
+      )
+      pubKey.verify(hashedTransaction, signature)
+    }).exists(identity)
   }
 }

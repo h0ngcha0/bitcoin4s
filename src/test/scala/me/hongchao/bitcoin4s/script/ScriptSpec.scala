@@ -74,17 +74,9 @@ class ScriptSpec extends Spec with ScriptTestRunner {
     }
 
     val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK)
-      .take(661)
-
-    val notImplementedOpCodes = Seq("CHECKMULTISIG")
-
     okScriptTests.zipWithIndex.foreach {
       case (test, index) =>
-        if (notImplementedOpCodes.exists(test.raw.contains)) {
-          info(s"Test $index: [Skip] $test, one of the op code is not implemented yet")
-        } else {
-          run(test, index)
-        }
+        run(test, index)
     }
   }
 
