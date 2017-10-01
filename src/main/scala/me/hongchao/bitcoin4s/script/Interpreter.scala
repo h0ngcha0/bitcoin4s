@@ -28,6 +28,13 @@ case class InterpreterState(
     )
   }
 
+  def dropTopElement(): InterpreterState = {
+    copy(
+      stack = stack.tail,
+      opCount = opCount + 1
+    )
+  }
+
   def transactionInput: TxIn = {
     require(inputIndex >= 0 && inputIndex < transaction.tx_in.length, "Transation input index must be within range.")
     transaction.tx_in(inputIndex)
@@ -74,12 +81,20 @@ object InterpreterError {
     val description = "Found not executable reserved opcode"
   }
 
+  case class DiscourageUpgradableNops(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "Found not executable reserved opcode"
+  }
+
   case class InValidReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
     val description = "Found executable reserved opcode that invalidates the transaction"
   }
 
   case class VerificationFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
     val description = "Verification on top of the stack failed"
+  }
+
+  case class CLTVFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "CheckLockTimeVerify failed"
   }
 
   case class NotImplemented(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {

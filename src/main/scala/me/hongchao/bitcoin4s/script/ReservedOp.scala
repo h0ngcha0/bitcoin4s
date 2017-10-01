@@ -32,8 +32,14 @@ object ReservedOp {
       State.get[InterpreterState].flatMap { state =>
         opCode match {
           case OP_NOP1 | OP_NOP4 | OP_NOP5 | OP_NOP6 | OP_NOP7 | OP_NOP8 | OP_NOP9 | OP_NOP10 =>
-            val newState = state.copy(opCount = state.opCount + 1)
-            State.set(newState).flatMap(continue)
+            val disCourageUpgradableNop = state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+
+            if (disCourageUpgradableNop) {
+              abort(DiscourageUpgradableNops(opCode, state.stack))
+            } else {
+              val newState = state.copy(opCount = state.opCount + 1)
+              State.set(newState).flatMap(continue)
+            }
           case OP_RESERVED | OP_VER | OP_RESERVED1 | OP_RESERVED2 =>
             abort(NotExecutableReservedOpcode(opCode, state.stack))
           case OP_VERIF | OP_VERNOTIF =>
