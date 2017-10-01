@@ -146,13 +146,11 @@ object ArithmeticOp {
 
         case OP_WITHIN =>
           State.get.flatMap { state =>
-            val requireMinimalEncoding: Boolean = state.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
-
             state.stack match {
               case (first: ScriptConstant) :: (second: ScriptConstant) :: (third: ScriptConstant) :: rest =>
-                val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
-                val secondNumber = ScriptNum(second.bytes, requireMinimalEncoding)
-                val thirdNumber = ScriptNum(third.bytes, requireMinimalEncoding)
+                val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding)
+                val secondNumber = ScriptNum(second.bytes, state.requireMinimalEncoding)
+                val thirdNumber = ScriptNum(third.bytes, state.requireMinimalEncoding)
                 val isWithin = (thirdNumber < firstNumber && thirdNumber >= secondNumber)
 
                 val newState = state.copy(
@@ -193,11 +191,10 @@ object ArithmeticOp {
 
     private def twoOperants(opCode: ArithmeticOp, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterContext = {
       State.get.flatMap { state =>
-        val requireMinimalEncoding: Boolean = state.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
         state.stack match {
           case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>
-            val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
-            val secondNumber = ScriptNum(second.bytes, requireMinimalEncoding)
+            val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding)
+            val secondNumber = ScriptNum(second.bytes, state.requireMinimalEncoding)
             val newState = state.copy(
               script = state.script,
               stack = convert(firstNumber, secondNumber) +: rest,

@@ -41,6 +41,22 @@ case class InterpreterState(
   }
 
   def scriptSignature: Seq[Byte] = transactionInput.sig_script.toSeq
+
+  def cltvEnabled(): Boolean = {
+    flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
+  }
+
+  def csvEnabled(): Boolean = {
+    flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
+  }
+
+  def disCourageUpgradableNop(): Boolean = {
+    flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+  }
+
+  def requireMinimalEncoding(): Boolean = {
+    flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALDATA)
+  }
 }
 
 
@@ -95,6 +111,10 @@ object InterpreterError {
 
   case class CLTVFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
     val description = "CheckLockTimeVerify failed"
+  }
+
+  case class CSVFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description = "CheckSequenceVerify failed"
   }
 
   case class NotImplemented(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
@@ -167,7 +187,13 @@ object Interpreter {
                   runOp(op.interpret(verbose), state)
               }
             case Nil =>
-              val result = state.stack.headOption.map(_.bytes).exists(_.toBoolean)
+              val result = state.stack.headOption match {
+                case Some(head) =>
+                  head.bytes.toBoolean()
+                case None =>
+                  true
+              }
+
               interpret(Right(Some(result)))
           }
         case other =>

@@ -26,8 +26,6 @@ object FlowControlOp {
   implicit val interpreter = new Interpretable[FlowControlOp] {
     def interpret(opCode: FlowControlOp): InterpreterContext = {
       State.get[InterpreterState].flatMap { state =>
-        val requireMinimalEncoding: Boolean = state.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
-
         opCode match {
           case OP_NOP =>
             State.set(state.copy(opCount = state.opCount + 1)).flatMap(continue)
@@ -43,7 +41,7 @@ object FlowControlOp {
               case Success(ConditionalBranchSplitResult(branches, rest)) =>
                 state.stack match {
                   case first :: tail =>
-                    val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
+                    val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding)
                     val positiveBranches = branches.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
                     val negativeBranches = branches.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
                     val pickNegativeBranches = firstNumber == 0 && opCode == OP_IF || firstNumber == 1 && opCode == OP_NOTIF
@@ -73,7 +71,7 @@ object FlowControlOp {
           case OP_VERIFY =>
             state.stack match {
               case first :: tail =>
-                val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding, first.bytes.size)
+                val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding, first.bytes.size)
                 if (firstNumber == 0) {
                   abort(VerificationFailed(OP_VERIFY, state.stack))
                 } else {
