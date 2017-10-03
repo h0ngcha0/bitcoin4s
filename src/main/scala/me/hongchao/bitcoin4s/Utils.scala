@@ -2,11 +2,6 @@ package me.hongchao.bitcoin4s
 
 import java.nio.{ByteBuffer, ByteOrder}
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.collection.Size
-import eu.timepit.refined.generic.Equal
-import shapeless.nat._
-
 package object Utils {
   implicit class Rich[T](value: T) {
     def toHex: String = "%02x".format(value)

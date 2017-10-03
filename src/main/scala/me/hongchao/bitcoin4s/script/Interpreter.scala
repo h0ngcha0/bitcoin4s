@@ -1,20 +1,20 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.{State, StateT}
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.Utils._
 import com.typesafe.scalalogging.StrictLogging
 import simulacrum._
+import cats.data.StateT
 import cats.implicits._
 
 case class InterpreterState(
   script: Seq[ScriptElement],
-  stack: Seq[ScriptElement],
-  altStack: Seq[ScriptElement],
+  stack: Seq[ScriptElement] = Seq.empty,
+  altStack: Seq[ScriptElement] = Seq.empty,
   flags: Seq[ScriptFlag],
-  opCount: Int,
+  opCount: Int = 0,
   transaction: Tx,
   inputIndex: Int,
   scriptPubKey: Seq[ScriptElement],
@@ -151,9 +151,6 @@ object InterpreterError {
 }
 
 object Interpreter {
-  type InterpreterResult = Either[InterpreterError, Option[Boolean]]
-  type InterpreterContextLegacy = State[InterpreterState, InterpreterResult]
-
   type InterpreterErrorHandler[T] = Either[InterpreterError, T]
   type InterpreterContext[T] = StateT[InterpreterErrorHandler, InterpreterState, T]
 
@@ -233,4 +230,3 @@ object Interpreter {
     errorWithExplicitType
   }
 }
-
