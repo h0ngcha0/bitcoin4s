@@ -1,6 +1,7 @@
 bitcoin4s
 =========
 [![Build Status](https://travis-ci.org/liuhongchao/bitcoin4s.svg?branch=master)](https://travis-ci.org/liuhongchao/bitcoin4s)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Scala library for experimenting with Bitcoin
 
@@ -48,3 +49,7 @@ Interpreter.interpret().run(initialState) match {
 }
 
 ```
+
+# License
+
+MIT: http://rem.mit-license.org
