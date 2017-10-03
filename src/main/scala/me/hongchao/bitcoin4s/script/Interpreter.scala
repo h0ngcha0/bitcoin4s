@@ -1,12 +1,13 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
+import cats.data.{State, StateT}
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
-import me.hongchao.bitcoin4s.script.Interpreter.InterpreterContext
+import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.Utils._
 import com.typesafe.scalalogging.StrictLogging
 import simulacrum._
+import cats.implicits._
 
 case class InterpreterState(
   script: Seq[ScriptElement],
@@ -131,12 +132,12 @@ object InterpreterError {
 }
 
 @typeclass trait Interpretable[A <: ScriptOpCode] extends StrictLogging {
-  def interpret(opCode: A): InterpreterContext
+  def interpret(opCode: A): InterpreterContext[Option[Boolean]]
 
-  def interpret(opCode: A, verbose: Boolean): InterpreterContext = {
+  def interpret(opCode: A, verbose: Boolean): InterpreterContext[Option[Boolean]] = {
     if (verbose) {
       for {
-        oldState <- State.get[InterpreterState]
+        oldState <- StateT.get[InterpreterErrorHandler, InterpreterState]
         newContext <- interpret(opCode)
       } yield {
         logger.info(s"State\nscript: ${opCode +: oldState.script}\nstack: ${oldState.stack}\naltstack: ${oldState.altStack}")
@@ -151,60 +152,85 @@ object InterpreterError {
 
 object Interpreter {
   type InterpreterResult = Either[InterpreterError, Option[Boolean]]
-  type InterpreterContext = State[InterpreterState, InterpreterResult]
+  type InterpreterContextLegacy = State[InterpreterState, InterpreterResult]
 
-  def continue: Any => InterpreterContext  = _ => State.pure(Right(None))
-  def abort(error: InterpreterError): InterpreterContext = State.pure(Left(error))
+  type InterpreterErrorHandler[T] = Either[InterpreterError, T]
+  type InterpreterContext[T] = StateT[InterpreterErrorHandler, InterpreterState, T]
 
   import me.hongchao.bitcoin4s.script.Interpretable.ops._
-  def interpret(result: InterpreterResult = Right(None)): InterpreterContext = {
-    val verbose = false
-    State.get[InterpreterState].flatMap { state =>
-      result match {
-        case Right(None) =>
-          state.script match {
-            case head :: _ =>
-              head match {
-                case op: ArithmeticOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: BitwiseLogicOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: ConstantOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: CryptoOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: FlowControlOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: LocktimeOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: PseudoOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: ReservedOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: SpliceOp =>
-                  runOp(op.interpret(verbose), state)
-                case op: StackOp =>
-                  runOp(op.interpret(verbose), state)
-              }
-            case Nil =>
-              val result = state.stack.headOption match {
-                case Some(head) =>
-                  head.bytes.toBoolean()
-                case None =>
-                  true
-              }
 
-              interpret(Right(Some(result)))
+  def interpret(verbose: Boolean = false): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      state.script match {
+        case head :: tail =>
+          val updatedContext = head match {
+            case op: ArithmeticOp =>
+              op.interpret(verbose)
+            case op: BitwiseLogicOp =>
+              op.interpret(verbose)
+            case op: ConstantOp =>
+              op.interpret(verbose)
+            case op: CryptoOp =>
+              op.interpret(verbose)
+            case op: FlowControlOp =>
+              op.interpret(verbose)
+            case op: LocktimeOp =>
+              op.interpret(verbose)
+            case op: PseudoOp =>
+              op.interpret(verbose)
+            case op: ReservedOp =>
+              op.interpret(verbose)
+            case op: SpliceOp =>
+              op.interpret(verbose)
+            case op: StackOp =>
+              op.interpret(verbose)
           }
-        case other =>
-          State.pure(other)
+
+          for {
+            _ <- setState(state.copy(script = tail))
+            _ <- updatedContext
+            result <- interpret(verbose)
+          } yield result
+
+        case Nil =>
+          val result = state.stack.headOption match {
+            case Some(head) =>
+              head.bytes.toBoolean()
+            case None =>
+              true
+          }
+
+          evaluated(result)
       }
     }
   }
 
-  private def runOp(context: InterpreterContext, state: InterpreterState): InterpreterContext = {
-    val (newState, result) = context.run(state.copy(script = state.script.tail)).value
-    State.set(newState).flatMap(_ => interpret(result))
+  def getState: InterpreterContext[InterpreterState] = {
+    StateT.get[InterpreterErrorHandler, InterpreterState]
+  }
+
+  def setState(newState: InterpreterState): InterpreterContext[Unit] = {
+    StateT.set[InterpreterErrorHandler, InterpreterState](newState)
+  }
+
+  def updateState(updateStateFun: InterpreterState => InterpreterState): InterpreterContext[Unit] = {
+    getState.flatMap { oldState =>
+      val newState = updateStateFun(oldState)
+      setState(newState)
+    }
+  }
+
+  def evaluated(result: Boolean): InterpreterContext[Option[Boolean]] = {
+    StateT.pure(Some(result))
+  }
+
+  def continue: Any => InterpreterContext[Option[Boolean]] = {
+    _ => StateT.pure(None)
+  }
+
+  def abort(error: InterpreterError): InterpreterContext[Option[Boolean]] = StateT.lift {
+    val errorWithExplicitType: InterpreterErrorHandler[Option[Boolean]] = Left(error)
+    errorWithExplicitType
   }
 }
 

@@ -1,17 +1,15 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.Eval
-import cats.data.{State, StateT}
 import me.hongchao.bitcoin4s.crypto.Hash._
 import me.hongchao.bitcoin4s.crypto.{PublicKey, Signature}
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
-import me.hongchao.bitcoin4s.script.InterpreterError.{NotEnoughElementsInStack, NotImplemented}
+import me.hongchao.bitcoin4s.script.InterpreterError.NotEnoughElementsInStack
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
-
 import scala.annotation.tailrec
+import cats.implicits._
 
 sealed trait CryptoOp extends ScriptOpCode
 
@@ -33,7 +31,7 @@ object CryptoOp {
   )
 
   implicit val interpreter = new Interpretable[CryptoOp] {
-    def interpret(opCode: CryptoOp): InterpreterContext = {
+    def interpret(opCode: CryptoOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_RIPEMD160 =>
           onOpHash(opCode, RipeMD160.apply _)
@@ -54,12 +52,12 @@ object CryptoOp {
           continue(OP_CODESEPARATOR)
 
         case OP_CHECKSIG =>
-          State.get.flatMap { state =>
+          getState.flatMap { state =>
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
                 val checkResult = checkSignature(encodedPublicKey, encodedSignature, state)
 
-                State.set(
+                setState(
                   state.copy(
                     script = state.script,
                     stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
@@ -73,9 +71,9 @@ object CryptoOp {
           }
 
         case OP_CHECKSIGVERIFY =>
-          State.get[InterpreterState]
+          getState
             .flatMap { state =>
-              State.set(
+              setState(
                 state.copy(
                   script = OP_CHECKSIG +: OP_VERIFY +: state.script,
                   opCount = state.opCount - 1
@@ -85,7 +83,7 @@ object CryptoOp {
             .flatMap(continue)
 
         case OP_CHECKMULTISIG =>
-          State.get[InterpreterState].flatMap { state =>
+          getState.flatMap { state =>
             val maybeSplitStack = for {
               (ms, rest0)         <- state.stack.splitAtOpt(1)
               numberOfPubKeys     <- ms.headOption.flatMap { m =>
@@ -107,7 +105,7 @@ object CryptoOp {
 
                 val oneMorePop = rest.tail // Due to the bug in the reference client
 
-                State.set[InterpreterState](
+                setState(
                   state.copy(
                     stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
                     opCount = state.opCount + 1 + pubKeys.length
@@ -119,9 +117,9 @@ object CryptoOp {
           }
 
         case OP_CHECKMULTISIGVERIFY =>
-          State.get[InterpreterState]
+          getState
             .flatMap { state =>
-              State.set(
+              setState(
                 state.copy(
                   script = OP_CHECKMULTISIG +: OP_VERIFY +: state.script,
                   opCount = state.opCount - 1
@@ -132,18 +130,16 @@ object CryptoOp {
       }
     }
 
-    private def onOpHash(opCode: ScriptOpCode, hash: (Array[Byte]) => Array[Byte]): InterpreterContext = {
-      def hashTopElement(state: InterpreterState): InterpreterContext = state.stack match {
+    private def onOpHash(opCode: ScriptOpCode, hash: (Array[Byte]) => Array[Byte]): InterpreterContext[Option[Boolean]] = {
+      def hashTopElement(state: InterpreterState): InterpreterContext[Option[Boolean]] = state.stack match {
         case head :: _ =>
           val hashed = hash(head.bytes.toArray)
-          State
-            .set(state.replaceStackTopElement(ScriptConstant(hashed)))
-            .flatMap(continue)
+          setState(state.replaceStackTopElement(ScriptConstant(hashed))).flatMap(continue)
         case _ =>
           abort(NotEnoughElementsInStack(opCode, state.stack))
       }
 
-      State.get.flatMap(hashTopElement)
+      getState.flatMap(hashTopElement)
     }
   }
 

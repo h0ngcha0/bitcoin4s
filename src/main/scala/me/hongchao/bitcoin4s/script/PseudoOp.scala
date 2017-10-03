@@ -1,8 +1,9 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
+import cats.data.{State, StateT}
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError.NotImplemented
+import cats.implicits._
 
 sealed trait PseudoOp extends ScriptOpCode
 
@@ -14,8 +15,8 @@ object PseudoOp {
   val all = Seq(OP_PUBKEYHASH, OP_PUBKEY, OP_INVALIDOPCODE)
 
   implicit val interpreter = new Interpretable[PseudoOp] {
-    def interpret(opCode: PseudoOp): InterpreterContext = {
-      State.get.flatMap { state =>
+    def interpret(opCode: PseudoOp): InterpreterContext[Option[Boolean]] = {
+      getState.flatMap { state =>
         abort(NotImplemented(opCode, state.stack))
       }
     }

@@ -1,8 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import cats.implicits._
 
 sealed trait LocktimeOp extends ScriptOpCode
 
@@ -15,17 +15,17 @@ object LocktimeOp {
   val all = Seq(OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY, OP_NOP2, OP_NOP3)
 
   implicit val interpreter = new Interpretable[LocktimeOp] {
-    def interpret(opCode: LocktimeOp): InterpreterContext = {
+    def interpret(opCode: LocktimeOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_CHECKLOCKTIMEVERIFY | OP_NOP2 =>
-          State.get.flatMap { state =>
+          getState.flatMap { state =>
             if (state.cltvEnabled) {
               state.stack match {
                 case head :: _ =>
                   val lockTime = ScriptNum(head.bytes, false, 5).value
 
                   if (lockTime > state.transaction.lock_time) {
-                    State.set(state.dropTopElement).flatMap(continue)
+                    setState(state.dropTopElement).flatMap(continue)
                   } else {
                     abort(CLTVFailed(opCode, state.stack))
                   }
@@ -36,19 +36,19 @@ object LocktimeOp {
             } else if (state.disCourageUpgradableNop) {
               abort(DiscourageUpgradableNops(opCode, state.stack))
             } else {
-              State.pure(Right(None))
+              continue(opCode)
             }
           }
 
         case OP_CHECKSEQUENCEVERIFY | OP_NOP3 =>
-          State.get.flatMap { state =>
+          getState.flatMap { state =>
             if (state.csvEnabled) {
               state.stack match {
                 case head :: _ =>
                   val sequence = ScriptNum(head.bytes, false, 5).value
                   val input = state.transaction.tx_in(state.inputIndex)
                   if (sequence >= input.sequence) {
-                    State.set(state.dropTopElement).flatMap(continue)
+                    setState(state.dropTopElement).flatMap(continue)
                   } else {
                     abort(CLTVFailed(opCode, state.stack))
                   }
@@ -59,7 +59,7 @@ object LocktimeOp {
             } else if (state.disCourageUpgradableNop) {
               abort(DiscourageUpgradableNops(opCode, state.stack))
             } else {
-              State.pure(Right(None))
+              continue(opCode)
             }
           }
       }

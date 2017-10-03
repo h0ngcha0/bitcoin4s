@@ -1,8 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import cats.implicits._
 
 sealed trait SpliceOp extends ScriptOpCode
 
@@ -17,8 +17,8 @@ object SpliceOp {
   val disabled = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT)
 
   implicit val interpreter = new Interpretable[SpliceOp] {
-    def interpret(opCode: SpliceOp): InterpreterContext = {
-      State.get[InterpreterState].flatMap { state =>
+    def interpret(opCode: SpliceOp): InterpreterContext[Option[Boolean]] = {
+      getState.flatMap { state =>
         opCode match {
           case opc if disabled.contains(opc) =>
             abort(OpcodeDisabled(opc, state.stack))
@@ -32,7 +32,7 @@ object SpliceOp {
                   opCount = state.opCount + 1
                 )
 
-                State.set(newState).flatMap(continue)
+                setState(newState).flatMap(continue)
               case Nil =>
                 abort(NotEnoughElementsInStack(OP_SIZE, state.stack))
             }
