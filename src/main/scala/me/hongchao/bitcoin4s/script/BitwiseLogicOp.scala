@@ -5,6 +5,7 @@ import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import cats.implicits._
 
 sealed trait BitwiseLogicOp extends ScriptOpCode
 
@@ -20,10 +21,10 @@ object BitwiseLogicOp {
   val disabled = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR)
 
   implicit val interpreter = new Interpretable[BitwiseLogicOp] {
-    override def interpret(opCode: BitwiseLogicOp): InterpreterContext = {
+    override def interpret(opCode: BitwiseLogicOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case opc if disabled.contains(opc) =>
-          State.get.flatMap( state =>
+          getState.flatMap( state =>
             abort(OpcodeDisabled(opc, state.stack))
           )
 
@@ -33,14 +34,14 @@ object BitwiseLogicOp {
         case OP_EQUALVERIFY =>
           for {
             result <- onOpEqual()
-            state <- State.get
-            _ <- State.set(state.copy(script = OP_VERIFY +: state.script))
-          } yield result // FIXME: should abort early if onOpEqual fails
+            state <- getState
+            _ <- setState(state.copy(script = OP_VERIFY +: state.script))
+          } yield result
       }
     }
 
-    private def onOpEqual(): InterpreterContext = {
-      State.get.flatMap { state =>
+    private def onOpEqual(): InterpreterContext[Option[Boolean]] = {
+      getState.flatMap { state =>
         state.stack match {
           case first :: second :: rest =>
             val result = (first.bytes == second.bytes).option(ScriptNum(1)).getOrElse(ScriptNum(0))
@@ -50,7 +51,7 @@ object BitwiseLogicOp {
               opCount = state.opCount + 1
             )
 
-            State.set(newState).flatMap(continue)
+            setState(newState).flatMap(continue)
           case _ =>
             abort(NotEnoughElementsInStack(OP_EQUAL, state.stack))
         }

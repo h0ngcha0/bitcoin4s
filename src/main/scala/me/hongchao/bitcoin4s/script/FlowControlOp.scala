@@ -1,12 +1,10 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
-
 import scala.annotation.tailrec
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.Interpreter._
-import me.hongchao.bitcoin4s.script.ScriptFlag.SCRIPT_VERIFY_MINIMALDATA
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import cats.implicits._
 
 import scala.util.{Failure, Success, Try}
 
@@ -24,11 +22,11 @@ object FlowControlOp {
   val all = Seq(OP_NOP, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, OP_VERIFY, OP_RETURN)
 
   implicit val interpreter = new Interpretable[FlowControlOp] {
-    def interpret(opCode: FlowControlOp): InterpreterContext = {
-      State.get[InterpreterState].flatMap { state =>
+    def interpret(opCode: FlowControlOp): InterpreterContext[Option[Boolean]] = {
+      getState.flatMap { state =>
         opCode match {
           case OP_NOP =>
-            State.set(state.copy(opCount = state.opCount + 1)).flatMap(continue)
+            setState(state.copy(opCount = state.opCount + 1)).flatMap(continue)
 
           case OP_IF | OP_NOTIF =>
             Try {
@@ -53,9 +51,9 @@ object FlowControlOp {
                       stack = tail,
                       opCount = state.opCount + 1
                     )
-                    State.set(updatedState).flatMap(continue)
+                    setState(updatedState).flatMap(continue)
                   case _ =>
-                    throw NotEnoughElementsInStack(opCode, state.stack)
+                    abort(NotEnoughElementsInStack(opCode, state.stack))
                 }
 
               case Failure(error: InterpreterError) =>
@@ -79,7 +77,7 @@ object FlowControlOp {
                     stack = tail,
                     opCount = state.opCount + 1
                   )
-                  State.set(newState).flatMap(continue)
+                  setState(newState).flatMap(continue)
                 }
               case _ =>
                 abort(NotEnoughElementsInStack(OP_VERIFY, state.stack))
@@ -90,84 +88,84 @@ object FlowControlOp {
         }
       }
     }
+  }
 
-    // There could be mulitple of OP_ELSE, e.g.:
-    // ["1", "IF 1 ELSE 0 ELSE 1 ENDIF ADD 2 EQUAL", "P2SH,STRICTENC", "OK"]
-    // Each of the OP_ELSE could be executed depending on if the previous branch is executed
-    case class ConditionalBranchSplitResult(
-      branches: Seq[Seq[ScriptElement]] = Seq(Seq.empty),
-      rest: Seq[ScriptElement] = Seq.empty
-    )
+  // There could be mulitple of OP_ELSE, e.g.:
+  // ["1", "IF 1 ELSE 0 ELSE 1 ENDIF ADD 2 EQUAL", "P2SH,STRICTENC", "OK"]
+  // Each of the OP_ELSE could be executed depending on if the previous branch is executed
+  private case class ConditionalBranchSplitResult(
+    branches: Seq[Seq[ScriptElement]] = Seq(Seq.empty),
+    rest: Seq[ScriptElement] = Seq.empty
+  )
 
-    @tailrec
-    private def splitScriptOnConditional(
-      script: Seq[ScriptElement],
-      nestedDepth: Int = 0,
-      acc: ConditionalBranchSplitResult
-    ): ConditionalBranchSplitResult = {
-      script match {
-        case opCode :: tail if opCode == OP_IF || opCode == OP_NOTIF =>
-          val newNestedDepth = nestedDepth + 1
+  @tailrec
+  private def splitScriptOnConditional(
+    script: Seq[ScriptElement],
+    nestedDepth: Int = 0,
+    acc: ConditionalBranchSplitResult
+  ): ConditionalBranchSplitResult = {
+    script match {
+      case opCode :: tail if opCode == OP_IF || opCode == OP_NOTIF =>
+        val newNestedDepth = nestedDepth + 1
 
-          if (newNestedDepth > 1){
-            splitScriptOnConditional(
-              script = tail,
-              nestedDepth = newNestedDepth,
-              acc = pushToBranch(opCode, acc)
-            )
-          } else {
-            throw new RuntimeException("Unbalanced conditionals")
-          }
+        if (newNestedDepth > 1){
+          splitScriptOnConditional(
+            script = tail,
+            nestedDepth = newNestedDepth,
+            acc = pushToBranch(opCode, acc)
+          )
+        } else {
+          throw new RuntimeException("Unbalanced conditionals")
+        }
 
-        case OP_ENDIF :: tail =>
-          if (nestedDepth == 1) {
-            acc.copy(rest = tail)
-          } else if (nestedDepth > 1) {
-            splitScriptOnConditional(
-              script = tail,
-              nestedDepth = nestedDepth - 1,
-              acc = pushToBranch(OP_ENDIF, acc)
-            )
-          } else {
-            throw new RuntimeException("Unbalanced conditionals")
-          }
+      case OP_ENDIF :: tail =>
+        if (nestedDepth == 1) {
+          acc.copy(rest = tail)
+        } else if (nestedDepth > 1) {
+          splitScriptOnConditional(
+            script = tail,
+            nestedDepth = nestedDepth - 1,
+            acc = pushToBranch(OP_ENDIF, acc)
+          )
+        } else {
+          throw new RuntimeException("Unbalanced conditionals")
+        }
 
-        case OP_ELSE :: tail =>
-          if (nestedDepth == 1) {
-            splitScriptOnConditional(
-              script = tail,
-              nestedDepth = nestedDepth,
-              acc = acc.copy(branches = acc.branches :+ Seq.empty) // add a new empty branch
-            )
-          } else if (nestedDepth > 1){
-            splitScriptOnConditional(
-              script = tail,
-              nestedDepth = nestedDepth,
-              acc = pushToBranch(OP_ELSE, acc)
-            )
-          } else {
-            throw new RuntimeException("Unbalanced conditionals")
-          }
-
-        case element :: tail if nestedDepth >= 1 =>
+      case OP_ELSE :: tail =>
+        if (nestedDepth == 1) {
           splitScriptOnConditional(
             script = tail,
             nestedDepth = nestedDepth,
-            acc = pushToBranch(element, acc)
+            acc = acc.copy(branches = acc.branches :+ Seq.empty) // add a new empty branch
           )
-      }
-    }
+        } else if (nestedDepth > 1){
+          splitScriptOnConditional(
+            script = tail,
+            nestedDepth = nestedDepth,
+            acc = pushToBranch(OP_ELSE, acc)
+          )
+        } else {
+          throw new RuntimeException("Unbalanced conditionals")
+        }
 
-    private def pushToBranch(
-      element: ScriptElement,
-      currentResult: ConditionalBranchSplitResult
-    ): ConditionalBranchSplitResult = {
-      val currentBranches = currentResult.branches
-      val currentBranch = currentBranches.last
-      val updatedCurrentBranch = currentBranch :+ element
-      val updatedCurrentBranches = currentBranches.dropRight(1) :+ updatedCurrentBranch
-
-      currentResult.copy(branches = updatedCurrentBranches)
+      case element :: tail if nestedDepth >= 1 =>
+        splitScriptOnConditional(
+          script = tail,
+          nestedDepth = nestedDepth,
+          acc = pushToBranch(element, acc)
+        )
     }
+  }
+
+  private def pushToBranch(
+    element: ScriptElement,
+    currentResult: ConditionalBranchSplitResult
+  ): ConditionalBranchSplitResult = {
+    val currentBranches = currentResult.branches
+    val currentBranch = currentBranches.last
+    val updatedCurrentBranch = currentBranch :+ element
+    val updatedCurrentBranches = currentBranches.dropRight(1) :+ updatedCurrentBranch
+
+    currentResult.copy(branches = updatedCurrentBranches)
   }
 }

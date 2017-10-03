@@ -7,6 +7,7 @@ import me.hongchao.bitcoin4s.script.ConstantOp.OP_0
 import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.Spec
+import cats.implicits._
 
 trait ScriptTestRunner { self: Spec =>
   sealed trait ExpectedResult extends Product {
@@ -98,16 +99,14 @@ trait ScriptTestRunner { self: Spec =>
       sigVersion = SigVersion.SIGVERSION_BASE // FIXME: not dealing with witness for now
     )
 
-    val (finalState, interpretResult) = Interpreter.interpret().run(initialState).value
-
     test.expectedResult match {
       case ExpectedResult.OK =>
         withClue(test.comments) {
-          interpretResult match {
+          Interpreter.interpret().run(initialState) match {
+            case Right((finalState, result)) =>
+              result shouldEqual Some(true)
             case Left(error) =>
               throw error
-            case Right(result) =>
-              result shouldEqual Some(true)
           }
         }
       case _ =>

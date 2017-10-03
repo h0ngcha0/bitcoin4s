@@ -1,8 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import cats.implicits._
 
 sealed trait ConstantOp extends ScriptOpCode {
   override def toString: String = name
@@ -50,13 +50,13 @@ object ConstantOp {
   // How does this work?
 
   implicit val interpreter = new Interpretable[ConstantOp] {
-    override def interpret(opCode: ConstantOp): InterpreterContext = {
+    override def interpret(opCode: ConstantOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case opc if opc.value >= 79 && opc.value <= 96 =>
-          State.get[InterpreterState]
+          getState
             .flatMap { state =>
               // from OP_1NEGATE to OP_16
-              State.set(state.copy(
+              setState(state.copy(
                 script = state.script,
                 stack = ScriptNum(opc.value - 80) +: state.stack,
                 opCount = state.opCount + 1
@@ -65,10 +65,10 @@ object ConstantOp {
             .flatMap(continue)
 
         case OP_0 | OP_FALSE =>
-          State.get[InterpreterState]
+          getState
             .flatMap { state =>
               // Push empty byte array to the stack
-              State.set(state.copy(
+              setState(state.copy(
                 script = state.script,
                 stack = ScriptConstant(Seq.empty[Byte]) +: state.stack,
                 opCount = state.opCount + 1
@@ -77,17 +77,17 @@ object ConstantOp {
             .flatMap(continue)
 
         case _: OP_PUSHDATA | OP_PUSHDATA1 | OP_PUSHDATA2 | OP_PUSHDATA4 =>
-          State.get[InterpreterState]
+          getState
             .flatMap { state =>
               state.script match {
                 case (dataToPush: ScriptConstant) :: rest =>
-                  State.set(state.copy(
+                  setState(state.copy(
                     script = rest,
                     stack = dataToPush +: state.stack,
                     opCount = state.opCount + 1
                   )).flatMap(continue)
                 case OP_0 :: rest =>
-                  State.set(state.copy(
+                  setState(state.copy(
                     script = rest,
                     stack = ScriptNum(0) +: state.stack,
                     opCount = state.opCount + 1

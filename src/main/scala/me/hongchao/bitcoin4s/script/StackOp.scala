@@ -1,8 +1,8 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import cats.implicits._
 
 sealed trait StackOp extends ScriptOpCode
 
@@ -34,7 +34,7 @@ object StackOp {
   )
 
   implicit val interpreter = new Interpretable[StackOp] {
-    def interpret(opCode: StackOp): InterpreterContext = {
+    def interpret(opCode: StackOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_DUP =>
           onStackOp(OP_DUP) {
@@ -43,7 +43,7 @@ object StackOp {
           }
 
         case OP_TOALTSTACK =>
-          State.get[InterpreterState].flatMap { state =>
+          getState.flatMap { state =>
             val stack = state.stack
 
             stack match {
@@ -53,15 +53,14 @@ object StackOp {
                   altStack = head +: state.altStack,
                   opCount = state.opCount + 1
                 )
-                State.set(newState).flatMap(continue)
+                setState(newState).flatMap(continue)
               case _ =>
                 abort(NotEnoughElementsInStack(OP_TOALTSTACK, stack))
-
             }
           }
 
         case OP_FROMALTSTACK =>
-          State.get[InterpreterState].flatMap { state =>
+          getState.flatMap { state =>
             state.altStack match {
               case head :: _ =>
                 val newState = state.copy(
@@ -69,7 +68,7 @@ object StackOp {
                   altStack = state.altStack.tail
                 )
 
-                State.set(newState).flatMap(continue)
+                setState(newState).flatMap(continue)
               case _ =>
                 abort(NotEnoughElementsInAltStack(OP_FROMALTSTACK, state.stack))
             }
@@ -144,9 +143,9 @@ object StackOp {
           }
 
         case OP_DEPTH =>
-          State.get[InterpreterState].flatMap { state =>
+          getState.flatMap { state =>
             val newStack = ScriptNum(state.stack.length) +: state.stack
-            State.set(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
+            setState(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
           }
 
         case OP_NIP =>
@@ -156,7 +155,7 @@ object StackOp {
           }
 
         case OP_PICK =>
-          State.get[InterpreterState].flatMap { state =>
+          getState.flatMap { state =>
             val stack = state.stack
 
             stack match {
@@ -164,7 +163,7 @@ object StackOp {
                 val nth = ScriptNum.toLong(constant.bytes).toInt
                 if (rest.length >= nth) {
                   val newState = rest(nth) :: rest
-                  State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                  setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
                 } else {
                   abort(NotEnoughElementsInStack(OP_PICK, stack))
                 }
@@ -176,7 +175,7 @@ object StackOp {
           }
 
         case OP_ROLL =>
-          State.get[InterpreterState].flatMap { state =>
+          getState.flatMap { state =>
             val stack = state.stack
 
             stack match {
@@ -184,7 +183,7 @@ object StackOp {
                 val nth = ScriptNum.toLong(constant.bytes).toInt
                 if (rest.length >= nth) {
                   val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
-                  State.set(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                  setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
                 } else {
                   abort(NotEnoughElementsInStack(OP_ROLL, stack))
                 }
@@ -203,11 +202,11 @@ object StackOp {
       }
     }
 
-    def onStackOp(opCode: ScriptOpCode)(stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]): InterpreterContext = {
-      State.get[InterpreterState].flatMap { state =>
+    def onStackOp(opCode: ScriptOpCode)(stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]): InterpreterContext[Option[Boolean]] = {
+      getState.flatMap { state =>
         if (stackConvertFunction.isDefinedAt(state.stack)) {
           val newStack = stackConvertFunction(state.stack)
-          State.set(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
+          setState(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
         } else {
           abort(NotEnoughElementsInStack(opCode, state.stack))
         }

@@ -1,6 +1,5 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
 import me.hongchao.bitcoin4s.script.ScriptFlag.SCRIPT_VERIFY_MINIMALDATA
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
@@ -49,10 +48,10 @@ object ArithmeticOp {
   val disabled = Seq(OP_2MUL, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
 
   implicit val interpreter = new Interpretable[ArithmeticOp] {
-    def interpret(opCode: ArithmeticOp): InterpreterContext = {
+    def interpret(opCode: ArithmeticOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case opc if disabled.contains(opc) =>
-          State.get.flatMap { state =>
+          getState.flatMap { state =>
             abort(OpcodeDisabled(opc, state.stack))
           }
 
@@ -105,9 +104,9 @@ object ArithmeticOp {
             result <- twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
               (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
             })
-            state <- State.get
-            _ <- State.set[InterpreterState](state.copy(script = OP_VERIFY +: state.script))
-          } yield result // FIXME: should abort earlier if result isn't successful
+            state <- getState
+            _ <- setState(state.copy(script = OP_VERIFY +: state.script))
+          } yield result
 
         case OP_NUMNOTEQUAL =>
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
@@ -145,7 +144,7 @@ object ArithmeticOp {
           })
 
         case OP_WITHIN =>
-          State.get.flatMap { state =>
+          getState.flatMap { state =>
             state.stack match {
               case (first: ScriptConstant) :: (second: ScriptConstant) :: (third: ScriptConstant) :: rest =>
                 val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding)
@@ -159,7 +158,7 @@ object ArithmeticOp {
                   opCount = state.opCount + 1
                 )
 
-                State.set(newState).flatMap(continue)
+                setState(newState).flatMap(continue)
               case _ :: _ :: _ :: _ =>
                 abort(NotAllOperantsAreConstant(opCode, state.stack))
               case _ =>
@@ -169,8 +168,8 @@ object ArithmeticOp {
       }
     }
 
-    private def oneOperant(opCode: ArithmeticOp, convert: (ScriptNum) => ScriptNum): InterpreterContext = {
-      State.get.flatMap { state =>
+    private def oneOperant(opCode: ArithmeticOp, convert: (ScriptNum) => ScriptNum): InterpreterContext[Option[Boolean]] = {
+      getState.flatMap { state =>
         val requireMinimalEncoding: Boolean = state.flags.contains(SCRIPT_VERIFY_MINIMALDATA)
         state.stack match {
           case (first: ScriptConstant) :: rest =>
@@ -180,17 +179,18 @@ object ArithmeticOp {
               stack = convert(firstNumber) +: rest,
               opCount = state.opCount + 1
             )
-            State.set(newState).flatMap(continue)
+            setState(newState).flatMap(continue)
           case _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state.stack))
           case _ =>
             abort(NotEnoughElementsInStack(opCode, state.stack))
         }
       }
+
     }
 
-    private def twoOperants(opCode: ArithmeticOp, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterContext = {
-      State.get.flatMap { state =>
+    private def twoOperants(opCode: ArithmeticOp, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterContext[Option[Boolean]] = {
+      getState.flatMap { state =>
         state.stack match {
           case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>
             val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding)
@@ -201,7 +201,7 @@ object ArithmeticOp {
               opCount = state.opCount + 1
             )
 
-            State.set(newState).flatMap(continue)
+            setState(newState).flatMap(continue)
           case _ :: _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state.stack))
           case _ =>
