@@ -73,8 +73,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
         }
     }
 
-    //val expectedResults = Seq(ExpectedResult.OK, ExpectedResult.EVAL_FALSE)
-    val expectedResults = Seq(ExpectedResult.OK)
+    val expectedResults = Seq(ExpectedResult.OK, ExpectedResult.EVAL_FALSE)
     val notIncludedTests = Seq("WITNESS")
     val filteredScriptTests = scriptTests.filter { test =>
       expectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)

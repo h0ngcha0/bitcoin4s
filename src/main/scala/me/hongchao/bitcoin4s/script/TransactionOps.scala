@@ -21,13 +21,13 @@ object TransactionOps {
     }
 
     def signingHash(
-      pubKeyScript: Seq[ScriptElement],
+      currentScript: Seq[ScriptElement],
       inputIndex: Int,
       sigHashType: SignatureHashType,
       sigVersion: SigVersion
     ): Seq[Byte] = sigVersion match {
       case SIGVERSION_BASE =>
-        normalSigningHash(pubKeyScript, inputIndex, sigHashType)
+        normalSigningHash(currentScript, inputIndex, sigHashType)
       case SIGVERSION_WITNESS_V0 =>
         segwitSigningHash()
     }

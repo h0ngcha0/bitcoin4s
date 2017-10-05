@@ -9,6 +9,8 @@ import simulacrum._
 import cats.data.StateT
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.ConstantOp._
+import me.hongchao.bitcoin4s.script.CryptoOp.OP_HASH160
+import me.hongchao.bitcoin4s.script.InterpreterError.NoSerializedScriptFound
 
 sealed trait ScriptExecutionProgress
 object ScriptExecutionProgress {
@@ -214,42 +216,55 @@ object Interpreter {
           } yield result
 
         case Nil =>
-          state.stack match {
-            case Nil =>
-              evaluated(false)
-            case head :: tail =>
-              evaluated(head.bytes.toBoolean())
-/*            case head :: _ if state.p2shScript.isDefined =>
-              evaluated(head.bytes.toBoolean())
-            case head :: tail =>
-              if (head.bytes.toBoolean()) {
-                if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
+          state.scriptExecutionProgress match {
+            case ScriptExecutionProgress.ExecutingScriptSig =>
+              for {
+                _ <- setState(state.copy(
+                  currentScript = state.scriptPubKey,
+                  scriptExecutionProgress = ScriptExecutionProgress.ExecutingScriptPubKey
+                ))
+                result <- interpret(verbose)
+              } yield result
 
-                  getSerializedScript(state.scriptSig) match {
-                    case Some(serializedScript) =>
-                      val payToScript = Parser.parse(serializedScript.bytes)
+            case ScriptExecutionProgress.ExecutingScriptPubKey =>
+              state.stack match {
+                case Nil =>
+                  evaluated(false)
+                case head :: Nil =>
+                  evaluated(head.bytes.toBoolean())
+                case head :: tail =>
+                  if (head.bytes.toBoolean()) {
+                    if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
+                      getSerializedScript(state.scriptSig) match {
+                        case Some(serializedScript) =>
+                          val payToScript = Parser.parse(serializedScript.bytes)
 
-                      println(s"serializedScript: $serializedScript")
-                      println(s"payToScript: ${payToScript}")
-                      setState(
-                        state.copy(
-                          currentScript = payToScript,
-                          stack = tail,
-                          p2shScript = Some(payToScript)
-                        )
-                      ).flatMap(_ => interpret(verbose))
-                    case None =>
-                      throw new RuntimeException("xxx")
+                          for {
+                            _ <- setState(state.copy(
+                              currentScript = payToScript,
+                              stack = tail,
+                              p2shScript = Some(payToScript),
+                              scriptExecutionProgress = ScriptExecutionProgress.ExecutingScriptP2SH
+                            ))
+                            result <- interpret(verbose)
+                          } yield result
+                        case None =>
+                          abort(NoSerializedScriptFound(OP_HASH160, state.stack))
+                      }
+                    } else {
+                      evaluated(!state.requireCleanStack())
+                    }
+                  } else {
+                    evaluated(false)
                   }
+              }
 
-
-                } else {
-                  evaluated(!state.requireCleanStack())
-                }
-              } else {
-                evaluated(false)
-              }*/
-
+            case ScriptExecutionProgress.ExecutingScriptP2SH =>
+              evaluated {
+                state.stack
+                  .headOption
+                  .exists(_.bytes.toBoolean())
+              }
           }
       }
     }

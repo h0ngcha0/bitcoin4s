@@ -103,7 +103,8 @@ object CryptoOp {
               case Some((pubKeys, signatures, rest)) =>
                 val checkResult = checkSignatures(pubKeys, signatures, state)
 
-                val oneMorePop = rest.tail // Due to the bug in the reference client
+                // NOTE: Due to the bug in the reference client
+                val oneMorePop = rest.tail
 
                 setState(
                   state.copy(
@@ -147,11 +148,11 @@ object CryptoOp {
   def checkSignatures(encodedPublicKeys: Seq[ScriptElement], encodedSignatures: Seq[ScriptElement], state: InterpreterState): Boolean = {
     encodedSignatures match {
       case encodedSignature :: tail =>
-        val maybeEncodedPubKeyWithSigature = encodedPublicKeys.find { encodedPubKey =>
+        val maybeEncodedPubKeyWithSignature = encodedPublicKeys.find { encodedPubKey =>
           checkSignature(encodedPubKey, encodedSignature, state)
         }
 
-        maybeEncodedPubKeyWithSigature match {
+        maybeEncodedPubKeyWithSignature match {
           case Some(encodedPubKey) =>
             val newEncodedPublicKeys = encodedPublicKeys.takeWhile(_ != encodedPubKey) ++ encodedPublicKeys.dropWhile(_ != encodedPubKey).tail
             checkSignatures(newEncodedPublicKeys, tail, state)
@@ -168,6 +169,7 @@ object CryptoOp {
     (for {
       pubKey <- PublicKey.decode(encodedPublicKey.bytes)
       (signature, sigHashFlagBytes) <- Signature.decode(encodedSignature.bytes)
+      currentScript <- getCurrentScript(state)
     } yield {
       val sigHashType = SignatureHashType(sigHashFlagBytes.headOption.map(_ & 0xff).getOrElse(1))
 
@@ -177,12 +179,23 @@ object CryptoOp {
       }
 
       val hashedTransaction = state.transaction.signingHash(
-        pubKeyScript = state.scriptPubKey,
+        currentScript = currentScript,
         inputIndex = state.inputIndex,
         sigHashType = sigHashType,
         sigVersion = SIGVERSION_BASE
       )
       pubKey.verify(hashedTransaction, signature)
     }).exists(identity)
+  }
+
+  private def getCurrentScript(state: InterpreterState): Option[Seq[ScriptElement]] = {
+    state.scriptExecutionProgress match {
+      case ScriptExecutionProgress.ExecutingScriptPubKey =>
+        Some(state.scriptPubKey)
+      case ScriptExecutionProgress.ExecutingScriptSig =>
+        Some(state.scriptSig)
+      case ScriptExecutionProgress.ExecutingScriptP2SH =>
+        state.p2shScript
+    }
   }
 }
