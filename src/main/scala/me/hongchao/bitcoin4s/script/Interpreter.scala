@@ -19,6 +19,26 @@ object ScriptExecutionProgress {
   case object ExecutingScriptP2SH extends ScriptExecutionProgress
 }
 
+object InterpreterState {
+  def apply(
+    scriptPubKey: Seq[ScriptElement],
+    scriptSig: Seq[ScriptElement],
+    flags: Seq[ScriptFlag],
+    transaction: Tx,
+    inputIndex: Int
+  ): InterpreterState = {
+    InterpreterState(
+      scriptPubKey = scriptPubKey,
+      scriptSig = scriptSig,
+      currentScript = scriptSig,
+      transaction = transaction,
+      inputIndex = inputIndex,
+      flags = flags,
+      sigVersion = SigVersion.SIGVERSION_BASE
+    )
+  }
+}
+
 case class InterpreterState(
   scriptPubKey: Seq[ScriptElement],
   scriptSig: Seq[ScriptElement],

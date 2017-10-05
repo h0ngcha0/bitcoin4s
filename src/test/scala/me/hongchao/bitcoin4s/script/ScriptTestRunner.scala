@@ -87,14 +87,14 @@ trait ScriptTestRunner { self: Spec =>
 
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes))
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes))
+
+    // FIXME: not dealing with witness for now
     val initialState = InterpreterState(
-      currentScript = test.scriptSig,
+      scriptPubKey = test.scriptPubKey,
+      scriptSig = test.scriptSig,
       flags = test.scriptFlags,
       transaction = spendingTx,
-      inputIndex = 0,
-      scriptSig = test.scriptSig,
-      scriptPubKey = test.scriptPubKey,
-      sigVersion = SigVersion.SIGVERSION_BASE // FIXME: not dealing with witness for now
+      inputIndex = 0
     )
 
     test.expectedResult match {

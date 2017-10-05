@@ -33,12 +33,11 @@ res0: Seq[me.hongchao.bitcoin4s.script.ScriptElement] = List(OP_0, OP_IF, OP_0, 
 
 ```scala
 val initialState = InterpreterState(
-  script = Seq(OP_0, OP_IF, OP_0, OP_ELSE, OP_1, OP_ELSE, OP_0, OP_ENDIF),
+  scriptSig = Seq(OP_0),
+  scriptPubKey = Seq(OP_IF, OP_0, OP_ELSE, OP_1, OP_ELSE, OP_0, OP_ENDIF),
   flags = Seq(ScriptFlag.SCRIPT_VERIFY_STRICTENC),
   transaction = spendingTx,
-  inputIndex = 0,
-  scriptPubKey = Seq(OP_0),
-  sigVersion = SigVersion.SIGVERSION_BASE
+  inputIndex = 0
 )
 
 Interpreter.interpret().run(initialState) match {
