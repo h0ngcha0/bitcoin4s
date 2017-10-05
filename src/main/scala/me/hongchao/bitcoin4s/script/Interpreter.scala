@@ -8,18 +8,30 @@ import com.typesafe.scalalogging.StrictLogging
 import simulacrum._
 import cats.data.StateT
 import cats.implicits._
+import me.hongchao.bitcoin4s.script.ConstantOp._
+
+sealed trait ScriptExecutionProgress
+object ScriptExecutionProgress {
+  case object ExecutingScriptSig extends ScriptExecutionProgress
+  case object ExecutingScriptPubKey extends ScriptExecutionProgress
+  case object ExecutingScriptP2SH extends ScriptExecutionProgress
+}
 
 case class InterpreterState(
-  script: Seq[ScriptElement],
+  scriptPubKey: Seq[ScriptElement],
+  scriptSig: Seq[ScriptElement],
+  currentScript: Seq[ScriptElement],
+  p2shScript: Option[Seq[ScriptElement]] = None,
   stack: Seq[ScriptElement] = Seq.empty,
   altStack: Seq[ScriptElement] = Seq.empty,
   flags: Seq[ScriptFlag],
   opCount: Int = 0,
   transaction: Tx,
   inputIndex: Int,
-  scriptPubKey: Seq[ScriptElement],
-  sigVersion: SigVersion
+  sigVersion: SigVersion,
+  scriptExecutionProgress: ScriptExecutionProgress = ScriptExecutionProgress.ExecutingScriptSig
 ) {
+
   // Execute one OpCode, which takes the stack top element and and produce a new
   // value. The new value it put on top of the stack
   def replaceStackTopElement(scriptElement: ScriptElement): InterpreterState = {
@@ -57,6 +69,14 @@ case class InterpreterState(
 
   def requireMinimalEncoding(): Boolean = {
     flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALDATA)
+  }
+
+  def p2sh(): Boolean = {
+    flags.contains(ScriptFlag.SCRIPT_VERIFY_P2SH)
+  }
+
+  def requireCleanStack(): Boolean = {
+    flags.contains(ScriptFlag.SCRIPT_VERIFY_CLEANSTACK)
   }
 }
 
@@ -126,6 +146,10 @@ object InterpreterError {
     val description: String = "Unbalanced condition"
   }
 
+  case class NoSerializedScriptFound(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+    val description: String = "No serialized script found for p2sh"
+  }
+
   case class UnexpectedOpCode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
     val description: String = "Unexpected op code encountered"
   }
@@ -140,7 +164,7 @@ object InterpreterError {
         oldState <- StateT.get[InterpreterErrorHandler, InterpreterState]
         newContext <- interpret(opCode)
       } yield {
-        logger.info(s"State\nscript: ${opCode +: oldState.script}\nstack: ${oldState.stack}\naltstack: ${oldState.altStack}")
+        logger.info(s"State\nscript: ${opCode +: oldState.currentScript}\nstack: ${oldState.stack}\naltstack: ${oldState.altStack}")
         logger.info("~~~~~~~~~~~~~~~~~~~~~")
         newContext
       }
@@ -158,7 +182,7 @@ object Interpreter {
 
   def interpret(verbose: Boolean = false): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
-      state.script match {
+      state.currentScript match {
         case head :: tail =>
           val updatedContext = head match {
             case op: ArithmeticOp =>
@@ -184,20 +208,49 @@ object Interpreter {
           }
 
           for {
-            _ <- setState(state.copy(script = tail))
+            _ <- setState(state.copy(currentScript = tail))
             _ <- updatedContext
             result <- interpret(verbose)
           } yield result
 
         case Nil =>
-          val result = state.stack.headOption match {
-            case Some(head) =>
-              head.bytes.toBoolean()
-            case None =>
-              true
-          }
+          state.stack match {
+            case Nil =>
+              evaluated(false)
+            case head :: tail =>
+              evaluated(head.bytes.toBoolean())
+/*            case head :: _ if state.p2shScript.isDefined =>
+              evaluated(head.bytes.toBoolean())
+            case head :: tail =>
+              if (head.bytes.toBoolean()) {
+                if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
 
-          evaluated(result)
+                  getSerializedScript(state.scriptSig) match {
+                    case Some(serializedScript) =>
+                      val payToScript = Parser.parse(serializedScript.bytes)
+
+                      println(s"serializedScript: $serializedScript")
+                      println(s"payToScript: ${payToScript}")
+                      setState(
+                        state.copy(
+                          currentScript = payToScript,
+                          stack = tail,
+                          p2shScript = Some(payToScript)
+                        )
+                      ).flatMap(_ => interpret(verbose))
+                    case None =>
+                      throw new RuntimeException("xxx")
+                  }
+
+
+                } else {
+                  evaluated(!state.requireCleanStack())
+                }
+              } else {
+                evaluated(false)
+              }*/
+
+          }
       }
     }
   }
@@ -228,5 +281,21 @@ object Interpreter {
   def abort(error: InterpreterError): InterpreterContext[Option[Boolean]] = StateT.lift {
     val errorWithExplicitType: InterpreterErrorHandler[Option[Boolean]] = Left(error)
     errorWithExplicitType
+  }
+
+  private def isP2SHScript(scriptPubkey: Seq[ScriptElement]): Boolean = {
+    scriptPubkey.headOption.exists(_ == CryptoOp.OP_HASH160) &&
+      scriptPubkey.lastOption.exists(_ == BitwiseLogicOp.OP_EQUAL)
+  }
+
+  private def getSerializedScript(scriptSig: Seq[ScriptElement]): Option[ScriptElement] = {
+    val fromLastPushOp = scriptSig.reverse.dropWhile { element =>
+      element.isInstanceOf[OP_PUSHDATA] ||
+        element == OP_PUSHDATA1 ||
+        element == OP_PUSHDATA2 ||
+        element == OP_PUSHDATA4
+    }
+
+    fromLastPushOp.headOption
   }
 }

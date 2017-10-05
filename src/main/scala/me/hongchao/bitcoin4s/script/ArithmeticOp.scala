@@ -105,7 +105,7 @@ object ArithmeticOp {
               (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
             })
             state <- getState
-            _ <- setState(state.copy(script = OP_VERIFY +: state.script))
+            _ <- setState(state.copy(currentScript = OP_VERIFY +: state.currentScript))
           } yield result
 
         case OP_NUMNOTEQUAL =>
@@ -153,7 +153,7 @@ object ArithmeticOp {
                 val isWithin = (thirdNumber < firstNumber && thirdNumber >= secondNumber)
 
                 val newState = state.copy(
-                  script = state.script,
+                  currentScript = state.currentScript,
                   stack = isWithin.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: rest,
                   opCount = state.opCount + 1
                 )
@@ -175,7 +175,7 @@ object ArithmeticOp {
           case (first: ScriptConstant) :: rest =>
             val firstNumber = ScriptNum(first.bytes, requireMinimalEncoding)
             val newState = state.copy(
-              script = state.script,
+              currentScript = state.currentScript,
               stack = convert(firstNumber) +: rest,
               opCount = state.opCount + 1
             )
@@ -196,7 +196,7 @@ object ArithmeticOp {
             val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding)
             val secondNumber = ScriptNum(second.bytes, state.requireMinimalEncoding)
             val newState = state.copy(
-              script = state.script,
+              currentScript = state.currentScript,
               stack = convert(firstNumber, secondNumber) +: rest,
               opCount = state.opCount + 1
             )

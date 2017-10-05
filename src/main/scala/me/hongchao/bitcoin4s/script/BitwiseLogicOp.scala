@@ -35,7 +35,7 @@ object BitwiseLogicOp {
           for {
             result <- onOpEqual()
             state <- getState
-            _ <- setState(state.copy(script = OP_VERIFY +: state.script))
+            _ <- setState(state.copy(currentScript = OP_VERIFY +: state.currentScript))
           } yield result
       }
     }

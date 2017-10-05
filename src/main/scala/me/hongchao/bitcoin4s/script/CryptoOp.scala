@@ -59,7 +59,7 @@ object CryptoOp {
 
                 setState(
                   state.copy(
-                    script = state.script,
+                    currentScript = state.currentScript,
                     stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
                     opCount = state.opCount + 1
                   )
@@ -75,7 +75,7 @@ object CryptoOp {
             .flatMap { state =>
               setState(
                 state.copy(
-                  script = OP_CHECKSIG +: OP_VERIFY +: state.script,
+                  currentScript = OP_CHECKSIG +: OP_VERIFY +: state.currentScript,
                   opCount = state.opCount - 1
                 )
               )
@@ -121,7 +121,7 @@ object CryptoOp {
             .flatMap { state =>
               setState(
                 state.copy(
-                  script = OP_CHECKMULTISIG +: OP_VERIFY +: state.script,
+                  currentScript = OP_CHECKMULTISIG +: OP_VERIFY +: state.currentScript,
                   opCount = state.opCount - 1
                 )
               )

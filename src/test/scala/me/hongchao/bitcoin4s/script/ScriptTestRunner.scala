@@ -88,10 +88,11 @@ trait ScriptTestRunner { self: Spec =>
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes))
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes))
     val initialState = InterpreterState(
-      script = test.scriptSig ++ test.scriptPubKey,
+      currentScript = test.scriptSig ++ test.scriptPubKey,
       flags = test.scriptFlags,
       transaction = spendingTx,
       inputIndex = 0,
+      scriptSig = test.scriptSig,
       scriptPubKey = test.scriptPubKey,
       sigVersion = SigVersion.SIGVERSION_BASE // FIXME: not dealing with witness for now
     )
@@ -102,6 +103,15 @@ trait ScriptTestRunner { self: Spec =>
           Interpreter.interpret().run(initialState) match {
             case Right((finalState, result)) =>
               result shouldEqual Some(true)
+            case Left(error) =>
+              throw error
+          }
+        }
+      case ExpectedResult.EVAL_FALSE =>
+        withClue(test.comments) {
+          Interpreter.interpret().run(initialState) match {
+            case Right((finalState, result)) =>
+              result shouldEqual Some(false)
             case Left(error) =>
               throw error
           }

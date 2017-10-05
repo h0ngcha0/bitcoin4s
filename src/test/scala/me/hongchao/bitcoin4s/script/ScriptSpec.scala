@@ -73,8 +73,14 @@ class ScriptSpec extends Spec with ScriptTestRunner {
         }
     }
 
-    val okScriptTests = scriptTests.filter(_.expectedResult == ExpectedResult.OK)
-    okScriptTests.zipWithIndex.foreach {
+    //val expectedResults = Seq(ExpectedResult.OK, ExpectedResult.EVAL_FALSE)
+    val expectedResults = Seq(ExpectedResult.OK)
+    val notIncludedTests = Seq("WITNESS")
+    val filteredScriptTests = scriptTests.filter { test =>
+      expectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
+    }
+
+    filteredScriptTests.zipWithIndex.foreach {
       case (test, index) =>
         run(test, index)
     }

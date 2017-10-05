@@ -25,7 +25,7 @@ object LocktimeOp {
                   val lockTime = ScriptNum(head.bytes, false, 5).value
 
                   if (lockTime > state.transaction.lock_time) {
-                    setState(state.dropTopElement).flatMap(continue)
+                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
                   } else {
                     abort(CLTVFailed(opCode, state.stack))
                   }
@@ -48,7 +48,7 @@ object LocktimeOp {
                   val sequence = ScriptNum(head.bytes, false, 5).value
                   val input = state.transaction.tx_in(state.inputIndex)
                   if (sequence >= input.sequence) {
-                    setState(state.dropTopElement).flatMap(continue)
+                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
                   } else {
                     abort(CLTVFailed(opCode, state.stack))
                   }

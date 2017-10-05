@@ -31,7 +31,7 @@ object FlowControlOp {
           case OP_IF | OP_NOTIF =>
             Try {
               splitScriptOnConditional(
-                script = state.script,
+                script = state.currentScript,
                 nestedDepth = 1,
                 acc = ConditionalBranchSplitResult()
               )
@@ -47,7 +47,7 @@ object FlowControlOp {
                       .option(negativeBranches.flatten ++ rest)
                       .getOrElse(positiveBranches.flatten ++ rest)
                     val updatedState = state.copy(
-                      script = updatedScript,
+                      currentScript = updatedScript,
                       stack = tail,
                       opCount = state.opCount + 1
                     )

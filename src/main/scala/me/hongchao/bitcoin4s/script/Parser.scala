@@ -55,7 +55,7 @@ object Parser {
             if (unquotedString == "") {
               parseTokensToBytes(tail, OP_0.bytes +: acc)
             } else {
-              parseTokensToBytes(unquotedString :: tail, acc)
+              parseTokensToBytes(tail, bytesAndLength(unquotedString.getBytes()) +: acc)
             }
 
           case t =>
