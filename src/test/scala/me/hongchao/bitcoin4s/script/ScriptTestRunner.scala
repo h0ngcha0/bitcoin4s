@@ -8,6 +8,7 @@ import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
+import me.hongchao.bitcoin4s.script.InterpreterError.BadOpCode
 
 trait ScriptTestRunner { self: Spec =>
   sealed trait ExpectedResult extends Product {
@@ -97,27 +98,37 @@ trait ScriptTestRunner { self: Spec =>
       inputIndex = 0
     )
 
-    test.expectedResult match {
-      case ExpectedResult.OK =>
-        withClue(test.comments) {
-          Interpreter.interpret().run(initialState) match {
+    withClue(test.comments) {
+      val result = Interpreter.interpret().run(initialState)
+
+      test.expectedResult match {
+        case ExpectedResult.OK =>
+          result match {
             case Right((finalState, result)) =>
               result shouldEqual Some(true)
             case Left(error) =>
-              throw error
+              fail(error)
           }
-        }
-      case ExpectedResult.EVAL_FALSE =>
-        withClue(test.comments) {
-          Interpreter.interpret().run(initialState) match {
+
+        case ExpectedResult.EVAL_FALSE =>
+          result match {
             case Right((finalState, result)) =>
               result shouldEqual Some(false)
             case Left(error) =>
-              throw error
+              fail(error)
           }
-        }
-      case _ =>
-        throw new NotImplementedError()
+
+        case ExpectedResult.BAD_OPCODE =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect BAD_OPCODE, but receive $result")
+            case Left(error) =>
+              error shouldBe a [BadOpCode]
+          }
+
+        case _ =>
+          throw new NotImplementedError()
+      }
     }
   }
 

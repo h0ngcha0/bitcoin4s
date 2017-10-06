@@ -33,17 +33,17 @@ object ReservedOp {
         opCode match {
           case OP_NOP1 | OP_NOP4 | OP_NOP5 | OP_NOP6 | OP_NOP7 | OP_NOP8 | OP_NOP9 | OP_NOP10 =>
             if (state.disCourageUpgradableNop) {
-              abort(DiscourageUpgradableNops(opCode, state.stack))
+              abort(DiscourageUpgradableNops(opCode, state))
             } else {
               val newState = state.copy(opCount = state.opCount + 1)
               setState(newState).flatMap(continue)
             }
           case OP_RESERVED | OP_VER | OP_RESERVED1 | OP_RESERVED2 =>
-            abort(NotExecutableReservedOpcode(opCode, state.stack))
+            abort(NotExecutableReservedOpcode(opCode, state))
           case OP_VERIF | OP_VERNOTIF =>
             // These two OpCodes should be checked before script is executed. If found, entire
             // transaction should be invalid.
-            abort(InValidReservedOpcode(opCode, state.stack))
+            abort(InValidReservedOpcode(opCode, state))
         }
       }
     }

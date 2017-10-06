@@ -93,9 +93,9 @@ object ConstantOp {
                     opCount = state.opCount + 1
                   )).flatMap(continue)
                 case _ :: _ =>
-                  abort(OperantMustBeScriptConstant(opCode, state.stack))
+                  abort(OperantMustBeScriptConstant(opCode, state))
                 case _ =>
-                  abort(NotEnoughElementsInStack(opCode, state.stack))
+                  abort(NotEnoughElementsInStack(opCode, state))
               }
             }
       }

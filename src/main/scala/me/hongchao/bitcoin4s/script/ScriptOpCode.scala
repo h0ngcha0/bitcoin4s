@@ -167,6 +167,8 @@ object OpCodes {
     BitwiseLogicOp.disabled ++
     ArithmeticOp.disabled
 
+  val invalid = Seq(ReservedOp.OP_VERIF, ReservedOp.OP_VERNOTIF)
+
   // e.g. `OP_DUP` or `DUP`
   def fromString(str: String): Option[ScriptOpCode] = {
     all.find(_.name == str)

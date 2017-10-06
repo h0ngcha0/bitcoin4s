@@ -52,7 +52,7 @@ object ArithmeticOp {
       opCode match {
         case opc if disabled.contains(opc) =>
           getState.flatMap { state =>
-            abort(OpcodeDisabled(opc, state.stack))
+            abort(OpcodeDisabled(opc, state))
           }
 
         case OP_1ADD =>
@@ -160,9 +160,9 @@ object ArithmeticOp {
 
                 setState(newState).flatMap(continue)
               case _ :: _ :: _ :: _ =>
-                abort(NotAllOperantsAreConstant(opCode, state.stack))
+                abort(NotAllOperantsAreConstant(opCode, state))
               case _ =>
-                abort(NotEnoughElementsInStack(opCode, state.stack))
+                abort(NotEnoughElementsInStack(opCode, state))
             }
           }
       }
@@ -181,9 +181,9 @@ object ArithmeticOp {
             )
             setState(newState).flatMap(continue)
           case _ :: _ =>
-            abort(NotAllOperantsAreConstant(opCode, state.stack))
+            abort(NotAllOperantsAreConstant(opCode, state))
           case _ =>
-            abort(NotEnoughElementsInStack(opCode, state.stack))
+            abort(NotEnoughElementsInStack(opCode, state))
         }
       }
 
@@ -203,9 +203,9 @@ object ArithmeticOp {
 
             setState(newState).flatMap(continue)
           case _ :: _ :: _ =>
-            abort(NotAllOperantsAreConstant(opCode, state.stack))
+            abort(NotAllOperantsAreConstant(opCode, state))
           case _ =>
-            abort(NotEnoughElementsInStack(opCode, state.stack))
+            abort(NotEnoughElementsInStack(opCode, state))
         }
       }
     }

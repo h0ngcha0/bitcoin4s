@@ -25,7 +25,7 @@ object BitwiseLogicOp {
       opCode match {
         case opc if disabled.contains(opc) =>
           getState.flatMap( state =>
-            abort(OpcodeDisabled(opc, state.stack))
+            abort(OpcodeDisabled(opc, state))
           )
 
         case OP_EQUAL =>
@@ -53,7 +53,7 @@ object BitwiseLogicOp {
 
             setState(newState).flatMap(continue)
           case _ =>
-            abort(NotEnoughElementsInStack(OP_EQUAL, state.stack))
+            abort(NotEnoughElementsInStack(OP_EQUAL, state))
         }
       }
     }

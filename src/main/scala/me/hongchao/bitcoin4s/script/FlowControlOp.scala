@@ -53,7 +53,7 @@ object FlowControlOp {
                     )
                     setState(updatedState).flatMap(continue)
                   case _ =>
-                    abort(NotEnoughElementsInStack(opCode, state.stack))
+                    abort(NotEnoughElementsInStack(opCode, state))
                 }
 
               case Failure(error: InterpreterError) =>
@@ -64,14 +64,14 @@ object FlowControlOp {
             }
 
           case OP_ELSE | OP_ENDIF =>
-            abort(UnexpectedOpCode(opCode, state.stack))
+            abort(UnexpectedOpCode(opCode, state))
 
           case OP_VERIFY =>
             state.stack match {
               case first :: tail =>
                 val firstNumber = ScriptNum(first.bytes, state.requireMinimalEncoding, first.bytes.size)
                 if (firstNumber == 0) {
-                  abort(VerificationFailed(OP_VERIFY, state.stack))
+                  abort(VerificationFailed(OP_VERIFY, state))
                 } else {
                   val newState = state.copy(
                     stack = tail,
@@ -80,11 +80,11 @@ object FlowControlOp {
                   setState(newState).flatMap(continue)
                 }
               case _ =>
-                abort(NotEnoughElementsInStack(OP_VERIFY, state.stack))
+                abort(NotEnoughElementsInStack(OP_VERIFY, state))
             }
 
           case OP_RETURN =>
-            abort(UnexpectedOpCode(opCode, state.stack))
+            abort(UnexpectedOpCode(opCode, state))
         }
       }
     }

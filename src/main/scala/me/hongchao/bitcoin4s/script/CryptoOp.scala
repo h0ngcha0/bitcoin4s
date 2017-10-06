@@ -66,7 +66,7 @@ object CryptoOp {
                 ).flatMap(continue)
 
               case _ =>
-                abort(NotEnoughElementsInStack(opCode, state.stack))
+                abort(NotEnoughElementsInStack(opCode, state))
             }
           }
 
@@ -113,7 +113,7 @@ object CryptoOp {
                   )
                 ).flatMap(continue)
               case None =>
-                abort(NotEnoughElementsInStack(opCode, state.stack))
+                abort(NotEnoughElementsInStack(opCode, state))
             }
           }
 
@@ -137,7 +137,7 @@ object CryptoOp {
           val hashed = hash(head.bytes.toArray)
           setState(state.replaceStackTopElement(ScriptConstant(hashed))).flatMap(continue)
         case _ =>
-          abort(NotEnoughElementsInStack(opCode, state.stack))
+          abort(NotEnoughElementsInStack(opCode, state))
       }
 
       getState.flatMap(hashTopElement)
@@ -189,12 +189,12 @@ object CryptoOp {
   }
 
   private def getCurrentScript(state: InterpreterState): Option[Seq[ScriptElement]] = {
-    state.scriptExecutionProgress match {
-      case ScriptExecutionProgress.ExecutingScriptPubKey =>
+    state.scriptExecutionStage match {
+      case ScriptExecutionStage.ExecutingScriptPubKey =>
         Some(state.scriptPubKey)
-      case ScriptExecutionProgress.ExecutingScriptSig =>
+      case ScriptExecutionStage.ExecutingScriptSig =>
         Some(state.scriptSig)
-      case ScriptExecutionProgress.ExecutingScriptP2SH =>
+      case ScriptExecutionStage.ExecutingScriptP2SH =>
         state.p2shScript
     }
   }

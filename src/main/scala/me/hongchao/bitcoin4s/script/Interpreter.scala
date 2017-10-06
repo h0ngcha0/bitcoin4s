@@ -10,13 +10,14 @@ import cats.data.StateT
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_HASH160
-import me.hongchao.bitcoin4s.script.InterpreterError.NoSerializedScriptFound
+import me.hongchao.bitcoin4s.script.InterpreterError.{BadOpCode, NoSerializedScriptFound}
+import ScriptExecutionStage._
 
-sealed trait ScriptExecutionProgress
-object ScriptExecutionProgress {
-  case object ExecutingScriptSig extends ScriptExecutionProgress
-  case object ExecutingScriptPubKey extends ScriptExecutionProgress
-  case object ExecutingScriptP2SH extends ScriptExecutionProgress
+sealed trait ScriptExecutionStage
+object ScriptExecutionStage {
+  case object ExecutingScriptSig extends ScriptExecutionStage
+  case object ExecutingScriptPubKey extends ScriptExecutionStage
+  case object ExecutingScriptP2SH extends ScriptExecutionStage
 }
 
 object InterpreterState {
@@ -51,7 +52,7 @@ case class InterpreterState(
   transaction: Tx,
   inputIndex: Int,
   sigVersion: SigVersion,
-  scriptExecutionProgress: ScriptExecutionProgress = ScriptExecutionProgress.ExecutingScriptSig
+  scriptExecutionStage: ScriptExecutionStage = ScriptExecutionStage.ExecutingScriptSig
 ) {
 
   // Execute one OpCode, which takes the stack top element and and produce a new
@@ -105,74 +106,83 @@ case class InterpreterState(
 
 sealed trait InterpreterError extends RuntimeException {
   val opCode: ScriptOpCode
-  val stack: Seq[ScriptElement]
+  val state: InterpreterState
   val description: String
 
-  super.initCause(new Throwable(s"$description\nopCode: $opCode\nstack: $stack"))
+  super.initCause(new Throwable(s"$description\nopCode: $opCode\nstate: $state"))
 }
 
 object InterpreterError {
-  case class NotEnoughElementsInStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-    val description = "Not enough elements in the stack"
+  case class BadOpCode(opCode: ScriptOpCode, state: InterpreterState, description: String) extends InterpreterError {
   }
 
-  case class NotEnoughElementsInAltStack(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-    val description = "Not enough elements in the alternative stack"
+  object NotEnoughElementsInStack {
+    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
+      BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Not enough elements in the stack")
+    }
   }
 
-  case class NotAllOperantsAreConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  object NotEnoughElementsInAltStack {
+    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
+      BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Not enough elements in the alternative stack")
+    }
+  }
+
+  object NotExecutableReservedOpcode{
+    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
+      BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Found not executable reserved opcode")
+    }
+  }
+
+  case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not all operants are constant"
   }
 
-  case class OperantMustBeScriptNum(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class OperantMustBeScriptNum(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Operant must be ScriptNum"
   }
 
-  case class OperantMustBeScriptConstant(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class OperantMustBeScriptConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Operant must be ScriptConstant"
   }
 
-  case class OpcodeDisabled(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class OpcodeDisabled(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Opcode is disabled"
   }
 
-  case class NotExecutableReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class DiscourageUpgradableNops(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Found not executable reserved opcode"
   }
 
-  case class DiscourageUpgradableNops(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
-    val description = "Found not executable reserved opcode"
-  }
-
-  case class InValidReservedOpcode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class InValidReservedOpcode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Found executable reserved opcode that invalidates the transaction"
   }
 
-  case class VerificationFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class VerificationFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Verification on top of the stack failed"
   }
 
-  case class CLTVFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class CLTVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "CheckLockTimeVerify failed"
   }
 
-  case class CSVFailed(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class CSVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "CheckSequenceVerify failed"
   }
 
-  case class NotImplemented(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not implemented"
   }
 
-  case class UnbalancedCondition(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class UnbalancedCondition(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Unbalanced condition"
   }
 
-  case class NoSerializedScriptFound(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class NoSerializedScriptFound(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "No serialized script found for p2sh"
   }
 
-  case class UnexpectedOpCode(opCode: ScriptOpCode, stack: Seq[ScriptElement]) extends InterpreterError {
+  case class UnexpectedOpCode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Unexpected op code encountered"
   }
 }
@@ -204,86 +214,91 @@ object Interpreter {
 
   def interpret(verbose: Boolean = false): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
-      state.currentScript match {
-        case head :: tail =>
-          val updatedContext = head match {
-            case op: ArithmeticOp =>
-              op.interpret(verbose)
-            case op: BitwiseLogicOp =>
-              op.interpret(verbose)
-            case op: ConstantOp =>
-              op.interpret(verbose)
-            case op: CryptoOp =>
-              op.interpret(verbose)
-            case op: FlowControlOp =>
-              op.interpret(verbose)
-            case op: LocktimeOp =>
-              op.interpret(verbose)
-            case op: PseudoOp =>
-              op.interpret(verbose)
-            case op: ReservedOp =>
-              op.interpret(verbose)
-            case op: SpliceOp =>
-              op.interpret(verbose)
-            case op: StackOp =>
-              op.interpret(verbose)
-          }
+      state.currentScript.find(OpCodes.invalid.contains) match {
+        case Some(opCode: ScriptOpCode) =>
+          abort(BadOpCode(opCode, state, "Opcode not allowed"))
+        case _ =>
+          state.currentScript match {
+            case head :: tail =>
+              val updatedContext = head match {
+                case op: ArithmeticOp =>
+                  op.interpret(verbose)
+                case op: BitwiseLogicOp =>
+                  op.interpret(verbose)
+                case op: ConstantOp =>
+                  op.interpret(verbose)
+                case op: CryptoOp =>
+                  op.interpret(verbose)
+                case op: FlowControlOp =>
+                  op.interpret(verbose)
+                case op: LocktimeOp =>
+                  op.interpret(verbose)
+                case op: PseudoOp =>
+                  op.interpret(verbose)
+                case op: ReservedOp =>
+                  op.interpret(verbose)
+                case op: SpliceOp =>
+                  op.interpret(verbose)
+                case op: StackOp =>
+                  op.interpret(verbose)
+              }
 
-          for {
-            _ <- setState(state.copy(currentScript = tail))
-            _ <- updatedContext
-            result <- interpret(verbose)
-          } yield result
-
-        case Nil =>
-          state.scriptExecutionProgress match {
-            case ScriptExecutionProgress.ExecutingScriptSig =>
               for {
-                _ <- setState(state.copy(
-                  currentScript = state.scriptPubKey,
-                  scriptExecutionProgress = ScriptExecutionProgress.ExecutingScriptPubKey
-                ))
+                _ <- setState(state.copy(currentScript = tail))
+                _ <- updatedContext
                 result <- interpret(verbose)
               } yield result
 
-            case ScriptExecutionProgress.ExecutingScriptPubKey =>
-              state.stack match {
-                case Nil =>
-                  evaluated(false)
-                case head :: Nil =>
-                  evaluated(head.bytes.toBoolean())
-                case head :: tail =>
-                  if (head.bytes.toBoolean()) {
-                    if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
-                      getSerializedScript(state.scriptSig) match {
-                        case Some(serializedScript) =>
-                          val payToScript = Parser.parse(serializedScript.bytes)
+            case Nil =>
+              state.scriptExecutionStage match {
+                case ExecutingScriptSig =>
+                  for {
+                    _ <- setState(state.copy(
+                      currentScript = state.scriptPubKey,
+                      scriptExecutionStage = ExecutingScriptPubKey
+                    ))
+                    result <- interpret(verbose)
+                  } yield result
 
-                          for {
-                            _ <- setState(state.copy(
-                              currentScript = payToScript,
-                              stack = tail,
-                              p2shScript = Some(payToScript),
-                              scriptExecutionProgress = ScriptExecutionProgress.ExecutingScriptP2SH
-                            ))
-                            result <- interpret(verbose)
-                          } yield result
-                        case None =>
-                          abort(NoSerializedScriptFound(OP_HASH160, state.stack))
+                case ExecutingScriptPubKey =>
+                  state.stack match {
+                    case Nil =>
+                      evaluated(false)
+                    case head :: Nil =>
+                      evaluated(head.bytes.toBoolean())
+                    case head :: tail =>
+                      if (head.bytes.toBoolean()) {
+                        if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
+                          getSerializedScript(state.scriptSig) match {
+                            case Some(serializedScript) =>
+                              val payToScript = Parser.parse(serializedScript.bytes)
+
+                              for {
+                                _ <- setState(state.copy(
+                                  currentScript = payToScript,
+                                  stack = tail,
+                                  p2shScript = Some(payToScript),
+                                  scriptExecutionStage = ExecutingScriptP2SH
+                                ))
+                                result <- interpret(verbose)
+                              } yield result
+                            case None =>
+                              abort(NoSerializedScriptFound(OP_HASH160, state))
+                          }
+                        } else {
+                          evaluated(!state.requireCleanStack())
+                        }
+                      } else {
+                        evaluated(false)
                       }
-                    } else {
-                      evaluated(!state.requireCleanStack())
-                    }
-                  } else {
-                    evaluated(false)
                   }
-              }
 
-            case ScriptExecutionProgress.ExecutingScriptP2SH =>
-              evaluated {
-                state.stack
-                  .headOption
-                  .exists(_.bytes.toBoolean())
+                case ExecutingScriptP2SH =>
+                  evaluated {
+                    state.stack
+                      .headOption
+                      .exists(_.bytes.toBoolean())
+                  }
               }
           }
       }

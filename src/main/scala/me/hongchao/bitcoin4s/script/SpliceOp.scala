@@ -21,7 +21,7 @@ object SpliceOp {
       getState.flatMap { state =>
         opCode match {
           case opc if disabled.contains(opc) =>
-            abort(OpcodeDisabled(opc, state.stack))
+            abort(OpcodeDisabled(opc, state))
 
           case OP_SIZE =>
             state.stack match {
@@ -34,7 +34,7 @@ object SpliceOp {
 
                 setState(newState).flatMap(continue)
               case Nil =>
-                abort(NotEnoughElementsInStack(OP_SIZE, state.stack))
+                abort(NotEnoughElementsInStack(OP_SIZE, state))
             }
         }
       }

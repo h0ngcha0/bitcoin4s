@@ -55,7 +55,7 @@ object StackOp {
                 )
                 setState(newState).flatMap(continue)
               case _ =>
-                abort(NotEnoughElementsInStack(OP_TOALTSTACK, stack))
+                abort(NotEnoughElementsInStack(OP_TOALTSTACK, state))
             }
           }
 
@@ -70,7 +70,7 @@ object StackOp {
 
                 setState(newState).flatMap(continue)
               case _ =>
-                abort(NotEnoughElementsInAltStack(OP_FROMALTSTACK, state.stack))
+                abort(NotEnoughElementsInAltStack(OP_FROMALTSTACK, state))
             }
           }
 
@@ -165,12 +165,12 @@ object StackOp {
                   val newState = rest(nth) :: rest
                   setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
                 } else {
-                  abort(NotEnoughElementsInStack(OP_PICK, stack))
+                  abort(NotEnoughElementsInStack(OP_PICK, state))
                 }
               case _ :: rest =>
-                abort(OperantMustBeScriptNum(OP_PICK, stack))
+                abort(OperantMustBeScriptNum(OP_PICK, state))
               case _ =>
-                abort(NotEnoughElementsInStack(OP_PICK, stack))
+                abort(NotEnoughElementsInStack(OP_PICK, state))
             }
           }
 
@@ -185,12 +185,12 @@ object StackOp {
                   val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
                   setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
                 } else {
-                  abort(NotEnoughElementsInStack(OP_ROLL, stack))
+                  abort(NotEnoughElementsInStack(OP_ROLL, state))
                 }
               case _ :: rest =>
-                abort(OperantMustBeScriptNum(OP_ROLL, stack))
+                abort(OperantMustBeScriptNum(OP_ROLL, state))
               case _ =>
-                abort(NotEnoughElementsInStack(OP_ROLL, stack))
+                abort(NotEnoughElementsInStack(OP_ROLL, state))
             }
           }
 
@@ -208,7 +208,7 @@ object StackOp {
           val newStack = stackConvertFunction(state.stack)
           setState(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
         } else {
-          abort(NotEnoughElementsInStack(opCode, state.stack))
+          abort(NotEnoughElementsInStack(opCode, state))
         }
       }
     }

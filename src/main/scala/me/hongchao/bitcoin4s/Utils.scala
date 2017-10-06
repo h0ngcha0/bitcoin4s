@@ -50,7 +50,7 @@ package object Utils {
   }
 
   def bytesToUInt8(bytes: Seq[Byte]): Int = {
-    bytes.head.toShort
+    bytes.head.toShort & 0xFF
   }
 
   def bytesToUInt16(bytes: Seq[Byte]): Int = {

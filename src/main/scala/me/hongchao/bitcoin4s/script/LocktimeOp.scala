@@ -27,14 +27,14 @@ object LocktimeOp {
                   if (lockTime > state.transaction.lock_time) {
                     setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
                   } else {
-                    abort(CLTVFailed(opCode, state.stack))
+                    abort(CLTVFailed(opCode, state))
                   }
 
                 case Nil =>
-                  abort(NotEnoughElementsInStack(opCode, state.stack))
+                  abort(NotEnoughElementsInStack(opCode, state))
               }
             } else if (state.disCourageUpgradableNop) {
-              abort(DiscourageUpgradableNops(opCode, state.stack))
+              abort(DiscourageUpgradableNops(opCode, state))
             } else {
               continue(opCode)
             }
@@ -50,14 +50,14 @@ object LocktimeOp {
                   if (sequence >= input.sequence) {
                     setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
                   } else {
-                    abort(CLTVFailed(opCode, state.stack))
+                    abort(CSVFailed(opCode, state))
                   }
 
                 case Nil =>
-                  abort(NotEnoughElementsInStack(opCode, state.stack))
+                  abort(NotEnoughElementsInStack(opCode, state))
               }
             } else if (state.disCourageUpgradableNop) {
-              abort(DiscourageUpgradableNops(opCode, state.stack))
+              abort(DiscourageUpgradableNops(opCode, state))
             } else {
               continue(opCode)
             }

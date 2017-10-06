@@ -84,11 +84,13 @@ object Parser {
         }
 
       def pushData(opCode: ScriptOpCode, numberOfBytesToPush: Int, restOfData: Seq[Byte]): (Seq[Byte], Seq[Seq[ScriptElement]]) = {
-        val bytesToPush = restOfData.take(numberOfBytesToPush)
+        val maybeBytesToPush = restOfData.takeOpt(numberOfBytesToPush)
         val restOfBytes = restOfData.drop(numberOfBytesToPush)
+        val maybeConstantToBePushed = maybeBytesToPush.map { bytesToPush =>
+          (bytesToPush.isEmpty).option(OP_0).getOrElse(ScriptConstant(bytesToPush))
+        }
 
-        val constantToBePushed = (bytesToPush.isEmpty).option(OP_0).getOrElse(ScriptConstant(bytesToPush))
-        (restOfBytes, Seq(opCode, constantToBePushed) +: acc)
+        (restOfBytes, (Seq(opCode) ++ maybeConstantToBePushed.toList) +: acc)
       }
 
       val (restOfBytes, newAcc) = opCode match {
