@@ -169,6 +169,11 @@ object OpCodes {
 
   val invalid = Seq(ReservedOp.OP_VERIF, ReservedOp.OP_VERNOTIF)
 
+  // An non-existent op code, only used internally.
+  case object OP_UNKNOWN extends ScriptOpCode {
+    val value = -1
+  }
+
   // e.g. `OP_DUP` or `DUP`
   def fromString(str: String): Option[ScriptOpCode] = {
     all.find(_.name == str)

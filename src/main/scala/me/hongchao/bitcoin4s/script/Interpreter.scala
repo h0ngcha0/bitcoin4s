@@ -10,8 +10,9 @@ import cats.data.StateT
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_HASH160
-import me.hongchao.bitcoin4s.script.InterpreterError.{BadOpCode, NoSerializedScriptFound}
+import me.hongchao.bitcoin4s.script.InterpreterError.{BadOpCode, NoSerializedScriptFound, RequireCleanStack}
 import ScriptExecutionStage._
+import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
 
 sealed trait ScriptExecutionStage
 object ScriptExecutionStage {
@@ -134,6 +135,10 @@ object InterpreterError {
     }
   }
 
+  case class RequireCleanStack(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Stack is not clean when SCRIPT_VERIFY_CLEANSTACK flag is set"
+  }
+
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not all operants are constant"
   }
@@ -219,8 +224,8 @@ object Interpreter {
           abort(BadOpCode(opCode, state, "Opcode not allowed"))
         case _ =>
           state.currentScript match {
-            case head :: tail =>
-              val updatedContext = head match {
+            case opCode :: tail =>
+              val updatedContext = opCode match {
                 case op: ArithmeticOp =>
                   op.interpret(verbose)
                 case op: BitwiseLogicOp =>
@@ -267,37 +272,40 @@ object Interpreter {
                     case head :: Nil =>
                       evaluated(head.bytes.toBoolean())
                     case head :: tail =>
-                      if (head.bytes.toBoolean()) {
-                        if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
-                          getSerializedScript(state.scriptSig) match {
-                            case Some(serializedScript) =>
-                              val payToScript = Parser.parse(serializedScript.bytes)
+                      if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
+                        getSerializedScript(state.scriptSig) match {
+                          case Some(serializedScript) =>
+                            val payToScript = Parser.parse(serializedScript.bytes)
 
-                              for {
-                                _ <- setState(state.copy(
-                                  currentScript = payToScript,
-                                  stack = tail,
-                                  p2shScript = Some(payToScript),
-                                  scriptExecutionStage = ExecutingScriptP2SH
-                                ))
-                                result <- interpret(verbose)
-                              } yield result
-                            case None =>
-                              abort(NoSerializedScriptFound(OP_HASH160, state))
-                          }
-                        } else {
-                          evaluated(!state.requireCleanStack())
+                            for {
+                              _ <- setState(state.copy(
+                                currentScript = payToScript,
+                                stack = tail,
+                                p2shScript = Some(payToScript),
+                                scriptExecutionStage = ExecutingScriptP2SH
+                              ))
+                              result <- interpret(verbose)
+                            } yield result
+                          case None =>
+                            abort(NoSerializedScriptFound(OP_HASH160, state))
                         }
                       } else {
-                        evaluated(false)
+                        if (state.requireCleanStack()) {
+                          abort(RequireCleanStack(OP_UNKNOWN, state))
+                        } else {
+                          evaluated(head.bytes.toBoolean())
+                        }
                       }
                   }
 
                 case ExecutingScriptP2SH =>
-                  evaluated {
-                    state.stack
-                      .headOption
-                      .exists(_.bytes.toBoolean())
+                  state.stack match {
+                    case head :: tail =>
+                      if (state.requireCleanStack() && tail.nonEmpty) {
+                        abort(RequireCleanStack(OP_UNKNOWN, state))
+                      } else {
+                        evaluated(head.bytes.toBoolean())
+                      }
                   }
               }
           }

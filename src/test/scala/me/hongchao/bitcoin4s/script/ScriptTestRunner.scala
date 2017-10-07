@@ -8,7 +8,7 @@ import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
-import me.hongchao.bitcoin4s.script.InterpreterError.BadOpCode
+import me.hongchao.bitcoin4s.script.InterpreterError.{BadOpCode, RequireCleanStack}
 
 trait ScriptTestRunner { self: Spec =>
   sealed trait ExpectedResult extends Product {
@@ -99,7 +99,7 @@ trait ScriptTestRunner { self: Spec =>
     )
 
     withClue(test.comments) {
-      val result = Interpreter.interpret().run(initialState)
+      val result = Interpreter.interpret(verbose = false).run(initialState)
 
       test.expectedResult match {
         case ExpectedResult.OK =>
@@ -124,6 +124,14 @@ trait ScriptTestRunner { self: Spec =>
               fail(s"Expect BAD_OPCODE, but receive $result")
             case Left(error) =>
               error shouldBe a [BadOpCode]
+          }
+
+        case ExpectedResult.CLEANSTACK =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect CLEANSTACK, but receive $result")
+            case Left(error) =>
+              error shouldBe a [RequireCleanStack]
           }
 
         case _ =>
