@@ -53,18 +53,18 @@ object FlowControlOp {
                     )
                     setState(updatedState).flatMap(continue)
                   case _ =>
-                    abort(NotEnoughElementsInStack(opCode, state))
+                    abort(UnbalancedConditional(opCode, state))
                 }
 
               case Failure(error: InterpreterError) =>
                 abort(error)
 
               case Failure(error) =>
-                throw error
+                abort(UnbalancedConditional(opCode, state))
             }
 
           case OP_ELSE | OP_ENDIF =>
-            abort(UnexpectedOpCode(opCode, state))
+            abort(UnbalancedConditional(opCode, state))
 
           case OP_VERIFY =>
             state.stack match {
@@ -105,6 +105,8 @@ object FlowControlOp {
     acc: ConditionalBranchSplitResult
   ): ConditionalBranchSplitResult = {
     script match {
+      case Nil =>
+        throw new RuntimeException("Unbalanced conditionals")
       case opCode :: tail if opCode == OP_IF || opCode == OP_NOTIF =>
         val newNestedDepth = nestedDepth + 1
 

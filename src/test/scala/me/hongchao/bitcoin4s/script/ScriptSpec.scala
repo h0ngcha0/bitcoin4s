@@ -73,17 +73,22 @@ class ScriptSpec extends Spec with ScriptTestRunner {
         }
     }
 
-    val expectedResults = Seq(
-      ExpectedResult.OK, ExpectedResult.EVAL_FALSE,
-      ExpectedResult.BAD_OPCODE, ExpectedResult.CLEANSTACK,
-      ExpectedResult.DISABLED_OPCODE, ExpectedResult.DISCOURAGE_UPGRADABLE_NOPS,
-      ExpectedResult.EQUALVERIFY, ExpectedResult.INVALID_ALTSTACK_OPERATION,
+    val checkExpectedResults = Seq(
+      ExpectedResult.OK,
+      ExpectedResult.EVAL_FALSE,
+      ExpectedResult.BAD_OPCODE,
+      ExpectedResult.CLEANSTACK,
+      ExpectedResult.DISABLED_OPCODE,
+      ExpectedResult.DISCOURAGE_UPGRADABLE_NOPS,
+      ExpectedResult.EQUALVERIFY,
+      ExpectedResult.INVALID_ALTSTACK_OPERATION,
       ExpectedResult.INVALID_STACK_OPERATION,
-      ExpectedResult.MINIMALDATA
+      ExpectedResult.MINIMALDATA,
+      ExpectedResult.UNBALANCED_CONDITIONAL
     )
     val notIncludedTests = Seq("WITNESS")
     val filteredScriptTests = scriptTests.filter { test =>
-      expectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
+      checkExpectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
     }
 
     filteredScriptTests.zipWithIndex.foreach {

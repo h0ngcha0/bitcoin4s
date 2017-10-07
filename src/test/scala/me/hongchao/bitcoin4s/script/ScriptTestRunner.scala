@@ -183,6 +183,14 @@ trait ScriptTestRunner { self: Spec =>
               error shouldBe a [NotMinimalEncoding]
           }
 
+        case ExpectedResult.UNBALANCED_CONDITIONAL =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect UnbalancedConditional but receive $result")
+            case Left(error) =>
+              error shouldBe a [UnbalancedConditional]
+          }
+
         case _ =>
           throw new NotImplementedError()
       }

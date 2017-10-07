@@ -185,8 +185,8 @@ object InterpreterError {
     val description = "Not implemented"
   }
 
-  case class UnbalancedCondition(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Unbalanced condition"
+  case class UnbalancedConditional(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Unbalanced conditional"
   }
 
   case class NoSerializedScriptFound(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
