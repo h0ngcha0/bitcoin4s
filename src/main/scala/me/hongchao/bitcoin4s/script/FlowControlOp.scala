@@ -80,7 +80,7 @@ object FlowControlOp {
                   setState(newState).flatMap(continue)
                 }
               case _ =>
-                abort(NotEnoughElementsInStack(OP_VERIFY, state))
+                abort(InvalidStackOperation(OP_VERIFY, state))
             }
 
           case OP_RETURN =>

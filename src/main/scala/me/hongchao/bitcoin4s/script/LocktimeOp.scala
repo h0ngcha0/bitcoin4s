@@ -54,7 +54,7 @@ object LocktimeOp {
                   }
 
                 case Nil =>
-                  abort(NotEnoughElementsInStack(opCode, state))
+                  abort(InvalidStackOperation(opCode, state))
               }
             } else if (state.disCourageUpgradableNop) {
               abort(DiscourageUpgradableNops(opCode, state))

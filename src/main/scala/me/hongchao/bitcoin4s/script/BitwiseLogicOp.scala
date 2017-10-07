@@ -53,7 +53,7 @@ object BitwiseLogicOp {
 
             setState(newState).flatMap(continue)
           case _ =>
-            abort(NotEnoughElementsInStack(OP_EQUAL, state))
+            abort(InvalidStackOperation(OP_EQUAL, state))
         }
       }
     }

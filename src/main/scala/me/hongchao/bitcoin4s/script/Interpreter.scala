@@ -105,7 +105,7 @@ case class InterpreterState(
 }
 
 
-sealed trait InterpreterError extends RuntimeException {
+sealed trait InterpreterError extends RuntimeException with Product {
   val opCode: ScriptOpCode
   val state: InterpreterState
   val description: String
@@ -123,16 +123,18 @@ object InterpreterError {
     }
   }
 
-  object NotEnoughElementsInAltStack {
-    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
-      BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Not enough elements in the alternative stack")
-    }
-  }
-
   object NotExecutableReservedOpcode{
     def apply(opCode: ScriptOpCode, state: InterpreterState) = {
       BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Found not executable reserved opcode")
     }
+  }
+
+  case class InvalidStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Invalid stack operation"
+  }
+
+  case class InvalidAltStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Invalid alt stack operation"
   }
 
   case class RequireCleanStack(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
@@ -314,6 +316,7 @@ object Interpreter {
               for {
                 _ <- setState(state.copy(
                   currentScript = state.scriptPubKey,
+                  altStack = Seq.empty,
                   scriptExecutionStage = ExecutingScriptPubKey
                 ))
                 result <- interpret(verbose)
@@ -335,6 +338,7 @@ object Interpreter {
                           _ <- setState(state.copy(
                             currentScript = payToScript,
                             stack = tail,
+                            altStack = Seq.empty,
                             p2shScript = Some(payToScript),
                             scriptExecutionStage = ExecutingScriptP2SH
                           ))

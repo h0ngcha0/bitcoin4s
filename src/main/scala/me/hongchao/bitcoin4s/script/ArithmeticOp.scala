@@ -162,7 +162,7 @@ object ArithmeticOp {
               case _ :: _ :: _ :: _ =>
                 abort(NotAllOperantsAreConstant(opCode, state))
               case _ =>
-                abort(NotEnoughElementsInStack(opCode, state))
+                abort(InvalidStackOperation(opCode, state))
             }
           }
       }
@@ -183,7 +183,7 @@ object ArithmeticOp {
           case _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state))
           case _ =>
-            abort(NotEnoughElementsInStack(opCode, state))
+            abort(InvalidStackOperation(opCode, state))
         }
       }
 
@@ -205,7 +205,7 @@ object ArithmeticOp {
           case _ :: _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state))
           case _ =>
-            abort(NotEnoughElementsInStack(opCode, state))
+            abort(InvalidStackOperation(opCode, state))
         }
       }
     }

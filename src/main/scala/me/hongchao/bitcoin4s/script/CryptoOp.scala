@@ -4,10 +4,11 @@ import me.hongchao.bitcoin4s.crypto.Hash._
 import me.hongchao.bitcoin4s.crypto.{PublicKey, Signature}
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
-import me.hongchao.bitcoin4s.script.InterpreterError.NotEnoughElementsInStack
+import me.hongchao.bitcoin4s.script.InterpreterError.{InvalidStackOperation, NotEnoughElementsInStack}
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
+
 import scala.annotation.tailrec
 import cats.implicits._
 
@@ -66,7 +67,7 @@ object CryptoOp {
                 ).flatMap(continue)
 
               case _ =>
-                abort(NotEnoughElementsInStack(opCode, state))
+                abort(InvalidStackOperation(opCode, state))
             }
           }
 
@@ -104,16 +105,20 @@ object CryptoOp {
                 val checkResult = checkSignatures(pubKeys, signatures, state)
 
                 // NOTE: Due to the bug in the reference client
-                val oneMorePop = rest.tail
+                if (rest.nonEmpty) {
+                  val oneMorePop = rest.tail
 
-                setState(
-                  state.copy(
-                    stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
-                    opCount = state.opCount + 1 + pubKeys.length
-                  )
-                ).flatMap(continue)
+                  setState(
+                    state.copy(
+                      stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
+                      opCount = state.opCount + 1 + pubKeys.length
+                    )
+                  ).flatMap(continue)
+                } else {
+                  abort(InvalidStackOperation(opCode, state))
+                }
               case None =>
-                abort(NotEnoughElementsInStack(opCode, state))
+                abort(InvalidStackOperation(opCode, state))
             }
           }
 
@@ -137,7 +142,7 @@ object CryptoOp {
           val hashed = hash(head.bytes.toArray)
           setState(state.replaceStackTopElement(ScriptConstant(hashed))).flatMap(continue)
         case _ =>
-          abort(NotEnoughElementsInStack(opCode, state))
+          abort(InvalidStackOperation(opCode, state))
       }
 
       getState.flatMap(hashTopElement)

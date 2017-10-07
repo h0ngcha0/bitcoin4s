@@ -34,7 +34,7 @@ object SpliceOp {
 
                 setState(newState).flatMap(continue)
               case Nil =>
-                abort(NotEnoughElementsInStack(OP_SIZE, state))
+                abort(InvalidStackOperation(OP_SIZE, state))
             }
         }
       }

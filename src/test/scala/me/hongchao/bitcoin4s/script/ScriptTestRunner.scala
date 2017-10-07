@@ -8,6 +8,7 @@ import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
+import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
 
 trait ScriptTestRunner { self: Spec =>
@@ -140,6 +141,38 @@ trait ScriptTestRunner { self: Spec =>
               fail(s"Expect DISABLED_OPCODE, but receive $result")
             case Left(error) =>
               error shouldBe a [OpcodeDisabled]
+          }
+
+        case ExpectedResult.DISCOURAGE_UPGRADABLE_NOPS =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect DISCOURAGE_UPGRADABLE_NOPS, but receive $result")
+            case Left(error) =>
+              error shouldBe a [DiscourageUpgradableNops]
+          }
+
+        case ExpectedResult.EQUALVERIFY=>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect EQUAL_VERIFY, but receive $result")
+            case Left(error) =>
+              error shouldBe a [VerificationFailed]
+          }
+
+        case ExpectedResult.INVALID_ALTSTACK_OPERATION=>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect INVALID_ALTSTACK_OPERATION but receive $result")
+            case Left(error) =>
+              error shouldBe a [InvalidAltStackOperation]
+          }
+
+        case ExpectedResult.INVALID_STACK_OPERATION =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect INVALID_STACK_OPERATION but receive $result")
+            case Left(error) =>
+              error shouldBe a [InvalidStackOperation]
           }
 
         case _ =>

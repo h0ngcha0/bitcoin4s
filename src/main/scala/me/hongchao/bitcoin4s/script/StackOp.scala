@@ -2,6 +2,7 @@ package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import me.hongchao.bitcoin4s.Utils._
 import cats.implicits._
 
 sealed trait StackOp extends ScriptOpCode
@@ -55,7 +56,7 @@ object StackOp {
                 )
                 setState(newState).flatMap(continue)
               case _ =>
-                abort(NotEnoughElementsInStack(OP_TOALTSTACK, state))
+                abort(InvalidStackOperation(OP_TOALTSTACK, state))
             }
           }
 
@@ -70,7 +71,7 @@ object StackOp {
 
                 setState(newState).flatMap(continue)
               case _ =>
-                abort(NotEnoughElementsInAltStack(OP_FROMALTSTACK, state))
+                abort(InvalidAltStackOperation(OP_FROMALTSTACK, state))
             }
           }
 
@@ -161,16 +162,16 @@ object StackOp {
             stack match {
               case (constant: ScriptConstant) :: rest =>
                 val nth = ScriptNum.toLong(constant.bytes).toInt
-                if (rest.length >= nth) {
+                if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
                   val newState = rest(nth) :: rest
                   setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
                 } else {
-                  abort(NotEnoughElementsInStack(OP_PICK, state))
+                  abort(InvalidStackOperation(OP_PICK, state))
                 }
               case _ :: rest =>
                 abort(OperantMustBeScriptNum(OP_PICK, state))
               case _ =>
-                abort(NotEnoughElementsInStack(OP_PICK, state))
+                abort(InvalidStackOperation(OP_PICK, state))
             }
           }
 
@@ -181,16 +182,16 @@ object StackOp {
             stack match {
               case (constant: ScriptConstant) :: rest =>
                 val nth = ScriptNum.toLong(constant.bytes).toInt
-                if (rest.length >= nth) {
+                if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
                   val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
                   setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
                 } else {
-                  abort(NotEnoughElementsInStack(OP_ROLL, state))
+                  abort(InvalidStackOperation(OP_ROLL, state))
                 }
               case _ :: rest =>
                 abort(OperantMustBeScriptNum(OP_ROLL, state))
               case _ =>
-                abort(NotEnoughElementsInStack(OP_ROLL, state))
+                abort(InvalidStackOperation(OP_ROLL, state))
             }
           }
 
@@ -208,7 +209,7 @@ object StackOp {
           val newStack = stackConvertFunction(state.stack)
           setState(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
         } else {
-          abort(NotEnoughElementsInStack(opCode, state))
+          abort(InvalidStackOperation(opCode, state))
         }
       }
     }
