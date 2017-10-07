@@ -52,7 +52,7 @@ object ConstantOp {
   implicit val interpreter = new Interpretable[ConstantOp] {
     override def interpret(opCode: ConstantOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
-        case opc if opc.value >= 79 && opc.value <= 96 =>
+        case opc if opc.value >= 79 && opc.value <= 96 => // From OP_1NEGATE to OP_16
           getState
             .flatMap { state =>
               // from OP_1NEGATE to OP_16
@@ -81,17 +81,25 @@ object ConstantOp {
             .flatMap { state =>
               state.currentScript match {
                 case (dataToPush: ScriptConstant) :: rest =>
-                  setState(state.copy(
-                    currentScript = rest,
-                    stack = dataToPush +: state.stack,
-                    opCount = state.opCount + 1
-                  )).flatMap(continue)
+                  if (!checkMinimalPush(opCode, dataToPush) && state.requireMinimalEncoding()) {
+                    abort(NotMinimalEncoding(opCode, state))
+                  } else {
+                    setState(state.copy(
+                      currentScript = rest,
+                      stack = dataToPush +: state.stack,
+                      opCount = state.opCount + 1
+                    )).flatMap(continue)
+                  }
                 case OP_0 :: rest =>
-                  setState(state.copy(
-                    currentScript = rest,
-                    stack = ScriptNum(0) +: state.stack,
-                    opCount = state.opCount + 1
-                  )).flatMap(continue)
+                  if (state.requireMinimalEncoding()) {
+                    abort(NotMinimalEncoding(opCode, state))
+                  } else {
+                    setState(state.copy(
+                      currentScript = rest,
+                      stack = ScriptNum(0) +: state.stack,
+                      opCount = state.opCount + 1
+                    )).flatMap(continue)
+                  }
                 case _ :: _ =>
                   abort(OperantMustBeScriptConstant(opCode, state))
                 case _ =>
@@ -99,6 +107,26 @@ object ConstantOp {
               }
             }
       }
+    }
+  }
+
+  // Similiar to https://github.com/bitcoin/bitcoin/blob/923c5e93a90a6eddde3ab8589fc393da95bbc489/src/script/interpreter.cpp#L215
+  private def checkMinimalPush(opCode: ScriptOpCode, constant: ScriptConstant): Boolean = {
+    constant.bytes.size match {
+      case 0 =>
+        opCode == OP_0
+      case 1 if constant.bytes(0) == 0x81.toByte =>
+        opCode == OP_1NEGATE
+      case 1 if constant.bytes(0) >= 1 && constant.bytes(0) <= 16 =>
+        all.find(_.value == (OP_1.value + constant.bytes(0) - 1)).exists(_ == opCode)
+      case s if s <= 75 =>
+        opCode == OP_PUSHDATA(s)
+      case s if s <= 255 =>
+        opCode == OP_PUSHDATA1
+      case s if s <= 65535 =>
+        opCode == OP_PUSHDATA2
+      case _ =>
+        true
     }
   }
 }

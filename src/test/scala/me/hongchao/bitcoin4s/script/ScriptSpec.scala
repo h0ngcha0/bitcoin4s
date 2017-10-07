@@ -78,7 +78,8 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.BAD_OPCODE, ExpectedResult.CLEANSTACK,
       ExpectedResult.DISABLED_OPCODE, ExpectedResult.DISCOURAGE_UPGRADABLE_NOPS,
       ExpectedResult.EQUALVERIFY, ExpectedResult.INVALID_ALTSTACK_OPERATION,
-      ExpectedResult.INVALID_STACK_OPERATION
+      ExpectedResult.INVALID_STACK_OPERATION,
+      ExpectedResult.MINIMALDATA
     )
     val notIncludedTests = Seq("WITNESS")
     val filteredScriptTests = scriptTests.filter { test =>

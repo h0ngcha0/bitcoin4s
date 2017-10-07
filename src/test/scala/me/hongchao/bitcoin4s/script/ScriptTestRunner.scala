@@ -175,6 +175,14 @@ trait ScriptTestRunner { self: Spec =>
               error shouldBe a [InvalidStackOperation]
           }
 
+        case ExpectedResult.MINIMALDATA =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect MINIMALDATA but receive $result")
+            case Left(error) =>
+              error shouldBe a [NotMinimalEncoding]
+          }
+
         case _ =>
           throw new NotImplementedError()
       }

@@ -141,6 +141,10 @@ object InterpreterError {
     val description = "Stack is not clean when SCRIPT_VERIFY_CLEANSTACK flag is set"
   }
 
+  case class NotMinimalEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "MINIMALENCODING flags is set but it's not minimal encoded"
+  }
+
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not all operants are constant"
   }
