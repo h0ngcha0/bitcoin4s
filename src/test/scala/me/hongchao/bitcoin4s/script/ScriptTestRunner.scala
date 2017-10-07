@@ -8,7 +8,7 @@ import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
-import me.hongchao.bitcoin4s.script.InterpreterError.{BadOpCode, RequireCleanStack}
+import me.hongchao.bitcoin4s.script.InterpreterError._
 
 trait ScriptTestRunner { self: Spec =>
   sealed trait ExpectedResult extends Product {
@@ -132,6 +132,14 @@ trait ScriptTestRunner { self: Spec =>
               fail(s"Expect CLEANSTACK, but receive $result")
             case Left(error) =>
               error shouldBe a [RequireCleanStack]
+          }
+
+        case ExpectedResult.DISABLED_OPCODE =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect DISABLED_OPCODE, but receive $result")
+            case Left(error) =>
+              error shouldBe a [OpcodeDisabled]
           }
 
         case _ =>

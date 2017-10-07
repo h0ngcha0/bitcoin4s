@@ -45,7 +45,7 @@ object ArithmeticOp {
     OP_GREATERTHAN, OP_LESSTHANOREQUAL, OP_GREATERTHANOREQUAL, OP_MIN, OP_MAX, OP_WITHIN
   )
 
-  val disabled = Seq(OP_2MUL, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
+  val disabled = Seq(OP_MUL, OP_2MUL, OP_DIV, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
 
   implicit val interpreter = new Interpretable[ArithmeticOp] {
     def interpret(opCode: ArithmeticOp): InterpreterContext[Option[Boolean]] = {
