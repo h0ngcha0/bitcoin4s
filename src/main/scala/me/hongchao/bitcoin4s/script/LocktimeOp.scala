@@ -23,11 +23,10 @@ object LocktimeOp {
               state.stack match {
                 case head :: _ =>
                   val lockTime = ScriptNum(head.bytes, false, 5).value
-
-                  if (lockTime > state.transaction.lock_time) {
-                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
-                  } else {
+                  if (lockTime < 0 || lockTime <= state.transaction.lock_time) {
                     abort(CLTVFailed(opCode, state))
+                  } else {
+                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
                   }
 
                 case Nil =>
@@ -47,10 +46,10 @@ object LocktimeOp {
                 case head :: _ =>
                   val sequence = ScriptNum(head.bytes, false, 5).value
                   val input = state.transaction.tx_in(state.inputIndex)
-                  if (sequence >= input.sequence) {
-                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
-                  } else {
+                  if (sequence < 0 || sequence < input.sequence) {
                     abort(CSVFailed(opCode, state))
+                  } else {
+                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
                   }
 
                 case Nil =>

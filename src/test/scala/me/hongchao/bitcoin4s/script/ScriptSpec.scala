@@ -84,7 +84,9 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.INVALID_ALTSTACK_OPERATION,
       ExpectedResult.INVALID_STACK_OPERATION,
       ExpectedResult.MINIMALDATA,
-      ExpectedResult.UNBALANCED_CONDITIONAL
+      ExpectedResult.UNBALANCED_CONDITIONAL,
+      ExpectedResult.NEGATIVE_LOCKTIME
+      //ExpectedResult.OP_COUNT
     )
     val notIncludedTests = Seq("WITNESS")
     val filteredScriptTests = scriptTests.filter { test =>
