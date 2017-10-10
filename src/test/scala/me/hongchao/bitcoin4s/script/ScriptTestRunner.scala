@@ -10,6 +10,8 @@ import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
+//import scala.reflect.runtime.universe._
+//import scala.reflect.ClassTag
 
 trait ScriptTestRunner { self: Spec =>
   sealed trait ExpectedResult extends Product {
@@ -191,11 +193,29 @@ trait ScriptTestRunner { self: Spec =>
               error shouldBe a [UnbalancedConditional]
           }
 
+        case ExpectedResult.NEGATIVE_LOCKTIME =>
+          result match {
+            case Right((finalState, result)) =>
+              fail(s"Expect NEGATIVE_LOCKTIME but receive $result")
+            case Left(error) =>
+              error shouldBe a [CSVFailed]
+          }
+
         case _ =>
           throw new NotImplementedError()
       }
     }
   }
+
+/*  type ErrorType[T] = ClassTag[T] with TypeTag[T]
+  private def checkError[T: ErrorType](result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]) = {
+    result match {
+      case Right((finalState, result)) =>
+        fail(s"Expect ${typeOf[T].toString} but receive $result")
+      case Left(error) =>
+        error shouldBe a [T]
+    }
+  }*/
 
   def creditingTransaction(scriptPubKey: Seq[Byte], amount: Option[Long] = None) = {
     val emptyTxId = Array.fill[Byte](32)(0)
