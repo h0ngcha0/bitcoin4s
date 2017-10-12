@@ -1,8 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.{State, StateT}
 import me.hongchao.bitcoin4s.script.Interpreter._
-import me.hongchao.bitcoin4s.script.InterpreterError.{BadOpCode, NotImplemented}
+import me.hongchao.bitcoin4s.script.InterpreterError.BadOpCode
 import cats.implicits._
 
 sealed trait PseudoOp extends ScriptOpCode

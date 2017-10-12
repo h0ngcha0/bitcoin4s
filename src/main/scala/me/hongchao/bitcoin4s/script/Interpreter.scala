@@ -162,6 +162,10 @@ object InterpreterError {
     val description = "Exceed the maximum stack size"
   }
 
+  case class ExceedMaxScriptSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Exceed the maximum script size"
+  }
+
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not all operants are constant"
   }
@@ -198,20 +202,12 @@ object InterpreterError {
     val description = "CheckSequenceVerify failed"
   }
 
-  case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Not implemented"
-  }
-
   case class UnbalancedConditional(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Unbalanced conditional"
   }
 
   case class NoSerializedScriptFound(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "No serialized script found for p2sh"
-  }
-
-  case class UnexpectedOpCode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Unexpected op code encountered"
   }
 }
 
@@ -241,6 +237,7 @@ object Interpreter {
   val MAX_OPCODES = 201
   val MAX_PUSH_SIZE = 520
   val MAX_STACK_SIZE = 1000
+  val MAX_SCRIPT_SIZE = 10000  // bytes
 
   def tailRecM[A, B] = FlatMap[InterpreterContext].tailRecM[A, B] _
 
@@ -251,6 +248,7 @@ object Interpreter {
       _ <- checkInvalidOpCode()
       _ <- checkDisabledOpCode()
       _ <- checkMaxPushSize()
+      _ <- checkMaxScriptSize()
       result <- interpretScript(verbose)
     } yield result
   }
@@ -335,6 +333,23 @@ object Interpreter {
     }
   }
 
+  private def checkMaxScriptSize(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val numberOfPushData1 = state.currentScript.filter(_ == OP_PUSHDATA1).length
+      val numberOfPushData2 = state.currentScript.filter(_ == OP_PUSHDATA2).length
+      val numberOfPushData4 = state.currentScript.filter(_ == OP_PUSHDATA4).length
+      val skippedDataLengthBytes = numberOfPushData1 + numberOfPushData2 * 2 + numberOfPushData4 * 4
+
+      val totalBytes = state.currentScript.map(_.bytes.length).sum + skippedDataLengthBytes
+
+      if (totalBytes > MAX_SCRIPT_SIZE) {
+        abort(ExceedMaxScriptSize(OP_UNKNOWN, state))
+      } else {
+        StateT.pure(None)
+      }
+    }
+  }
+
   private def interpretScript(verbose: Boolean): InterpreterContext[Option[Boolean]] = {
     tailRecM(None: Option[Boolean]) {
       case Some(value) =>
@@ -400,6 +415,7 @@ object Interpreter {
               _ <- checkInvalidOpCode()
               _ <- checkDisabledOpCode()
               _ <- checkMaxPushSize()
+              _ <- checkMaxScriptSize()
             } yield {
               Left(None)
             }
@@ -428,6 +444,7 @@ object Interpreter {
                         _ <- checkInvalidOpCode()
                         _ <- checkDisabledOpCode()
                         _ <- checkMaxPushSize()
+                        _ <- checkMaxScriptSize()
                       } yield {
                         Left(None)
                       }

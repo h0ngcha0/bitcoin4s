@@ -165,6 +165,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.STACK_SIZE =>
           checkError[ExceedMaxStackSize](result, "STACK_SIZE")
 
+        case ExpectedResult.SCRIPT_SIZE =>
+          checkError[ExceedMaxScriptSize](result, "SCRIPT_SIZE")
+
         case _ =>
           throw new NotImplementedError()
       }
