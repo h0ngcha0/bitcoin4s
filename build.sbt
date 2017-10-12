@@ -4,7 +4,7 @@ name := "bitcoin4s"
 organization := "me.hongchao"
 version := "0.0.1"
 
-scalaVersion := "2.12.3"
+scalaVersion in ThisBuild := "2.12.3"
 
 scalacOptions := Seq(
   "-unchecked",

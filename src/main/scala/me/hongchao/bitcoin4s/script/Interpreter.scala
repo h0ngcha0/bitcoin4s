@@ -1,16 +1,17 @@
 package me.hongchao.bitcoin4s.script
 
+import cats.FlatMap
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.Utils._
 import com.typesafe.scalalogging.StrictLogging
 import simulacrum._
-import cats.data.StateT
+import cats.data._
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_HASH160
-import me.hongchao.bitcoin4s.script.InterpreterError.{BadOpCode, NoSerializedScriptFound, OpcodeDisabled, RequireCleanStack}
+import me.hongchao.bitcoin4s.script.InterpreterError._
 import ScriptExecutionStage._
 import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
 
@@ -145,6 +146,10 @@ object InterpreterError {
     val description = "MINIMALENCODING flags is set but it's not minimal encoded"
   }
 
+  case class ExceedMaxOpCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "More than max op count"
+  }
+
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not all operants are constant"
   }
@@ -221,6 +226,10 @@ object Interpreter {
   type InterpreterErrorHandler[T] = Either[InterpreterError, T]
   type InterpreterContext[T] = StateT[InterpreterErrorHandler, InterpreterState, T]
 
+  val MAX_OPCODES = 201
+
+  def tailRecM[A, B] = FlatMap[InterpreterContext].tailRecM[A, B] _
+
   import me.hongchao.bitcoin4s.script.Interpretable.ops._
 
   def interpret(verbose: Boolean = false): InterpreterContext[Option[Boolean]] = {
@@ -228,6 +237,7 @@ object Interpreter {
       _ <- checkInvalidOpCode()
       _ <- checkDisabledOpCode()
       result <- interpretScript(verbose)
+      //_ <- checkOpCodeCount()
     } yield result
   }
 
@@ -259,6 +269,14 @@ object Interpreter {
     errorWithExplicitType
   }
 
+  private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      (state.opCount > MAX_OPCODES)
+        .option(abort(ExceedMaxOpCount(OP_UNKNOWN, state)))
+        .getOrElse(StateT.pure(None))
+    }
+  }
+
   private def checkInvalidOpCode(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
       state.currentScript.find(OpCodes.invalid.contains) match {
@@ -282,95 +300,112 @@ object Interpreter {
   }
 
   private def interpretScript(verbose: Boolean): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      state.currentScript match {
-        case opCode :: tail =>
-          val updatedContext = opCode match {
-            case op: ArithmeticOp =>
-              op.interpret(verbose)
-            case op: BitwiseLogicOp =>
-              op.interpret(verbose)
-            case op: ConstantOp =>
-              op.interpret(verbose)
-            case op: CryptoOp =>
-              op.interpret(verbose)
-            case op: FlowControlOp =>
-              op.interpret(verbose)
-            case op: LocktimeOp =>
-              op.interpret(verbose)
-            case op: PseudoOp =>
-              op.interpret(verbose)
-            case op: ReservedOp =>
-              op.interpret(verbose)
-            case op: SpliceOp =>
-              op.interpret(verbose)
-            case op: StackOp =>
-              op.interpret(verbose)
-          }
+    tailRecM(None: Option[Boolean]) {
+      case Some(value) =>
+        StateT.pure(Right(Some(value)))
+      case None =>
+        getState.flatMap { state =>
+          state.currentScript match {
+            case opCode :: tail =>
+              val updatedContext = opCode match {
+                case op: ArithmeticOp =>
+                  op.interpret(verbose)
+                case op: BitwiseLogicOp =>
+                  op.interpret(verbose)
+                case op: ConstantOp =>
+                  op.interpret(verbose)
+                case op: CryptoOp =>
+                  op.interpret(verbose)
+                case op: FlowControlOp =>
+                  op.interpret(verbose)
+                case op: LocktimeOp =>
+                  op.interpret(verbose)
+                case op: PseudoOp =>
+                  op.interpret(verbose)
+                case op: ReservedOp =>
+                  op.interpret(verbose)
+                case op: SpliceOp =>
+                  op.interpret(verbose)
+                case op: StackOp =>
+                  op.interpret(verbose)
+              }
 
-          for {
-            _ <- setState(state.copy(currentScript = tail))
-            _ <- updatedContext
-            result <- interpret(verbose)
-          } yield result
-
-        case Nil =>
-          state.scriptExecutionStage match {
-            case ExecutingScriptSig =>
               for {
-                _ <- setState(state.copy(
-                  currentScript = state.scriptPubKey,
-                  altStack = Seq.empty,
-                  scriptExecutionStage = ExecutingScriptPubKey
-                ))
-                result <- interpret(verbose)
-              } yield result
-
-            case ExecutingScriptPubKey =>
-              state.stack match {
-                case Nil =>
-                  evaluated(false)
-                case head :: Nil =>
-                  evaluated(head.bytes.toBoolean())
-                case head :: tail =>
-                  if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
-                    getSerializedScript(state.scriptSig) match {
-                      case Some(serializedScript) =>
-                        val payToScript = Parser.parse(serializedScript.bytes)
-
-                        for {
-                          _ <- setState(state.copy(
-                            currentScript = payToScript,
-                            stack = tail,
-                            altStack = Seq.empty,
-                            p2shScript = Some(payToScript),
-                            scriptExecutionStage = ExecutingScriptP2SH
-                          ))
-                          result <- interpret(verbose)
-                        } yield result
-                      case None =>
-                        abort(NoSerializedScriptFound(OP_HASH160, state))
-                    }
-                  } else {
-                    if (state.requireCleanStack()) {
-                      abort(RequireCleanStack(OP_UNKNOWN, state))
-                    } else {
-                      evaluated(head.bytes.toBoolean())
-                    }
-                  }
+                _ <- setState(state.copy(currentScript = tail))
+                result <- updatedContext
+              } yield {
+                result match {
+                  case Some(value) =>
+                    Right(Some(value))
+                  case None =>
+                    Left(None)
+                }
               }
 
-            case ExecutingScriptP2SH =>
-              state.stack match {
-                case head :: tail =>
-                  if (state.requireCleanStack() && tail.nonEmpty) {
-                    abort(RequireCleanStack(OP_UNKNOWN, state))
-                  } else {
-                    evaluated(head.bytes.toBoolean())
+            case Nil =>
+              state.scriptExecutionStage match {
+                case ExecutingScriptSig =>
+                  for {
+                    _ <- setState(state.copy(
+                      currentScript = state.scriptPubKey,
+                      altStack = Seq.empty,
+                      scriptExecutionStage = ExecutingScriptPubKey
+                    ))
+                    _ <- checkInvalidOpCode()
+                    _ <- checkDisabledOpCode()
+                  } yield {
+                    Left(None)
+                  }
+
+                case ExecutingScriptPubKey =>
+                  state.stack match {
+                    case Nil =>
+                      StateT.pure(Right(Some(false)))
+                    case head :: Nil =>
+                      StateT.pure(Right(Some(head.bytes.toBoolean())))
+                    case head :: tail =>
+                      if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
+                        getSerializedScript(state.scriptSig) match {
+                          case Some(serializedScript) =>
+                            val payToScript = Parser.parse(serializedScript.bytes)
+
+                            for {
+                              _ <- setState(state.copy(
+                                currentScript = payToScript,
+                                stack = tail,
+                                altStack = Seq.empty,
+                                p2shScript = Some(payToScript),
+                                scriptExecutionStage = ExecutingScriptP2SH
+                              ))
+                              _ <- checkInvalidOpCode()
+                              _ <- checkDisabledOpCode()
+                            } yield {
+                              Left(None)
+                            }
+                          case None =>
+                            tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
+                        }
+                      } else {
+                        if (state.requireCleanStack()) {
+                          tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
+                        } else {
+                          StateT.pure(Right(Some(head.bytes.toBoolean())))
+                        }
+                      }
+                  }
+
+                case ExecutingScriptP2SH =>
+                  state.stack match {
+                    case head :: tail =>
+                      if (state.requireCleanStack() && tail.nonEmpty) {
+                        tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
+                      } else {
+                        StateT.pure(Right(Some(head.bytes.toBoolean())))
+                      }
                   }
               }
           }
-      }
+        }
     }
   }
 
@@ -388,5 +423,10 @@ object Interpreter {
     }
 
     fromLastPushOp.headOption
+  }
+
+  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.lift {
+    val errorWithExplicitType: InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]] = Left(error)
+    errorWithExplicitType
   }
 }

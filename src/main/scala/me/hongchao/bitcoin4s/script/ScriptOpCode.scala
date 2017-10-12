@@ -174,6 +174,10 @@ object OpCodes {
     val value = -1
   }
 
+  def isOpCode(scriptElement: ScriptElement): Boolean = {
+    all.find(_.hex == scriptElement.bytes.toHex).isDefined
+  }
+
   // e.g. `OP_DUP` or `DUP`
   def fromString(str: String): Option[ScriptOpCode] = {
     all.find(_.name == str)

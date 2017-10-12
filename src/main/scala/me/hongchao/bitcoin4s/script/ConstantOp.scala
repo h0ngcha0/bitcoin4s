@@ -59,7 +59,7 @@ object ConstantOp {
               setState(state.copy(
                 currentScript = state.currentScript,
                 stack = ScriptNum(opc.value - 80) +: state.stack,
-                opCount = state.opCount + 1
+                opCount = state.opCount
               ))
             }
             .flatMap(continue)

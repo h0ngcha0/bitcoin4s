@@ -46,10 +46,17 @@ object FlowControlOp {
                     val updatedScript = pickNegativeBranches
                       .option(negativeBranches.flatten ++ rest)
                       .getOrElse(positiveBranches.flatten ++ rest)
+
+                    // Even if other branch is not executed, need to take it into consideration
+                    // when calculating opCodes
+                    val otherBranchOpCount: Seq[ScriptElement] = pickNegativeBranches
+                      .option(positiveBranches.flatten.filter(OpCodes.isOpCode))
+                      .getOrElse(negativeBranches.flatten.filter(OpCodes.isOpCode))
+
                     val updatedState = state.copy(
                       currentScript = updatedScript,
                       stack = tail,
-                      opCount = state.opCount + 1
+                      opCount = state.opCount + 1 + otherBranchOpCount.length
                     )
                     setState(updatedState).flatMap(continue)
                   case _ =>

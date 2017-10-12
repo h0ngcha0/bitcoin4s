@@ -10,8 +10,8 @@ import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
-//import scala.reflect.runtime.universe._
-//import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
+import scala.reflect.ClassTag
 
 trait ScriptTestRunner { self: Spec =>
   sealed trait ExpectedResult extends Product {
@@ -122,84 +122,37 @@ trait ScriptTestRunner { self: Spec =>
           }
 
         case ExpectedResult.BAD_OPCODE =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect BAD_OPCODE, but receive $result")
-            case Left(error) =>
-              error shouldBe a [BadOpCode]
-          }
+          checkError[BadOpCode](result, "BAD_OPCODE")
 
         case ExpectedResult.CLEANSTACK =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect CLEANSTACK, but receive $result")
-            case Left(error) =>
-              error shouldBe a [RequireCleanStack]
-          }
+          checkError[RequireCleanStack](result, "CLEANSTACK")
 
         case ExpectedResult.DISABLED_OPCODE =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect DISABLED_OPCODE, but receive $result")
-            case Left(error) =>
-              error shouldBe a [OpcodeDisabled]
-          }
+          checkError[OpcodeDisabled](result, "DISABLED_OPCODE")
 
         case ExpectedResult.DISCOURAGE_UPGRADABLE_NOPS =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect DISCOURAGE_UPGRADABLE_NOPS, but receive $result")
-            case Left(error) =>
-              error shouldBe a [DiscourageUpgradableNops]
-          }
+          checkError[DiscourageUpgradableNops](result, "DISCOURAGE_UPGRADABLE_NOPS")
 
-        case ExpectedResult.EQUALVERIFY=>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect EQUAL_VERIFY, but receive $result")
-            case Left(error) =>
-              error shouldBe a [VerificationFailed]
-          }
+        case ExpectedResult.EQUALVERIFY =>
+          checkError[VerificationFailed](result, "EQUALVERIFY")
 
-        case ExpectedResult.INVALID_ALTSTACK_OPERATION=>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect INVALID_ALTSTACK_OPERATION but receive $result")
-            case Left(error) =>
-              error shouldBe a [InvalidAltStackOperation]
-          }
+        case ExpectedResult.INVALID_ALTSTACK_OPERATION =>
+          checkError[InvalidAltStackOperation](result, "INVALID_ALTSTACK_OPERATION")
 
         case ExpectedResult.INVALID_STACK_OPERATION =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect INVALID_STACK_OPERATION but receive $result")
-            case Left(error) =>
-              error shouldBe a [InvalidStackOperation]
-          }
+          checkError[InvalidStackOperation](result, "INVALID_STACK_OPERATION")
 
         case ExpectedResult.MINIMALDATA =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect MINIMALDATA but receive $result")
-            case Left(error) =>
-              error shouldBe a [NotMinimalEncoding]
-          }
+          checkError[NotMinimalEncoding](result, "MINIMALDATA")
 
         case ExpectedResult.UNBALANCED_CONDITIONAL =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect UnbalancedConditional but receive $result")
-            case Left(error) =>
-              error shouldBe a [UnbalancedConditional]
-          }
+          checkError[UnbalancedConditional](result, "UNBALANCED_CONDITIONAL")
 
         case ExpectedResult.NEGATIVE_LOCKTIME =>
-          result match {
-            case Right((finalState, result)) =>
-              fail(s"Expect NEGATIVE_LOCKTIME but receive $result")
-            case Left(error) =>
-              error shouldBe a [CSVFailed]
-          }
+          checkError[CSVFailed](result, "NEGATIVE_LOCKTIME")
+
+        case ExpectedResult.OP_COUNT =>
+          checkError[ExceedMaxOpCount](result, "OP_COUNT")
 
         case _ =>
           throw new NotImplementedError()
@@ -207,15 +160,17 @@ trait ScriptTestRunner { self: Spec =>
     }
   }
 
-/*  type ErrorType[T] = ClassTag[T] with TypeTag[T]
-  private def checkError[T: ErrorType](result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]) = {
+  private def checkError[T: ClassTag](
+    result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])],
+    expectedError: String
+  ) = {
     result match {
       case Right((finalState, result)) =>
-        fail(s"Expect ${typeOf[T].toString} but receive $result")
+        fail(s"Expect $expectedError but receive $result")
       case Left(error) =>
         error shouldBe a [T]
     }
-  }*/
+  }
 
   def creditingTransaction(scriptPubKey: Seq[Byte], amount: Option[Long] = None) = {
     val emptyTxId = Array.fill[Byte](32)(0)
