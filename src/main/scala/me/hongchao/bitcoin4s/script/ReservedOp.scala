@@ -35,7 +35,7 @@ object ReservedOp {
             if (state.disCourageUpgradableNop) {
               abort(DiscourageUpgradableNops(opCode, state))
             } else {
-              val newState = state.copy(opCount = state.opCount + 1)
+              val newState = state.copy(opCount = state.opCount)
               setState(newState).flatMap(continue)
             }
           case OP_RESERVED | OP_VER | OP_RESERVED1 | OP_RESERVED2 =>

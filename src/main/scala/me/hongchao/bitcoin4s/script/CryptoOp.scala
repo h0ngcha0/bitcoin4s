@@ -102,7 +102,8 @@ object CryptoOp {
 
             maybeSplitStack match {
               case Some((pubKeys, signatures, rest)) =>
-                val checkResult = checkSignatures(pubKeys, signatures, state)
+                val nonEmptyPubKeys = pubKeys.filter(_ != ConstantOp.OP_0)
+                val checkResult = checkSignatures(nonEmptyPubKeys, signatures, state)
 
                 // NOTE: Due to the bug in the reference client
                 if (rest.nonEmpty) {
@@ -111,7 +112,7 @@ object CryptoOp {
                   setState(
                     state.copy(
                       stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
-                      opCount = state.opCount + 1 + pubKeys.length
+                      opCount = state.opCount + 1 + nonEmptyPubKeys.length
                     )
                   ).flatMap(continue)
                 } else {

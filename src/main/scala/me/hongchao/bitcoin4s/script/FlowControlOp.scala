@@ -50,13 +50,17 @@ object FlowControlOp {
                     // Even if other branch is not executed, need to take it into consideration
                     // when calculating opCodes
                     val otherBranchOpCount: Seq[ScriptElement] = pickNegativeBranches
-                      .option(positiveBranches.flatten.filter(OpCodes.isOpCode))
-                      .getOrElse(negativeBranches.flatten.filter(OpCodes.isOpCode))
+                      .option(positiveBranches.flatten.filter(OpCodes.isNonReservedOpCode))
+                      .getOrElse(negativeBranches.flatten.filter(OpCodes.isNonReservedOpCode))
+
+                    // numberOfBranches should be added to the opCode as well since it requires either a OP_ELSE
+                    // or OP_ENDIF to create a new branch.
+                    val numberOfBranches = branches.length
 
                     val updatedState = state.copy(
                       currentScript = updatedScript,
                       stack = tail,
-                      opCount = state.opCount + 1 + otherBranchOpCount.length
+                      opCount = state.opCount + otherBranchOpCount.length + numberOfBranches + 1
                     )
                     setState(updatedState).flatMap(continue)
                   case _ =>
