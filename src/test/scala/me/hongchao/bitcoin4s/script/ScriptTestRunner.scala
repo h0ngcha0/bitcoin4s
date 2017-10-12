@@ -10,7 +10,6 @@ import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
-import scala.reflect.runtime.universe._
 import scala.reflect.ClassTag
 
 trait ScriptTestRunner { self: Spec =>
@@ -153,6 +152,18 @@ trait ScriptTestRunner { self: Spec =>
 
         case ExpectedResult.OP_COUNT =>
           checkError[ExceedMaxOpCount](result, "OP_COUNT")
+
+        case ExpectedResult.OP_RETURN =>
+          checkError[FoundOpReturn](result, "OP_RETURN")
+
+        case ExpectedResult.VERIFY =>
+          checkError[VerificationFailed](result, "VERIFY")
+
+        case ExpectedResult.PUSH_SIZE =>
+          checkError[ExceedMaxPushSize](result, "PUSH_SIZE")
+
+        case ExpectedResult.STACK_SIZE =>
+          checkError[ExceedMaxStackSize](result, "STACK_SIZE")
 
         case _ =>
           throw new NotImplementedError()

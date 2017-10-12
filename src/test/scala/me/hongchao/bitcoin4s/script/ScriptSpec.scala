@@ -73,7 +73,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
         }
     }
 
-    val checkExpectedResults = Seq(
+    val checkedExpectedResults = Seq(
       ExpectedResult.OK,
       ExpectedResult.EVAL_FALSE,
       ExpectedResult.BAD_OPCODE,
@@ -86,11 +86,42 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.MINIMALDATA,
       ExpectedResult.UNBALANCED_CONDITIONAL,
       ExpectedResult.NEGATIVE_LOCKTIME,
-      ExpectedResult.OP_COUNT
+      ExpectedResult.OP_COUNT,
+      ExpectedResult.OP_RETURN,
+      ExpectedResult.VERIFY,
+      ExpectedResult.PUSH_SIZE,
+      ExpectedResult.STACK_SIZE
     )
+
+    val notCheckedExpectedResults = Seq(
+      ExpectedResult.UNKNOWN_ERROR,
+      ExpectedResult.SCRIPT_SIZE,
+      ExpectedResult.PUBKEY_COUNT,
+      ExpectedResult.SIG_COUNT,
+      ExpectedResult.SIG_PUSHONLY,
+      ExpectedResult.PUBKEYTYPE,
+      ExpectedResult.SIG_DER,
+      ExpectedResult.WITNESS_PROGRAM_MISMATCH,
+      ExpectedResult.NULLFAIL,
+      ExpectedResult.SIG_HIGH_S,
+      ExpectedResult.SIG_HASHTYPE,
+      ExpectedResult.SIG_NULLDUMMY,
+      ExpectedResult.DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,
+      ExpectedResult.WITNESS_PROGRAM_WRONG_LENGTH,
+      ExpectedResult.WITNESS_PROGRAM_WITNESS_EMPTY,
+      ExpectedResult.WITNESS_MALLEATED,
+      ExpectedResult.WITNESS_MALLEATED_P2SH,
+      ExpectedResult.WITNESS_UNEXPECTED,
+      ExpectedResult.WITNESS_PUBKEYTYPE,
+      ExpectedResult.UNSATISFIED_LOCKTIME,
+      ExpectedResult.MINIMALIF
+    )
+
+    (checkedExpectedResults ++ notCheckedExpectedResults) should contain theSameElementsAs ExpectedResult.all
+
     val notIncludedTests = Seq("WITNESS")
     val filteredScriptTests = scriptTests.filter { test =>
-      checkExpectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
+      checkedExpectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
     }
 
     filteredScriptTests.zipWithIndex.foreach {

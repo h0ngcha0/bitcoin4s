@@ -95,7 +95,7 @@ object FlowControlOp {
             }
 
           case OP_RETURN =>
-            abort(UnexpectedOpCode(opCode, state))
+            abort(FoundOpReturn(opCode, state))
         }
       }
     }

@@ -150,6 +150,18 @@ object InterpreterError {
     val description = "More than max op count"
   }
 
+  case class FoundOpReturn(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Found OP_RETURN"
+  }
+
+  case class ExceedMaxPushSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Exceed the maximum push size"
+  }
+
+  case class ExceedMaxStackSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Exceed the maximum stack size"
+  }
+
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not all operants are constant"
   }
@@ -227,6 +239,8 @@ object Interpreter {
   type InterpreterContext[T] = StateT[InterpreterErrorHandler, InterpreterState, T]
 
   val MAX_OPCODES = 201
+  val MAX_PUSH_SIZE = 520
+  val MAX_STACK_SIZE = 1000
 
   def tailRecM[A, B] = FlatMap[InterpreterContext].tailRecM[A, B] _
 
@@ -236,6 +250,7 @@ object Interpreter {
     for {
       _ <- checkInvalidOpCode()
       _ <- checkDisabledOpCode()
+      _ <- checkMaxPushSize()
       result <- interpretScript(verbose)
     } yield result
   }
@@ -298,6 +313,28 @@ object Interpreter {
     }
   }
 
+  private def checkMaxPushSize(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      state.currentScript.filter(_.isInstanceOf[ScriptConstant]).filter(_.bytes.length > MAX_PUSH_SIZE) match {
+        case head :: tail =>
+          abort(ExceedMaxPushSize(OP_UNKNOWN, state))
+        case Nil =>
+          StateT.pure(None)
+      }
+    }
+  }
+
+  private def checkMaxStackSize(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val totalStackSize = (state.stack ++ state.altStack).length
+      if (totalStackSize > MAX_STACK_SIZE) {
+        abort(ExceedMaxStackSize(OP_UNKNOWN, state))
+      } else {
+        StateT.pure(None)
+      }
+    }
+  }
+
   private def interpretScript(verbose: Boolean): InterpreterContext[Option[Boolean]] = {
     tailRecM(None: Option[Boolean]) {
       case Some(value) =>
@@ -306,6 +343,7 @@ object Interpreter {
         for {
           state <- getState
           _ <- checkOpCodeCount()
+          _ <- checkMaxStackSize()
           result <- interpretOneOp(state, verbose)
         } yield result
     }
@@ -361,6 +399,7 @@ object Interpreter {
               ))
               _ <- checkInvalidOpCode()
               _ <- checkDisabledOpCode()
+              _ <- checkMaxPushSize()
             } yield {
               Left(None)
             }
@@ -368,9 +407,9 @@ object Interpreter {
           case ExecutingScriptPubKey =>
             state.stack match {
               case Nil =>
-                StateT.pure(Right(Some(false)))
+                tailRecMEvaluated(false)
               case head :: Nil =>
-                StateT.pure(Right(Some(head.bytes.toBoolean())))
+                tailRecMEvaluated(head.bytes.toBoolean())
               case head :: tail =>
                 if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
                   getSerializedScript(state.scriptSig) match {
@@ -388,6 +427,7 @@ object Interpreter {
                         ))
                         _ <- checkInvalidOpCode()
                         _ <- checkDisabledOpCode()
+                        _ <- checkMaxPushSize()
                       } yield {
                         Left(None)
                       }
@@ -398,7 +438,7 @@ object Interpreter {
                   if (state.requireCleanStack()) {
                     tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
                   } else {
-                    StateT.pure(Right(Some(head.bytes.toBoolean())))
+                    tailRecMEvaluated(head.bytes.toBoolean())
                   }
                 }
             }
@@ -435,5 +475,9 @@ object Interpreter {
   def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.lift {
     val errorWithExplicitType: InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]] = Left(error)
     errorWithExplicitType
+  }
+
+  def tailRecMEvaluated(value: Boolean): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
+    StateT.pure(Right(Some(value)))
   }
 }
