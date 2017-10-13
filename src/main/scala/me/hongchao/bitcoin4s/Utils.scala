@@ -47,6 +47,19 @@ package object Utils {
       val (maybeNElements, rest) = seq.splitAt(n)
       (maybeNElements.length == n).option((maybeNElements, rest))
     }
+
+    def splitAtEither[Err](n: Int, error: Err): Either[Err, (Seq[T], Seq[T])] = {
+      val (maybeNElements, rest) = seq.splitAt(n)
+      if (maybeNElements.length == n) {
+        Right((maybeNElements, rest))
+      } else {
+        Left(error)
+      }
+    }
+
+    def headEither[Err](error: Err): Either[Err, T] = {
+      seq.headOption.map(head => Right(head)).getOrElse(Left(error))
+    }
   }
 
   def bytesToUInt8(bytes: Seq[Byte]): Int = {

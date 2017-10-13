@@ -168,6 +168,12 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.SCRIPT_SIZE =>
           checkError[ExceedMaxScriptSize](result, "SCRIPT_SIZE")
 
+        case ExpectedResult.PUBKEY_COUNT =>
+          checkError[WrongPubKeyCount](result, "PUBKEY_COUNT")
+
+        case ExpectedResult.SIG_COUNT =>
+          checkError[WrongSignaturesCount](result, "SIG_COUNT")
+
         case _ =>
           throw new NotImplementedError()
       }

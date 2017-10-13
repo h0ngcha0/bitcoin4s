@@ -91,13 +91,13 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.VERIFY,
       ExpectedResult.PUSH_SIZE,
       ExpectedResult.STACK_SIZE,
-      ExpectedResult.SCRIPT_SIZE
+      ExpectedResult.SCRIPT_SIZE,
+      ExpectedResult.PUBKEY_COUNT,
+      ExpectedResult.SIG_COUNT
     )
 
     val notCheckedExpectedResults = Seq(
       ExpectedResult.UNKNOWN_ERROR,
-      ExpectedResult.PUBKEY_COUNT,
-      ExpectedResult.SIG_COUNT,
       ExpectedResult.SIG_PUSHONLY,
       ExpectedResult.PUBKEYTYPE,
       ExpectedResult.SIG_DER,

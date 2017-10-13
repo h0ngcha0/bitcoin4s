@@ -4,7 +4,7 @@ import me.hongchao.bitcoin4s.crypto.Hash._
 import me.hongchao.bitcoin4s.crypto.{PublicKey, Signature}
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
-import me.hongchao.bitcoin4s.script.InterpreterError.{InvalidStackOperation, NotEnoughElementsInStack}
+import me.hongchao.bitcoin4s.script.InterpreterError._
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
@@ -30,6 +30,13 @@ object CryptoOp {
     OP_RIPEMD160, OP_SHA1, OP_SHA256, OP_HASH160, OP_HASH256, OP_CODESEPARATOR,
     OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_CHECKMULTISIG, OP_CHECKMULTISIGVERIFY
   )
+
+  sealed trait MultiSigCheckError extends Product
+  object MultiSigCheckError {
+    case object NotEnoughElements extends MultiSigCheckError
+    case object WrongNumberOfPubKeys extends MultiSigCheckError
+    case object WrongNumberOfSignatures extends MultiSigCheckError
+  }
 
   implicit val interpreter = new Interpretable[CryptoOp] {
     def interpret(opCode: CryptoOp): InterpreterContext[Option[Boolean]] = {
@@ -85,23 +92,34 @@ object CryptoOp {
 
         case OP_CHECKMULTISIG =>
           getState.flatMap { state =>
+            import MultiSigCheckError._
+
             val maybeSplitStack = for {
-              (ms, rest0)         <- state.stack.splitAtOpt(1)
-              numberOfPubKeys     <- ms.headOption.flatMap { m =>
+              v1                   <- state.stack.splitAtEither(1, NotEnoughElements)
+              val (ms, rest0)      = v1
+              numberOfPubKeys      <- ms.headEither(NotEnoughElements).flatMap { m =>
                 val numOfPubKeys = ScriptNum.toLong(m.bytes).toInt
-                (numOfPubKeys >= 0 && numOfPubKeys <= 20).option(numOfPubKeys)
+                (numOfPubKeys >= 0 && numOfPubKeys <= 20)
+                  .option(Right(numOfPubKeys))
+                  .getOrElse(Left(WrongNumberOfPubKeys))
               }
-              (pubKeys, rest1)    <- rest0.splitAtOpt(numberOfPubKeys)
-              (ns, rest2)         <- rest1.splitAtOpt(1)
-              numberOfSignatures  <- ns.headOption.flatMap { n =>
+              v2                   <- rest0.splitAtEither(numberOfPubKeys, NotEnoughElements)
+              val (pubKeys, rest1) = v2
+              v3                   <- rest1.splitAtEither(1, NotEnoughElements)
+              val (ns, rest2)      = v3
+              numberOfSignatures   <- ns.headEither(NotEnoughElements).flatMap { n =>
                 val numOfSignatures = ScriptNum.toLong(n.bytes).toInt
-                (numOfSignatures >= 0 && numberOfPubKeys <= numberOfPubKeys).option(numOfSignatures)
+                (numOfSignatures >= 0 && numOfSignatures <= numberOfPubKeys)
+                  .option(Right(numOfSignatures))
+                  .getOrElse(Left(WrongNumberOfSignatures))
               }
-              (signatures, rest)  <- rest2.splitAtOpt(numberOfSignatures)
+              v4                   <- rest2.splitAtEither(numberOfSignatures, NotEnoughElements)
+              val (signatures, rest) = v4
             } yield (pubKeys, signatures, rest)
 
+
             maybeSplitStack match {
-              case Some((pubKeys, signatures, rest)) =>
+              case Right((pubKeys, signatures, rest)) =>
                 val nonEmptyPubKeys = pubKeys.filter(_ != ConstantOp.OP_0)
                 val checkResult = checkSignatures(nonEmptyPubKeys, signatures, state)
 
@@ -118,7 +136,14 @@ object CryptoOp {
                 } else {
                   abort(InvalidStackOperation(opCode, state))
                 }
-              case None =>
+
+              case Left(WrongNumberOfPubKeys) =>
+                abort(WrongPubKeyCount(opCode, state))
+
+              case Left(WrongNumberOfSignatures) =>
+                abort(WrongSignaturesCount(opCode, state))
+
+              case Left(_) =>
                 abort(InvalidStackOperation(opCode, state))
             }
           }

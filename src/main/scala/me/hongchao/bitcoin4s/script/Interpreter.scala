@@ -166,6 +166,14 @@ object InterpreterError {
     val description = "Exceed the maximum script size"
   }
 
+  case class WrongPubKeyCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Wrong pubkey count"
+  }
+
+  case class WrongSignaturesCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Wrong signatures count"
+  }
+
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Not all operants are constant"
   }
