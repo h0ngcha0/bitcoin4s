@@ -102,8 +102,9 @@ trait ScriptTestRunner { self: Spec =>
 
     withClue(test.comments) {
       val result = Interpreter.interpret(verbose = false).run(initialState)
+      implicit val expectedResult = test.expectedResult
 
-      test.expectedResult match {
+      expectedResult match {
         case ExpectedResult.OK =>
           result match {
             case Right((finalState, result)) =>
@@ -121,58 +122,61 @@ trait ScriptTestRunner { self: Spec =>
           }
 
         case ExpectedResult.BAD_OPCODE =>
-          checkError[BadOpCode](result, "BAD_OPCODE")
+          checkError[BadOpCode](result)
 
         case ExpectedResult.CLEANSTACK =>
-          checkError[RequireCleanStack](result, "CLEANSTACK")
+          checkError[RequireCleanStack](result)
 
         case ExpectedResult.DISABLED_OPCODE =>
-          checkError[OpcodeDisabled](result, "DISABLED_OPCODE")
+          checkError[OpcodeDisabled](result)
 
         case ExpectedResult.DISCOURAGE_UPGRADABLE_NOPS =>
-          checkError[DiscourageUpgradableNops](result, "DISCOURAGE_UPGRADABLE_NOPS")
+          checkError[DiscourageUpgradableNops](result)
 
         case ExpectedResult.EQUALVERIFY =>
-          checkError[VerificationFailed](result, "EQUALVERIFY")
+          checkError[VerificationFailed](result)
 
         case ExpectedResult.INVALID_ALTSTACK_OPERATION =>
-          checkError[InvalidAltStackOperation](result, "INVALID_ALTSTACK_OPERATION")
+          checkError[InvalidAltStackOperation](result)
 
         case ExpectedResult.INVALID_STACK_OPERATION =>
-          checkError[InvalidStackOperation](result, "INVALID_STACK_OPERATION")
+          checkError[InvalidStackOperation](result)
 
         case ExpectedResult.MINIMALDATA =>
-          checkError[NotMinimalEncoding](result, "MINIMALDATA")
+          checkError[NotMinimalEncoding](result)
 
         case ExpectedResult.UNBALANCED_CONDITIONAL =>
-          checkError[UnbalancedConditional](result, "UNBALANCED_CONDITIONAL")
+          checkError[UnbalancedConditional](result)
 
         case ExpectedResult.NEGATIVE_LOCKTIME =>
-          checkError[CSVFailed](result, "NEGATIVE_LOCKTIME")
+          checkError[CSVFailed](result)
 
         case ExpectedResult.OP_COUNT =>
-          checkError[ExceedMaxOpCount](result, "OP_COUNT")
+          checkError[ExceedMaxOpCount](result)
 
         case ExpectedResult.OP_RETURN =>
-          checkError[FoundOpReturn](result, "OP_RETURN")
+          checkError[FoundOpReturn](result)
 
         case ExpectedResult.VERIFY =>
-          checkError[VerificationFailed](result, "VERIFY")
+          checkError[VerificationFailed](result)
 
         case ExpectedResult.PUSH_SIZE =>
-          checkError[ExceedMaxPushSize](result, "PUSH_SIZE")
+          checkError[ExceedMaxPushSize](result)
 
         case ExpectedResult.STACK_SIZE =>
-          checkError[ExceedMaxStackSize](result, "STACK_SIZE")
+          checkError[ExceedMaxStackSize](result)
 
         case ExpectedResult.SCRIPT_SIZE =>
-          checkError[ExceedMaxScriptSize](result, "SCRIPT_SIZE")
+          checkError[ExceedMaxScriptSize](result)
 
         case ExpectedResult.PUBKEY_COUNT =>
-          checkError[WrongPubKeyCount](result, "PUBKEY_COUNT")
+          checkError[WrongPubKeyCount](result)
 
         case ExpectedResult.SIG_COUNT =>
-          checkError[WrongSignaturesCount](result, "SIG_COUNT")
+          checkError[WrongSignaturesCount](result)
+
+        case ExpectedResult.SIG_PUSHONLY =>
+          checkError[ScriptSigPushOnly](result)
 
         case _ =>
           throw new NotImplementedError()
@@ -181,12 +185,11 @@ trait ScriptTestRunner { self: Spec =>
   }
 
   private def checkError[T: ClassTag](
-    result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])],
-    expectedError: String
-  ) = {
+    result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
+  )(implicit expectedResult: ExpectedResult) = {
     result match {
       case Right((finalState, result)) =>
-        fail(s"Expect $expectedError but receive $result")
+        fail(s"Expect ${expectedResult.name} but receive $result")
       case Left(error) =>
         error shouldBe a [T]
     }

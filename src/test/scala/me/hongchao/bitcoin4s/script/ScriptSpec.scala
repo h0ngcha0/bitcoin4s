@@ -93,12 +93,12 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.STACK_SIZE,
       ExpectedResult.SCRIPT_SIZE,
       ExpectedResult.PUBKEY_COUNT,
-      ExpectedResult.SIG_COUNT
+      ExpectedResult.SIG_COUNT,
+      ExpectedResult.SIG_PUSHONLY
     )
 
     val notCheckedExpectedResults = Seq(
       ExpectedResult.UNKNOWN_ERROR,
-      ExpectedResult.SIG_PUSHONLY,
       ExpectedResult.PUBKEYTYPE,
       ExpectedResult.SIG_DER,
       ExpectedResult.WITNESS_PROGRAM_MISMATCH,
@@ -124,10 +124,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       checkedExpectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
     }
 
-    filteredScriptTests.zipWithIndex.foreach {
-      case (test, index) =>
-        run(test, index)
-    }
+    filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
 
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {

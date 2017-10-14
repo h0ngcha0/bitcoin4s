@@ -80,28 +80,34 @@ case class InterpreterState(
 
   def scriptSignature: Seq[Byte] = transactionInput.sig_script.toSeq
 
-  def cltvEnabled(): Boolean = {
-    flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
-  }
+  object ScriptFlags {
+    def cltvEnabled(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
+    }
 
-  def csvEnabled(): Boolean = {
-    flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
-  }
+    def csvEnabled(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
+    }
 
-  def disCourageUpgradableNop(): Boolean = {
-    flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
-  }
+    def disCourageUpgradableNop(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+    }
 
-  def requireMinimalEncoding(): Boolean = {
-    flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALDATA)
-  }
+    def requireMinimalEncoding(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALDATA)
+    }
 
-  def p2sh(): Boolean = {
-    flags.contains(ScriptFlag.SCRIPT_VERIFY_P2SH)
-  }
+    def p2sh(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_P2SH)
+    }
 
-  def requireCleanStack(): Boolean = {
-    flags.contains(ScriptFlag.SCRIPT_VERIFY_CLEANSTACK)
+    def requireCleanStack(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_CLEANSTACK)
+    }
+
+    def pushOnly(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_SIGPUSHONLY)
+    }
   }
 }
 
@@ -172,6 +178,10 @@ object InterpreterError {
 
   case class WrongSignaturesCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Wrong signatures count"
+  }
+
+  case class ScriptSigPushOnly(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Script sig should only contain pusheOnly ops"
   }
 
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
@@ -257,6 +267,8 @@ object Interpreter {
       _ <- checkDisabledOpCode()
       _ <- checkMaxPushSize()
       _ <- checkMaxScriptSize()
+      _ <- checkIsPushOnly()
+
       result <- interpretScript(verbose)
     } yield result
   }
@@ -358,6 +370,20 @@ object Interpreter {
     }
   }
 
+  private def checkIsPushOnly(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val pushOnlyEnabled = state.ScriptFlags.pushOnly()
+      val shouldExecuteP2sh = isP2SHScript(state.scriptPubKey) && state.ScriptFlags.p2sh()
+      val shouldCheckPushOnly = pushOnlyEnabled || shouldExecuteP2sh
+
+      if (shouldCheckPushOnly && !isPushOnly(state.scriptSig)) {
+        abort(ScriptSigPushOnly(OP_UNKNOWN, state))
+      } else {
+        StateT.pure(None)
+      }
+    }
+  }
+
   private def interpretScript(verbose: Boolean): InterpreterContext[Option[Boolean]] = {
     tailRecM(None: Option[Boolean]) {
       case Some(value) =>
@@ -435,7 +461,7 @@ object Interpreter {
               case head :: Nil =>
                 tailRecMEvaluated(head.bytes.toBoolean())
               case head :: tail =>
-                if (state.p2sh() && isP2SHScript(state.scriptPubKey)) {
+                if (state.ScriptFlags.p2sh() && isP2SHScript(state.scriptPubKey)) {
                   getSerializedScript(state.scriptSig) match {
                     case Some(serializedScript) =>
                       val payToScript = Parser.parse(serializedScript.bytes)
@@ -460,7 +486,7 @@ object Interpreter {
                       tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
                   }
                 } else {
-                  if (state.requireCleanStack()) {
+                  if (state.ScriptFlags.requireCleanStack()) {
                     tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
                   } else {
                     tailRecMEvaluated(head.bytes.toBoolean())
@@ -471,7 +497,7 @@ object Interpreter {
           case ExecutingScriptP2SH =>
             state.stack match {
               case head :: tail =>
-                if (state.requireCleanStack() && tail.nonEmpty) {
+                if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
                   tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
                 } else {
                   StateT.pure(Right(Some(head.bytes.toBoolean())))
@@ -484,6 +510,10 @@ object Interpreter {
   private def isP2SHScript(scriptPubkey: Seq[ScriptElement]): Boolean = {
     scriptPubkey.headOption.exists(_ == CryptoOp.OP_HASH160) &&
       scriptPubkey.lastOption.exists(_ == BitwiseLogicOp.OP_EQUAL)
+  }
+
+  private def isPushOnly(script: Seq[ScriptElement]): Boolean = {
+    script.filterNot(_.isInstanceOf[ScriptConstant]).forall(ConstantOp.all.contains)
   }
 
   private def getSerializedScript(scriptSig: Seq[ScriptElement]): Option[ScriptElement] = {
