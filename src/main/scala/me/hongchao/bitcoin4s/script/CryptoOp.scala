@@ -68,52 +68,36 @@ object CryptoOp {
           getState.flatMap { state =>
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
+                def continueWithResult(result: Boolean) = {
+                  setState(
+                    state.copy(
+                      stack = result.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
+                      opCount = state.opCount + 1
+                    )
+                  ).flatMap(continue)
+                }
+
                 import PublicKey._
                 Signature.decode(encodedSignature.bytes) match {
                   case Some((signature, sigHashFlagBytes)) =>
                     if (state.ScriptFlags.derSig() && !Signature.isDERSignature(encodedSignature.bytes)) {
-                      setState(
-                        state.copy(
-                          currentScript = state.currentScript,
-                          stack = ScriptNum(0) +: tail,
-                          opCount = state.opCount + 1
-                        )
-                      ).flatMap(continue)
+                      continueWithResult(false)
                     } else {
                       PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
                         case DecodeResult.Ok(decodedPublicKey) =>
                           val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
-                          setState(
-                            state.copy(
-                              currentScript = state.currentScript,
-                              stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
-                              opCount = state.opCount + 1
-                            )
-                          ).flatMap(continue)
+                          continueWithResult(checkResult)
                         case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
                           abort(PublicKeyWrongEncoding(opCode, state))
                         case DecodeResult.Failure =>
-                          setState(
-                            state.copy(
-                              currentScript = state.currentScript,
-                              stack = ScriptNum(0) +: tail,
-                              opCount = state.opCount + 1
-                            )
-                          ).flatMap(continue)
+                          continueWithResult(false)
                       }
-
                     }
                   case None =>
                     if (state.ScriptFlags.strictEncoding()) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     } else {
-                      setState(
-                        state.copy(
-                          currentScript = state.currentScript,
-                          stack = ScriptNum(0) +: tail,
-                          opCount = state.opCount + 1
-                        )
-                      ).flatMap(continue)
+                      continueWithResult(false)
                     }
                 }
 
