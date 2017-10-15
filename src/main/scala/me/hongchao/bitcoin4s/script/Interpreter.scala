@@ -108,6 +108,14 @@ case class InterpreterState(
     def pushOnly(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_SIGPUSHONLY)
     }
+
+    def strictEncoding(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_STRICTENC)
+    }
+
+    def derSig(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)
+    }
   }
 }
 
@@ -206,6 +214,18 @@ object InterpreterError {
 
   case class InValidReservedOpcode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Found executable reserved opcode that invalidates the transaction"
+  }
+
+  case class PublicKeyWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Public key encoding wrong"
+  }
+
+  case class SignatureWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Signature encoding wrong"
+  }
+
+  case class InvalidSigHashType(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "SigHash type invalid"
   }
 
   case class VerificationFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {

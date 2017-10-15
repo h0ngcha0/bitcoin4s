@@ -178,6 +178,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.SIG_PUSHONLY =>
           checkError[ScriptSigPushOnly](result)
 
+        case ExpectedResult.PUBKEYTYPE =>
+          checkError[PublicKeyWrongEncoding](result)
+
         case _ =>
           throw new NotImplementedError()
       }
