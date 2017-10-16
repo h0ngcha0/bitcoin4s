@@ -80,7 +80,19 @@ object CryptoOp {
                 import PublicKey._
                 Signature.decode(encodedSignature.bytes) match {
                   case Some((signature, sigHashFlagBytes)) =>
-                    if (state.ScriptFlags.derSig() && !Signature.isDERSignature(encodedSignature.bytes)) {
+                    val hasValidSigHashFlag = (sigHashFlagBytes.length == 1 && sigHashFlagBytes.headOption.map(_ & 0xff).map(SignatureHashType).exists(_.isValid)) || encodedSignature.bytes.isEmpty
+                    val hasNegativeRorS = signature match {
+                      case EmptySignature =>
+                        false
+                      case ECDSASignature(r, s) =>
+                        r.intValue <= 0 || s.intValue <= 0
+                    }
+
+                    println(s"hasNegativeRorS : $hasNegativeRorS, $signature")
+                    if (state.ScriptFlags.derSig() && (!Signature.isDERSignature(encodedSignature.bytes) || !hasValidSigHashFlag || hasNegativeRorS)) {
+                      println(s"herereerere")
+                      abort(SignatureWrongEncoding(OP_CHECKSIG, state))
+                    } else if (state.ScriptFlags.strictEncoding() && !hasValidSigHashFlag) {
                       continueWithResult(false)
                     } else {
                       PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
@@ -94,7 +106,7 @@ object CryptoOp {
                       }
                     }
                   case None =>
-                    if (state.ScriptFlags.strictEncoding()) {
+                    if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     } else {
                       continueWithResult(false)
@@ -166,7 +178,11 @@ object CryptoOp {
                     } else {
                       abort(InvalidStackOperation(opCode, state))
                     }
+
                   case Failure(err: PublicKeyWrongEncoding) =>
+                    abort(err)
+
+                  case Failure(err: SignatureWrongEncoding) =>
                     abort(err)
 
                   case Failure(e) =>
@@ -218,8 +234,18 @@ object CryptoOp {
         val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
           Signature.decode(encodedSignature.bytes) match {
             case Some((signature, sigHashFlagBytes)) =>
-              if (state.ScriptFlags.derSig() && !Signature.isDERSignature(encodedSignature.bytes)) {
+              val hasValidSigHashFlag = (sigHashFlagBytes.length == 1 && sigHashFlagBytes.headOption.map(_ & 0xff).map(SignatureHashType).exists(_.isValid)) || encodedSignature.bytes.isEmpty
+              val hasNegativeRorS = signature match {
+                case EmptySignature =>
+                  false
+                case ECDSASignature(r, s) =>
+                  r.intValue <= 0 || s.intValue <= 0
+              }
+
+              if (state.ScriptFlags.derSig() && (!Signature.isDERSignature(encodedSignature.bytes) || !hasValidSigHashFlag || hasNegativeRorS)) {
                 false
+              } else if (state.ScriptFlags.strictEncoding() && !hasValidSigHashFlag) {
+                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
               } else {
                 PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
                   case DecodeResult.Ok(decodedPubKey) =>
@@ -234,8 +260,8 @@ object CryptoOp {
               }
 
             case None =>
-              if (state.ScriptFlags.strictEncoding()) {
-                throw SignatureWrongEncoding(OP_UNKNOWN, state)
+              if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
+                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
               } else {
                 false
               }
