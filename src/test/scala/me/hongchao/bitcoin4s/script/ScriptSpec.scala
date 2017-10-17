@@ -22,7 +22,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
        |}
      """.stripMargin)
 
-  "Script" should "test cases" in {
+  "Interpreter" should "pass script_test.json in bitcoin reference client code base" in {
     val scriptTestsConfig: List[List[ConfigValue]] = testConfig
       .getList("bitcoin4s.script_tests")
       .toList
@@ -95,12 +95,12 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.PUBKEY_COUNT,
       ExpectedResult.SIG_COUNT,
       ExpectedResult.SIG_PUSHONLY,
-      ExpectedResult.PUBKEYTYPE
+      ExpectedResult.PUBKEYTYPE,
+      ExpectedResult.SIG_DER
     )
 
     val notCheckedExpectedResults = Seq(
       ExpectedResult.UNKNOWN_ERROR,
-      ExpectedResult.SIG_DER,
       ExpectedResult.WITNESS_PROGRAM_MISMATCH,
       ExpectedResult.NULLFAIL,
       ExpectedResult.SIG_HIGH_S,

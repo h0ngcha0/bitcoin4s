@@ -80,9 +80,7 @@ object CryptoOp {
                 import PublicKey._
                 Signature.decode(encodedSignature.bytes) match {
                   case Some((signature, sigHashFlagBytes)) =>
-                    if (state.ScriptFlags.derSig() && !Signature.isDERSignature(encodedSignature.bytes)) {
-                      continueWithResult(false)
-                    } else {
+                    if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
                       PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
                         case DecodeResult.Ok(decodedPublicKey) =>
                           val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
@@ -92,9 +90,11 @@ object CryptoOp {
                         case DecodeResult.Failure =>
                           continueWithResult(false)
                       }
+                    } else {
+                      abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     }
                   case None =>
-                    if (state.ScriptFlags.strictEncoding()) {
+                    if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     } else {
                       continueWithResult(false)
@@ -166,7 +166,11 @@ object CryptoOp {
                     } else {
                       abort(InvalidStackOperation(opCode, state))
                     }
+
                   case Failure(err: PublicKeyWrongEncoding) =>
+                    abort(err)
+
+                  case Failure(err: SignatureWrongEncoding) =>
                     abort(err)
 
                   case Failure(e) =>
@@ -218,9 +222,7 @@ object CryptoOp {
         val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
           Signature.decode(encodedSignature.bytes) match {
             case Some((signature, sigHashFlagBytes)) =>
-              if (state.ScriptFlags.derSig() && !Signature.isDERSignature(encodedSignature.bytes)) {
-                false
-              } else {
+              if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
                 PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
                   case DecodeResult.Ok(decodedPubKey) =>
                     checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
@@ -231,11 +233,13 @@ object CryptoOp {
                       false
                     }
                 }
+              } else {
+                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
               }
 
             case None =>
-              if (state.ScriptFlags.strictEncoding()) {
-                throw SignatureWrongEncoding(OP_UNKNOWN, state)
+              if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
+                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
               } else {
                 false
               }
@@ -286,5 +290,14 @@ object CryptoOp {
       case ScriptExecutionStage.ExecutingScriptP2SH =>
         state.p2shScript.get // FIXME: get rid of get
     }
+  }
+
+  // Check that an encoding is correct
+  private def checkSignatureEncoding(signatureBytes: Seq[Byte], flags: Seq[ScriptFlag]) = {
+    val notValidDerEncoded = !Signature.isValidSignatureEncoding(signatureBytes)
+    val nonEmptySignature = signatureBytes.nonEmpty
+    val derSigOrStrictEnc = Seq(ScriptFlag.SCRIPT_VERIFY_DERSIG, ScriptFlag.SCRIPT_VERIFY_STRICTENC).exists(flags.contains)
+
+    !(nonEmptySignature && derSigOrStrictEnc && notValidDerEncoded)
   }
 }
