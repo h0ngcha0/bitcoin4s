@@ -110,6 +110,7 @@ trait ScriptTestRunner { self: Spec =>
             case Right((finalState, result)) =>
               result shouldEqual Some(true)
             case Left(error) =>
+              println(s"error: $error")
               fail(error)
           }
 
@@ -180,6 +181,9 @@ trait ScriptTestRunner { self: Spec =>
 
         case ExpectedResult.PUBKEYTYPE =>
           checkError[PublicKeyWrongEncoding](result)
+
+        case ExpectedResult.SIG_DER =>
+          checkError[SignatureWrongEncoding](result)
 
         case _ =>
           throw new NotImplementedError()
