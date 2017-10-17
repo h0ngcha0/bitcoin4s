@@ -1,6 +1,7 @@
 bitcoin4s
 =========
 [![Build Status](https://travis-ci.org/liuhongchao/bitcoin4s.svg?branch=master)](https://travis-ci.org/liuhongchao/bitcoin4s)
+[![Coverage Status](https://coveralls.io/repos/github/liuhongchao/bitcoin4s/badge.svg?branch=master)](https://coveralls.io/github/liuhongchao/bitcoin4s?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Scala library for experimenting with Bitcoin
