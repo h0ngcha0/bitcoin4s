@@ -16,8 +16,6 @@ object Signature {
   // `sequence`, `r`, and `s` are structured as `tlv` format respectively
   // Reference: https://msdn.microsoft.com/en-us/library/windows/desktop/bb648640(v=vs.85).aspx
   def decode(bytes: Seq[Byte]): Option[(Signature, Seq[Byte])] = {
-    println(s"bytes length: ${bytes.length}")
-
     bytes match {
       case Nil =>
         Some((EmptySignature, Seq.empty))
@@ -35,26 +33,10 @@ object Signature {
           _ <- checkPositive(sLength)
           (s, restOfBytesAfterS) <- restOfBytesAfterSLength.splitAtOpt(sLength)
         } yield {
-
-          println(s"rLength: $rLength")
-          println(s"r: $r")
-          println(s"sLength: $sLength")
-          println(s"s: $s")
-
-          println(s"restOfBytesAfterS: $restOfBytesAfterS")
           (ECDSASignature(new BigInteger(1, r.toArray), new BigInteger(1, s.toArray)), restOfBytesAfterS)
         }
       case _ =>
         None
-    }
-  }
-
-  def isDERSignature(bytes: Seq[Byte]): Boolean = {
-    decode(bytes) match {
-      case Some((signature, _)) if signature != EmptySignature=>
-        true
-      case _ =>
-        false
     }
   }
 

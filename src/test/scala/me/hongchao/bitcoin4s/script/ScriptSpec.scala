@@ -122,7 +122,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
     val notIncludedTests = Seq("WITNESS")
     val filteredScriptTests = scriptTests.filter { test =>
       checkedExpectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
-    }.drop(903).take(1)
+    }
 
     filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }

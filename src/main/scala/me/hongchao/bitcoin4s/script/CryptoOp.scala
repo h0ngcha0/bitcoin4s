@@ -80,21 +80,7 @@ object CryptoOp {
                 import PublicKey._
                 Signature.decode(encodedSignature.bytes) match {
                   case Some((signature, sigHashFlagBytes)) =>
-                    val hasValidSigHashFlag = (sigHashFlagBytes.length == 1 && sigHashFlagBytes.headOption.map(_ & 0xff).map(SignatureHashType).exists(_.isValid)) || encodedSignature.bytes.isEmpty
-                    val hasNegativeRorS = signature match {
-                      case EmptySignature =>
-                        false
-                      case ECDSASignature(r, s) =>
-                        r.intValue <= 0 || s.intValue <= 0
-                    }
-
-                    println(s"hasNegativeRorS : $hasNegativeRorS, $signature")
-                    if (state.ScriptFlags.derSig() && (!Signature.isDERSignature(encodedSignature.bytes) || !hasValidSigHashFlag || hasNegativeRorS)) {
-                      println(s"herereerere")
-                      abort(SignatureWrongEncoding(OP_CHECKSIG, state))
-                    } else if (state.ScriptFlags.strictEncoding() && !hasValidSigHashFlag) {
-                      continueWithResult(false)
-                    } else {
+                    if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
                       PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
                         case DecodeResult.Ok(decodedPublicKey) =>
                           val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
@@ -104,6 +90,8 @@ object CryptoOp {
                         case DecodeResult.Failure =>
                           continueWithResult(false)
                       }
+                    } else {
+                      abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     }
                   case None =>
                     if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
@@ -234,19 +222,7 @@ object CryptoOp {
         val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
           Signature.decode(encodedSignature.bytes) match {
             case Some((signature, sigHashFlagBytes)) =>
-              val hasValidSigHashFlag = (sigHashFlagBytes.length == 1 && sigHashFlagBytes.headOption.map(_ & 0xff).map(SignatureHashType).exists(_.isValid)) || encodedSignature.bytes.isEmpty
-              val hasNegativeRorS = signature match {
-                case EmptySignature =>
-                  false
-                case ECDSASignature(r, s) =>
-                  r.intValue <= 0 || s.intValue <= 0
-              }
-
-              if (state.ScriptFlags.derSig() && (!Signature.isDERSignature(encodedSignature.bytes) || !hasValidSigHashFlag || hasNegativeRorS)) {
-                false
-              } else if (state.ScriptFlags.strictEncoding() && !hasValidSigHashFlag) {
-                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-              } else {
+              if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
                 PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
                   case DecodeResult.Ok(decodedPubKey) =>
                     checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
@@ -257,6 +233,8 @@ object CryptoOp {
                       false
                     }
                 }
+              } else {
+                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
               }
 
             case None =>
@@ -312,5 +290,14 @@ object CryptoOp {
       case ScriptExecutionStage.ExecutingScriptP2SH =>
         state.p2shScript.get // FIXME: get rid of get
     }
+  }
+
+  // Check that an encoding is correct
+  private def checkSignatureEncoding(signatureBytes: Seq[Byte], flags: Seq[ScriptFlag]) = {
+    val notValidDerEncoded = !Signature.isValidSignatureEncoding(signatureBytes)
+    val nonEmptySignature = signatureBytes.nonEmpty
+    val derSigOrStrictEnc = Seq(ScriptFlag.SCRIPT_VERIFY_DERSIG, ScriptFlag.SCRIPT_VERIFY_STRICTENC).exists(flags.contains)
+
+    !(nonEmptySignature && derSigOrStrictEnc && notValidDerEncoded)
   }
 }
