@@ -116,6 +116,10 @@ case class InterpreterState(
     def derSig(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)
     }
+
+    def nullfail(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL)
+    }
   }
 }
 
@@ -230,6 +234,10 @@ object InterpreterError {
 
   case class VerificationFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Verification on top of the stack failed"
+  }
+
+  case class SignatureVerificationNullFail(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "If NULLFAIL flag is on and signature verification fails, signature has to be empty for script to continue"
   }
 
   case class CLTVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {

@@ -185,6 +185,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.SIG_DER =>
           checkError[SignatureWrongEncoding](result)
 
+        case ExpectedResult.NULLFAIL =>
+          checkError[SignatureVerificationNullFail](result)
+
         case _ =>
           throw new NotImplementedError()
       }

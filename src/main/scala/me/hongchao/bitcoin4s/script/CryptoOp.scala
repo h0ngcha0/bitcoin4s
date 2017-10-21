@@ -68,13 +68,17 @@ object CryptoOp {
           getState.flatMap { state =>
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
-                def continueWithResult(result: Boolean) = {
-                  setState(
-                    state.copy(
-                      stack = result.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
-                      opCount = state.opCount + 1
-                    )
-                  ).flatMap(continue)
+                def handleResult(result: Boolean) = {
+                  if (state.ScriptFlags.nullfail() && !result & encodedSignature.bytes.nonEmpty) {
+                    abort(SignatureVerificationNullFail(opCode, state))
+                  } else {
+                    setState(
+                      state.copy(
+                        stack = result.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
+                        opCount = state.opCount + 1
+                      )
+                    ).flatMap(continue)
+                  }
                 }
 
                 import PublicKey._
@@ -84,11 +88,11 @@ object CryptoOp {
                       PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
                         case DecodeResult.Ok(decodedPublicKey) =>
                           val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
-                          continueWithResult(checkResult)
+                          handleResult(checkResult)
                         case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
                           abort(PublicKeyWrongEncoding(opCode, state))
                         case DecodeResult.Failure =>
-                          continueWithResult(false)
+                          handleResult(false)
                       }
                     } else {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
@@ -97,7 +101,7 @@ object CryptoOp {
                     if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     } else {
-                      continueWithResult(false)
+                      handleResult(false)
                     }
                 }
 
@@ -154,23 +158,30 @@ object CryptoOp {
                   checkSignatures(nonEmptyEncodedPubKeys, signatures, state)
                 } match {
                   case Success(checkResult) =>
-                    // NOTE: Due to the bug in the reference client
-                    if (rest.nonEmpty) {
-                      val oneMorePop = rest.tail
-                      setState(
-                        state.copy(
-                          stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
-                          opCount = state.opCount + 1 + nonEmptyEncodedPubKeys.length
-                        )
-                      ).flatMap(continue)
+                    if (state.ScriptFlags.nullfail() && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
+                      abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {
-                      abort(InvalidStackOperation(opCode, state))
+                      // NOTE: Due to the bug in the reference client
+                      if (rest.nonEmpty) {
+                        val oneMorePop = rest.tail
+                        setState(
+                          state.copy(
+                            stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
+                            opCount = state.opCount + 1 + nonEmptyEncodedPubKeys.length
+                          )
+                        ).flatMap(continue)
+                      } else {
+                        abort(InvalidStackOperation(opCode, state))
+                      }
                     }
 
                   case Failure(err: PublicKeyWrongEncoding) =>
                     abort(err)
 
                   case Failure(err: SignatureWrongEncoding) =>
+                    abort(err)
+
+                  case Failure(err: SignatureVerificationNullFail) =>
                     abort(err)
 
                   case Failure(e) =>
