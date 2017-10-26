@@ -57,9 +57,7 @@ object ConstantOp {
             .flatMap { state =>
               // from OP_1NEGATE to OP_16
               setState(state.copy(
-                currentScript = state.currentScript,
-                stack = ScriptNum(opc.value - 80) +: state.stack,
-                opCount = state.opCount
+                stack = ScriptNum(opc.value - 80) +: state.stack
               ))
             }
             .flatMap(continue)
@@ -69,9 +67,7 @@ object ConstantOp {
             .flatMap { state =>
               // Push empty byte array to the stack
               setState(state.copy(
-                currentScript = state.currentScript,
-                stack = ScriptConstant(Seq.empty[Byte]) +: state.stack,
-                opCount = state.opCount
+                stack = ScriptConstant(Seq.empty[Byte]) +: state.stack
               ))
             }
             .flatMap(continue)
@@ -86,8 +82,7 @@ object ConstantOp {
                   } else {
                     setState(state.copy(
                       currentScript = rest,
-                      stack = dataToPush +: state.stack,
-                      opCount = state.opCount
+                      stack = dataToPush +: state.stack
                     )).flatMap(continue)
                   }
                 case OP_0 :: rest =>
@@ -96,8 +91,7 @@ object ConstantOp {
                   } else {
                     setState(state.copy(
                       currentScript = rest,
-                      stack = ScriptNum(0) +: state.stack,
-                      opCount = state.opCount
+                      stack = ScriptNum(0) +: state.stack
                     )).flatMap(continue)
                   }
                 case _ :: _ =>

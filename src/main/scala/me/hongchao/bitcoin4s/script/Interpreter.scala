@@ -1,19 +1,19 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.FlatMap
+import com.typesafe.scalalogging.StrictLogging
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
-import me.hongchao.bitcoin4s.script.Interpreter._
-import me.hongchao.bitcoin4s.Utils._
-import com.typesafe.scalalogging.StrictLogging
-import simulacrum._
-import cats.data._
-import cats.implicits._
+import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_HASH160
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import me.hongchao.bitcoin4s.script.Interpreter._
+import me.hongchao.bitcoin4s.Utils._
 import ScriptExecutionStage._
-import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
+import simulacrum._
+import cats.FlatMap
+import cats.data._
+import cats.implicits._
 
 sealed trait ScriptExecutionStage
 object ScriptExecutionStage {
@@ -119,6 +119,10 @@ case class InterpreterState(
 
     def nullfail(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL)
+    }
+
+    def nulldummy(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLDUMMY)
     }
   }
 }
@@ -230,6 +234,10 @@ object InterpreterError {
 
   case class InvalidSigHashType(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "SigHash type invalid"
+  }
+
+  case class MultiSigNullDummy(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Multisig dummy element is not null"
   }
 
   case class VerificationFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {

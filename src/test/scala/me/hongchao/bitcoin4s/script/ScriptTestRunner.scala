@@ -110,7 +110,6 @@ trait ScriptTestRunner { self: Spec =>
             case Right((finalState, result)) =>
               result shouldEqual Some(true)
             case Left(error) =>
-              println(s"error: $error")
               fail(error)
           }
 
@@ -187,6 +186,9 @@ trait ScriptTestRunner { self: Spec =>
 
         case ExpectedResult.NULLFAIL =>
           checkError[SignatureVerificationNullFail](result)
+
+        case ExpectedResult.SIG_NULLDUMMY =>
+          checkError[MultiSigNullDummy](result)
 
         case _ =>
           throw new NotImplementedError()

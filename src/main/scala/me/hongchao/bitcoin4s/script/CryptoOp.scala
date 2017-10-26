@@ -161,17 +161,22 @@ object CryptoOp {
                     if (state.ScriptFlags.nullfail() && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
                       abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {
-                      // NOTE: Due to the bug in the reference client
-                      if (rest.nonEmpty) {
-                        val oneMorePop = rest.tail
-                        setState(
-                          state.copy(
-                            stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: oneMorePop,
-                            opCount = state.opCount + 1 + nonEmptyEncodedPubKeys.length
-                          )
-                        ).flatMap(continue)
-                      } else {
-                        abort(InvalidStackOperation(opCode, state))
+                      // NOTE: Popping extra element due to the bug in the reference client
+                      rest match {
+                        case head :: tail =>
+                          if (state.ScriptFlags.nulldummy() && head.bytes.nonEmpty) {
+                            // Reference: https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
+                            abort(MultiSigNullDummy(opCode, state))
+                          } else {
+                            setState(
+                              state.copy(
+                                stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
+                                opCount = state.opCount + 1 + nonEmptyEncodedPubKeys.length
+                              )
+                            ).flatMap(continue)
+                          }
+                        case Nil =>
+                          abort(InvalidStackOperation(opCode, state))
                       }
                     }
 
