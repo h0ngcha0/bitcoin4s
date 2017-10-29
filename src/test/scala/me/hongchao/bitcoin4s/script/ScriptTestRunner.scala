@@ -80,7 +80,7 @@ trait ScriptTestRunner { self: Spec =>
     scriptFlags: Seq[ScriptFlag],
     expectedResult: ExpectedResult,
     comments: String,
-    witness: Option[(List[String], BigInt)],
+    witness: Option[(Seq[ScriptConstant], Long)],
     raw: String
   )
 
@@ -88,20 +88,21 @@ trait ScriptTestRunner { self: Spec =>
   def run(test: TestCase, testNumber: Int) = {
     info(s"Test $testNumber: $test")
 
-    val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes))
+    val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), test.witness.map(_._2))
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes))
 
     // FIXME: not dealing with witness for now
     val initialState = InterpreterState(
       scriptPubKey = test.scriptPubKey,
       scriptSig = test.scriptSig,
+      scriptWitnessStack = test.witness.map(_._1),
       flags = test.scriptFlags,
       transaction = spendingTx,
       inputIndex = 0
     )
 
     withClue(test.comments) {
-      val result = Interpreter.interpret(verbose = false).run(initialState)
+      val result = Interpreter.interpret(verbose = true).run(initialState)
       implicit val expectedResult = test.expectedResult
 
       expectedResult match {
@@ -110,7 +111,7 @@ trait ScriptTestRunner { self: Spec =>
             case Right((finalState, result)) =>
               result shouldEqual Some(true)
             case Left(error) =>
-              fail(error)
+              fail(error.toString, error)
           }
 
         case ExpectedResult.EVAL_FALSE =>

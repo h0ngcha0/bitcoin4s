@@ -1,10 +1,15 @@
 package me.hongchao.bitcoin4s.script
 
 import com.typesafe.config._
+
 import scala.collection.JavaConverters._
 import me.hongchao.bitcoin4s.Spec
 import me.hongchao.bitcoin4s.Utils._
+import org.spongycastle.util.encoders.Hex
+
+import scala.collection.immutable
 import scala.io.Source
+import scala.util.control.Exception.allCatch
 
 class ScriptSpec extends Spec with ScriptTestRunner {
 
@@ -35,13 +40,15 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       case elements @ (head :: tail)  =>
         if (head.isInstanceOf[ConfigList]) {
           val witnessElement = head.toList.map(_.render)
-          val amount = (BigDecimal(witnessElement.last) * 10000000).toBigInt
-          val witnesses = witnessElement.reverse.tail
+          val amount = (BigDecimal(witnessElement.last) * 10000000).toLong
           val stringTail = tail.map(stripDoubleQuotes)
+          val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
+          val witnesses = witnessElement.reverse.tail.flatMap { rawWitness =>
+            allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)).toSeq)
+          }.map(ScriptConstant.apply)
           val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringTail.take(4)
           val scriptFlags = toScriptFlags(scriptFlagsString)
           val expectedResult = ExpectedResult.fromString(expectedResultString).value
-          val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
 
           TestCase(
             scriptSig = Parser.parse(scriptSigString),
@@ -119,10 +126,9 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     (checkedExpectedResults ++ notCheckedExpectedResults) should contain theSameElementsAs ExpectedResult.all
 
-    val notIncludedTests = Seq("WITNESS")
     val filteredScriptTests = scriptTests.filter { test =>
-      checkedExpectedResults.contains(test.expectedResult) && !notIncludedTests.exists(test.raw.contains)
-    }
+      checkedExpectedResults.contains(test.expectedResult) && test.comments.equals("Basic P2WPKH")
+    }.take(1)
 
     filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
@@ -133,6 +139,10 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
   private def stripDoubleQuotes(config: ConfigValue): String = {
     val raw = config.render(ConfigRenderOptions.concise())
+    stripDoubleQuotes(raw)
+  }
+
+  private def stripDoubleQuotes(raw: String): String = {
     (raw.length >= 2 && raw.head == '\"' && raw.last == '\"')
       .option(raw.drop(1).dropRight(1))
       .getOrElse(raw)

@@ -97,6 +97,7 @@ object CryptoOp {
                     } else {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     }
+
                   case None =>
                     if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
@@ -290,7 +291,7 @@ object CryptoOp {
           currentScript = currentScript,
           inputIndex = state.inputIndex,
           sigHashType = sigHashType,
-          sigVersion = SIGVERSION_BASE
+          sigVersion = state.sigVersion
         )
 
         pubKey.verify(hashedTransaction, ecdsaSignature)
@@ -304,7 +305,11 @@ object CryptoOp {
       case ScriptExecutionStage.ExecutingScriptSig =>
         state.scriptSig
       case ScriptExecutionStage.ExecutingScriptP2SH =>
-        state.p2shScript.get // FIXME: get rid of get
+        state.scriptP2sh.get // FIXME: get rid of get
+      case ScriptExecutionStage.ExecutingScriptWitness =>
+        //state.scriptP2sh.get
+        //FIXME: figure out what
+        Seq.empty
     }
   }
 
