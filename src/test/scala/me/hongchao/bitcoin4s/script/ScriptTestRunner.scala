@@ -91,7 +91,6 @@ trait ScriptTestRunner { self: Spec =>
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), test.witness.map(_._2))
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes))
 
-    // FIXME: not dealing with witness for now
     val initialState = InterpreterState(
       scriptPubKey = test.scriptPubKey,
       scriptSig = test.scriptSig,
