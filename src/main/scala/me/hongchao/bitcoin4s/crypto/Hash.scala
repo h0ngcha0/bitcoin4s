@@ -1,9 +1,10 @@
 package me.hongchao.bitcoin4s.crypto
 
 import org.spongycastle.crypto.Digest
-import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA256Digest, SHA512Digest, SHA1Digest}
+import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA1Digest, SHA256Digest, SHA512Digest}
 import org.spongycastle.crypto.generators.PKCS5S2ParametersGenerator
 import org.spongycastle.crypto.params.KeyParameter
+import org.spongycastle.util.encoders.Hex
 
 
 trait Hash {
@@ -18,6 +19,7 @@ trait Hash {
 }
 
 object Hash {
+
   case object Sha1 extends Hash {
     val digest = new SHA1Digest
   }
@@ -55,5 +57,11 @@ object Hash {
       val keyParams = gen.generateDerivedParameters(512).asInstanceOf[KeyParameter]
       keyParams.getKey
     }
+  }
+
+  val zeros: Array[Byte] = Hash256(fromHex("0000000000000000000000000000000000000000000000000000000000000000"))
+
+  def fromHex(hex: String): Array[Byte] = {
+    Hex.decode(hex.stripPrefix("0x"))
   }
 }

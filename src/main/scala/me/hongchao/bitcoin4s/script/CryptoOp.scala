@@ -7,7 +7,6 @@ import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.script.Interpreter._
-import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
 
 import scala.annotation.tailrec
 import cats.implicits._
@@ -291,7 +290,8 @@ object CryptoOp {
           currentScript = currentScript,
           inputIndex = state.inputIndex,
           sigHashType = sigHashType,
-          sigVersion = state.sigVersion
+          sigVersion = state.sigVersion,
+          amount = state.amount
         )
 
         pubKey.verify(hashedTransaction, ecdsaSignature)
@@ -307,9 +307,7 @@ object CryptoOp {
       case ScriptExecutionStage.ExecutingScriptP2SH =>
         state.scriptP2sh.get // FIXME: get rid of get
       case ScriptExecutionStage.ExecutingScriptWitness =>
-        //state.scriptP2sh.get
-        //FIXME: figure out what
-        Seq.empty
+        state.scriptWitness.get
     }
   }
 

@@ -33,7 +33,8 @@ object InterpreterState {
     scriptWitnessStack: Option[Seq[ScriptElement]],
     flags: Seq[ScriptFlag],
     transaction: Tx,
-    inputIndex: Int
+    inputIndex: Int,
+    amount: Long
   ): InterpreterState = {
     InterpreterState(
       scriptPubKey = scriptPubKey,
@@ -43,7 +44,8 @@ object InterpreterState {
       transaction = transaction,
       inputIndex = inputIndex,
       flags = flags,
-      sigVersion = SigVersion.SIGVERSION_BASE
+      sigVersion = SigVersion.SIGVERSION_BASE,
+      amount = amount
     )
   }
 }
@@ -53,6 +55,7 @@ case class InterpreterState(
   scriptSig: Seq[ScriptElement],
   currentScript: Seq[ScriptElement],
   scriptP2sh: Option[Seq[ScriptElement]] = None,
+  scriptWitness: Option[Seq[ScriptElement]] = None,
   scriptWitnessStack: Option[Seq[ScriptElement]] = None,
   stack: Seq[ScriptElement] = Seq.empty,
   altStack: Seq[ScriptElement] = Seq.empty,
@@ -60,6 +63,7 @@ case class InterpreterState(
   opCount: Int = 0,
   transaction: Tx,
   inputIndex: Int,
+  amount: Long,
   sigVersion: SigVersion,
   scriptExecutionStage: ScriptExecutionStage = ScriptExecutionStage.ExecutingScriptSig
 ) {
@@ -371,6 +375,7 @@ object Interpreter {
                 tailRecMEvaluated(head.bytes.toBoolean())
               case head :: tail =>
                 val maybeRebuiltScriptPubkeyAndStackFromWitness = tryRebuildScriptPubkeyAndStackFromWitness(state.scriptPubKey, state.scriptWitnessStack)
+
                 if (state.ScriptFlags.witness() && maybeRebuiltScriptPubkeyAndStackFromWitness.isDefined) {
                   val (rebuiltScriptPubkey, rebuiltStack) = maybeRebuiltScriptPubkeyAndStackFromWitness.get
 
@@ -380,6 +385,7 @@ object Interpreter {
                       stack = rebuiltStack,
                       altStack = Seq.empty,
                       opCount = 0,
+                      scriptWitness = Some(rebuiltScriptPubkey),
                       sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
                       scriptExecutionStage = ExecutingScriptWitness
                     ))

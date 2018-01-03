@@ -6,3 +6,4 @@ project/target/
 .idea_modules/
 logs/
 .ensime_cache
+ensime.sbt

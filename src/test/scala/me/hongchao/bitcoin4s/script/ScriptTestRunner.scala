@@ -10,6 +10,8 @@ import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
+
+import scala.collection.immutable
 import scala.reflect.ClassTag
 
 trait ScriptTestRunner { self: Spec =>
@@ -86,10 +88,11 @@ trait ScriptTestRunner { self: Spec =>
 
 
   def run(test: TestCase, testNumber: Int) = {
-    info(s"Test $testNumber: $test")
+    println(s"\n\nTest $testNumber: $test\n\n")
 
-    val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), test.witness.map(_._2))
-    val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes))
+    val amount: Long = test.witness.map(_._2).getOrElse(0)
+    val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), amount)
+    val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes), test.witness.map(_._1))
 
     val initialState = InterpreterState(
       scriptPubKey = test.scriptPubKey,
@@ -97,11 +100,12 @@ trait ScriptTestRunner { self: Spec =>
       scriptWitnessStack = test.witness.map(_._1),
       flags = test.scriptFlags,
       transaction = spendingTx,
-      inputIndex = 0
+      inputIndex = 0,
+      amount = amount
     )
 
     withClue(test.comments) {
-      val result = Interpreter.interpret(verbose = true).run(initialState)
+      val result = Interpreter.interpret(verbose = false).run(initialState)
       implicit val expectedResult = test.expectedResult
 
       expectedResult match {
@@ -207,39 +211,54 @@ trait ScriptTestRunner { self: Spec =>
     }
   }
 
-  def creditingTransaction(scriptPubKey: Seq[Byte], amount: Option[Long] = None) = {
+  def creditingTransaction(scriptPubKey: Seq[Byte], amount: Long) = {
     val emptyTxId = Array.fill[Byte](32)(0)
     val emptyOutpoint = OutPoint(Hash.NULL, -1)
     val maxSequence = 0xffffffff
     val txIn = TxIn(
       previous_output = emptyOutpoint,
       sig_script = ByteVector(Seq(OP_0, OP_0).flatMap(_.bytes)),
+      witness_script = List.empty,
       sequence = maxSequence
     )
-    val txOut = TxOut(value = amount.getOrElse(0), pk_script = ByteVector(scriptPubKey))
+    val txOut = TxOut(value = amount, pk_script = ByteVector(scriptPubKey))
 
     Tx(
       version = 1,
+      marker = None,
+      flags = None,
       tx_in = txIn :: Nil,
       tx_out = txOut :: Nil,
+      witness_scripts = List.empty,
       lock_time = 0
     )
   }
 
-  // FIXME: witness to be implemented
-  def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte]) = {
+  def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
     val maxSequence = 0xffffffff
+    val witnessScript = maybeWitnessScript.map(_.map { scriptConstant =>
+      ByteVector(scriptConstant.bytes)
+    }).getOrElse(Seq.empty).toList
+
+    import scodec.bits._
+    val prevId = Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray)).reverse)
     val txIn = TxIn(
-      previous_output = OutPoint(Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray)).reverse), 0),
+      previous_output = OutPoint(prevId, 0),
       sig_script = ByteVector(scriptSig),
+      witness_script = witnessScript,
       sequence = maxSequence
     )
-    val txOut = TxOut(value = 0, pk_script = ByteVector.empty)
+
+    val amount = creditingTransaction.tx_out(0).value
+    val txOut = TxOut(value = amount, pk_script = ByteVector.empty)
 
     Tx(
       version = 1,
+      marker = None,
+      flags = None,
       tx_in = txIn :: Nil,
       tx_out = txOut :: Nil,
+      witness_scripts = List(witnessScript),
       lock_time = 0
     )
   }

@@ -36,11 +36,11 @@ class ScriptSpec extends Spec with ScriptTestRunner {
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
 
-    val scriptTests = rawScriptTests.collect {
+    lazy val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail)  =>
         if (head.isInstanceOf[ConfigList]) {
           val witnessElement = head.toList.map(_.render)
-          val amount = (BigDecimal(witnessElement.last) * 10000000).toLong
+          val amount = (BigDecimal(witnessElement.last) * 100000000).toLong
           val stringTail = tail.map(stripDoubleQuotes)
           val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
           val witnesses = witnessElement.reverse.tail.flatMap { rawWitness =>
@@ -128,7 +128,8 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val filteredScriptTests = scriptTests.filter { test =>
       checkedExpectedResults.contains(test.expectedResult) && test.comments.equals("Basic P2WPKH")
-    }.take(1)
+      //checkedExpectedResults.contains(test.expectedResult)
+    }
 
     filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
