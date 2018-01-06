@@ -1,7 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
-import io.github.yzernik.bitcoinscodec.messages.Tx
-import io.github.yzernik.bitcoinscodec.structures.{Hash, OutPoint, TxIn, TxOut}
+import io.github.yzernik.bitcoinscodec.messages.{RegularTx, Tx, TxWitness}
+import io.github.yzernik.bitcoinscodec.structures._
 import me.hongchao.bitcoin4s.crypto.Hash.Hash256
 import me.hongchao.bitcoin4s.script.ConstantOp.OP_0
 import scodec.bits.ByteVector
@@ -218,48 +218,56 @@ trait ScriptTestRunner { self: Spec =>
     val txIn = TxIn(
       previous_output = emptyOutpoint,
       sig_script = ByteVector(Seq(OP_0, OP_0).flatMap(_.bytes)),
-      witness_script = List.empty,
+      //witness_script = List.empty,
       sequence = maxSequence
     )
-    val txOut = TxOut(value = amount, pk_script = ByteVector(scriptPubKey))
+    val txOut = RegularTxOut(value = amount, pk_script = ByteVector(scriptPubKey))
 
-    Tx(
+    RegularTx(
       version = 1,
-      marker = None,
-      flags = None,
+      //marker = None,
+      //flags = None,
       tx_in = txIn :: Nil,
       tx_out = txOut :: Nil,
-      witness_scripts = List.empty,
+      //witness_scripts = List.empty,
       lock_time = 0
     )
   }
 
-  def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
+  def spendingTransaction(creditingTransaction: RegularTx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
     val maxSequence = 0xffffffff
-    val witnessScript = maybeWitnessScript.map(_.map { scriptConstant =>
+/*    val witnessScript = maybeWitnessScript.map(_.map { scriptConstant =>
       ByteVector(scriptConstant.bytes)
-    }).getOrElse(Seq.empty).toList
+    }).getOrElse(Seq.empty).toList*/
 
     import scodec.bits._
     val prevId = Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray)).reverse)
     val txIn = TxIn(
       previous_output = OutPoint(prevId, 0),
       sig_script = ByteVector(scriptSig),
-      witness_script = witnessScript,
       sequence = maxSequence
     )
 
     val amount = creditingTransaction.tx_out(0).value
-    val txOut = TxOut(value = amount, pk_script = ByteVector.empty)
 
-    Tx(
-      version = 1,
-      marker = None,
-      flags = None,
-      tx_in = txIn :: Nil,
-      tx_out = txOut :: Nil,
-      witness_scripts = List(witnessScript),
-      lock_time = 0
-    )
+    maybeWitnessScript match {
+      case Some(witnessScript) =>
+        val txOut = TxOutWitness(value = amount, pk_script = ByteVector.empty)
+        TxWitness(
+          version = 1,
+          tx_in = txIn :: Nil,
+          tx_out = txOut :: Nil,
+          lock_time = 0
+        )
+      case None =>
+        val txOut = RegularTxOut(value = amount, pk_script = ByteVector.empty)
+        RegularTx(
+          version = 1,
+          tx_in = txIn :: Nil,
+          tx_out = txOut :: Nil,
+          lock_time = 0
+        )
+    }
+
   }
 }
