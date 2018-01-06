@@ -1,7 +1,9 @@
 package me.hongchao.bitcoin4s.script
 
+import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
+
 sealed trait InterpreterError extends RuntimeException with Product {
-  val opCode: ScriptOpCode
+  def opCode: ScriptOpCode
   val state: InterpreterState
   val description: String
 
@@ -138,5 +140,10 @@ object InterpreterError {
 
   case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Not implemented"
+  }
+
+  // FIXME: Error should all be specific
+  case class GeneralError(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "General error"
   }
 }

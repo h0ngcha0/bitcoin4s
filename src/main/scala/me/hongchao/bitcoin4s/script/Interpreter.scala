@@ -374,28 +374,32 @@ object Interpreter {
               case head :: Nil =>
                 tailRecMEvaluated(head.bytes.toBoolean())
               case head :: tail =>
-                val maybeRebuiltScriptPubkeyAndStackFromWitness = tryRebuildScriptPubkeyAndStackFromWitness(state.scriptPubKey, state.scriptWitnessStack)
+                if (state.ScriptFlags.witness()) {
 
-                if (state.ScriptFlags.witness() && maybeRebuiltScriptPubkeyAndStackFromWitness.isDefined) {
-                  val (rebuiltScriptPubkey, rebuiltStack) = maybeRebuiltScriptPubkeyAndStackFromWitness.get
+                  tryRebuildScriptPubkeyAndStackFromWitness(state.scriptPubKey, state.scriptWitnessStack) match {
+                    case Some((rebuiltScriptPubkey, rebuiltStack)) =>
+                      for {
+                        _ <- setState(state.copy(
+                          currentScript = rebuiltScriptPubkey,
+                          stack = rebuiltStack,
+                          altStack = Seq.empty,
+                          opCount = 0,
+                          scriptWitness = Some(rebuiltScriptPubkey),
+                          sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
+                          scriptExecutionStage = ExecutingScriptWitness
+                        ))
+                        _ <- checkInvalidOpCode()
+                        _ <- checkDisabledOpCode()
+                        _ <- checkMaxPushSize()
+                        _ <- checkMaxScriptSize()
+                      } yield {
+                        Left(None)
+                      }
 
-                  for {
-                    _ <- setState(state.copy(
-                      currentScript = rebuiltScriptPubkey,
-                      stack = rebuiltStack,
-                      altStack = Seq.empty,
-                      opCount = 0,
-                      scriptWitness = Some(rebuiltScriptPubkey),
-                      sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
-                      scriptExecutionStage = ExecutingScriptWitness
-                    ))
-                    _ <- checkInvalidOpCode()
-                    _ <- checkDisabledOpCode()
-                    _ <- checkMaxPushSize()
-                    _ <- checkMaxScriptSize()
-                  } yield {
-                    Left(None)
+                    case None =>
+                      tailRecMAbort(GeneralError(OP_UNKNOWN, state))
                   }
+
                 } else if (state.ScriptFlags.p2sh() && isP2SHScript(state.scriptPubKey)) {
                   getSerializedScript(state.scriptSig) match {
                     case Some(serializedScript) =>
@@ -482,7 +486,7 @@ object Interpreter {
         // P2WPSH
         for {
           last <- witnessStack.lastOption
-          scriptPubKey <- (Hash.Hash256(last.bytes.toArray).toSeq == witnessHash.bytes).option(Parser.parse(last.bytes))
+          scriptPubKey <- (Hash.Sha256(last.bytes.toArray).toSeq == witnessHash.bytes).option(Parser.parse(last.bytes))
         } yield {
           (scriptPubKey, removePushOps(witnessStack.dropRight(1)))
         }

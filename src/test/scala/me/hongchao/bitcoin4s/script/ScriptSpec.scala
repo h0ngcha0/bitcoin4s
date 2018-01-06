@@ -127,9 +127,10 @@ class ScriptSpec extends Spec with ScriptTestRunner {
     (checkedExpectedResults ++ notCheckedExpectedResults) should contain theSameElementsAs ExpectedResult.all
 
     val filteredScriptTests = scriptTests.filter { test =>
-      checkedExpectedResults.contains(test.expectedResult) && test.comments.equals("Basic P2WPKH")
-      //checkedExpectedResults.contains(test.expectedResult)
-    }
+      checkedExpectedResults.contains(test.expectedResult)
+      // && test.raw.contains("Invalid witness script")
+      // checkedExpectedResults.contains(test.expectedResult)
+    }.take(907)
 
     filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
