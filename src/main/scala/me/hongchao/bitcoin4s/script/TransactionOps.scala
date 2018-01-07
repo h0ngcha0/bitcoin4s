@@ -182,5 +182,17 @@ object TransactionOps {
       Hash.Hash256(preImage.toArray)
     }
   }
+
+  implicit class RichTx(tx: Tx) {
+    def serialized(): ByteVector = {
+      tx match {
+        case regularTx: RegularTx =>
+          regularTx.transactionId()
+        case txWitness: TxWitness =>
+          txWitness.transactionId()
+      }
+    }
+  }
+
 }
 

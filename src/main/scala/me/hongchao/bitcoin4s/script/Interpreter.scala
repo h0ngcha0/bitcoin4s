@@ -484,11 +484,13 @@ object Interpreter {
         Some((scriptPubKey, witnessStack))
       } else if (witnessHash.bytes.length == 32) {
         // P2WPSH
+        val head = witnessStack.head
+
         for {
-          last <- witnessStack.lastOption
-          scriptPubKey <- (Hash.Sha256(last.bytes.toArray).toSeq == witnessHash.bytes).option(Parser.parse(last.bytes))
+          head <- witnessStack.headOption
+          scriptPubKey <- (Hash.Sha256(head.bytes.toArray).toSeq == witnessHash.bytes).option(Parser.parse(head.bytes))
         } yield {
-          (scriptPubKey, removePushOps(witnessStack.dropRight(1)))
+          (scriptPubKey, removePushOps(witnessStack.tail))
         }
       } else {
         None

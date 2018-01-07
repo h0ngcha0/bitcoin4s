@@ -88,9 +88,9 @@ trait ScriptTestRunner { self: Spec =>
 
 
   def run(test: TestCase, testNumber: Int) = {
-    println(s"\n\nTest $testNumber: $test\n\n")
+    //println(s"\n\nTest $testNumber: $test\n\n")
 
-    val amount: Long = test.witness.map(_._2).getOrElse(0)
+    val amount = test.witness.map(_._2)
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), amount)
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes), test.witness.map(_._1))
 
@@ -101,7 +101,7 @@ trait ScriptTestRunner { self: Spec =>
       flags = test.scriptFlags,
       transaction = spendingTx,
       inputIndex = 0,
-      amount = amount
+      amount = amount.getOrElse(0)
     )
 
     withClue(test.comments) {
@@ -211,37 +211,42 @@ trait ScriptTestRunner { self: Spec =>
     }
   }
 
-  def creditingTransaction(scriptPubKey: Seq[Byte], amount: Long) = {
+  def creditingTransaction(scriptPubKey: Seq[Byte], maybeAmount: Option[Long]) = {
     val emptyTxId = Array.fill[Byte](32)(0)
     val emptyOutpoint = OutPoint(Hash.NULL, -1)
     val maxSequence = 0xffffffff
     val txIn = TxIn(
       previous_output = emptyOutpoint,
       sig_script = ByteVector(Seq(OP_0, OP_0).flatMap(_.bytes)),
-      //witness_script = List.empty,
       sequence = maxSequence
     )
-    val txOut = RegularTxOut(value = amount, pk_script = ByteVector(scriptPubKey))
 
-    RegularTx(
-      version = 1,
-      //marker = None,
-      //flags = None,
-      tx_in = txIn :: Nil,
-      tx_out = txOut :: Nil,
-      //witness_scripts = List.empty,
-      lock_time = 0
-    )
+    maybeAmount match {
+      case Some(amount) =>
+        val txOut = TxOutWitness(value = amount, pk_script = ByteVector(scriptPubKey))
+        TxWitness(
+          version = 1,
+          tx_in = txIn :: Nil,
+          tx_out = txOut :: Nil,
+          lock_time = 0
+        )
+      case None =>
+        val txOut = RegularTxOut(value = 0, pk_script = ByteVector(scriptPubKey))
+        RegularTx(
+          version = 1,
+          tx_in = txIn :: Nil,
+          tx_out = txOut :: Nil,
+          lock_time = 0
+        )
+    }
   }
 
-  def spendingTransaction(creditingTransaction: RegularTx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
+  def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
     val maxSequence = 0xffffffff
-/*    val witnessScript = maybeWitnessScript.map(_.map { scriptConstant =>
-      ByteVector(scriptConstant.bytes)
-    }).getOrElse(Seq.empty).toList*/
 
     import scodec.bits._
-    val prevId = Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray)).reverse)
+
+    val prevId = Hash(ByteVector(Hash256(creditingTransaction.serialized().toArray)).reverse)
     val txIn = TxIn(
       previous_output = OutPoint(prevId, 0),
       sig_script = ByteVector(scriptSig),

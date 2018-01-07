@@ -130,7 +130,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       checkedExpectedResults.contains(test.expectedResult)
       // && test.raw.contains("Invalid witness script")
       // checkedExpectedResults.contains(test.expectedResult)
-    }.take(989)
+    }.take(990)
 
     filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }

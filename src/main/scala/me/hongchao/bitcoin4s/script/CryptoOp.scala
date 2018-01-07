@@ -89,8 +89,10 @@ object CryptoOp {
                         case DecodeResult.Ok(decodedPublicKey) =>
                           val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
                           handleResult(checkResult)
+
                         case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
                           abort(PublicKeyWrongEncoding(opCode, state))
+
                         case DecodeResult.Failure =>
                           handleResult(false)
                       }
@@ -294,6 +296,7 @@ object CryptoOp {
               inputIndex = state.inputIndex,
               sigHashType = sigHashType
             )
+
           case segwitTx: TxWitness =>
             segwitTx.signingHash(
               currentScript,
