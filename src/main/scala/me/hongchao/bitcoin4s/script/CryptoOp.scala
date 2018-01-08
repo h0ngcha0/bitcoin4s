@@ -245,6 +245,7 @@ object CryptoOp {
                 PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
                   case DecodeResult.Ok(decodedPubKey) =>
                     checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
+
                   case _ =>
                     if (state.ScriptFlags.strictEncoding()) {
                       throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)

@@ -88,7 +88,7 @@ trait ScriptTestRunner { self: Spec =>
 
 
   def run(test: TestCase, testNumber: Int) = {
-    //println(s"\n\nTest $testNumber: $test\n\n")
+    println(s"\n\nTest $testNumber: $test\n\n")
 
     val amount = test.witness.map(_._2)
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), amount)
