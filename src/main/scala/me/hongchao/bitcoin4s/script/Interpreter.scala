@@ -475,14 +475,14 @@ object Interpreter {
       script <- maybeScript
       result <- tryRebuildScriptPubkeyAndStackFromWitness(script, state.scriptWitnessStack)
     } yield result) match {
-      case Some((rebuiltScriptPubkey, rebuiltStack)) =>
+      case Some((rebuiltScript, rebuiltStack)) =>
         for {
           _ <- setState(state.copy(
-            currentScript = rebuiltScriptPubkey,
+            currentScript = rebuiltScript,
             stack = rebuiltStack,
             altStack = Seq.empty,
             opCount = 0,
-            scriptWitness = Some(rebuiltScriptPubkey),
+            scriptWitness = Some(rebuiltScript),
             sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
             scriptExecutionStage = ExecutingScriptWitness
           ))
@@ -509,9 +509,7 @@ object Interpreter {
         val scriptPubKey = OP_DUP :: OP_HASH160 :: OP_PUSHDATA(20) :: witnessHash :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil
         Some((scriptPubKey, witnessStack))
       } else if (witnessHash.bytes.length == 32) {
-        // P2WPSH
-        val head = witnessStack.head
-
+        // P2WSH
         for {
           head <- witnessStack.headOption
           scriptPubKey <- (Hash.Sha256(head.bytes.toArray).toSeq == witnessHash.bytes).option(Parser.parse(head.bytes))

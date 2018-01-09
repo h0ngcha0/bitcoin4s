@@ -7,7 +7,6 @@ import me.hongchao.bitcoin4s.Spec
 import me.hongchao.bitcoin4s.Utils._
 import org.spongycastle.util.encoders.Hex
 
-import scala.collection.immutable
 import scala.io.Source
 import scala.util.control.Exception.allCatch
 
@@ -130,8 +129,9 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       checkedExpectedResults.contains(test.expectedResult)
       // && test.raw.contains("Invalid witness script")
       // checkedExpectedResults.contains(test.expectedResult)
-    }.take(1011)
+    }.take(1031)
 
+    //println(s"filteredScriptTests.length: ${filteredScriptTests.length}")
     filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
 

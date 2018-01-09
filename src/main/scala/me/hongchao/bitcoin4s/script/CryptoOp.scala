@@ -152,7 +152,6 @@ object CryptoOp {
               val (signatures, rest) = v4
             } yield (pubKeys, signatures, rest)
 
-
             maybeSplitStack match {
               case Right((pubKeys, signatures, rest)) =>
                 val nonEmptyEncodedPubKeys = pubKeys.filter(_ != ConstantOp.OP_0)
@@ -161,6 +160,7 @@ object CryptoOp {
                   checkSignatures(nonEmptyEncodedPubKeys, signatures, state)
                 } match {
                   case Success(checkResult) =>
+
                     if (state.ScriptFlags.nullfail() && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
                       abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {
@@ -236,45 +236,49 @@ object CryptoOp {
 
   @tailrec
   def checkSignatures(encodedPublicKeys: Seq[ScriptElement], encodedSignatures: Seq[ScriptElement], state: InterpreterState, strictEnc: Boolean = true): Boolean = {
-    encodedSignatures match {
-      case encodedSignature :: tail =>
-        val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
-          Signature.decode(encodedSignature.bytes) match {
-            case Some((signature, sigHashFlagBytes)) =>
-              if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
-                PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
-                  case DecodeResult.Ok(decodedPubKey) =>
-                    checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
+    if (encodedSignatures.length > encodedPublicKeys.length) {
+      false
+    } else {
+      encodedSignatures match {
+        case encodedSignature :: tail =>
+          val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
+            Signature.decode(encodedSignature.bytes) match {
+              case Some((signature, sigHashFlagBytes)) =>
+                if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
+                  PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
+                    case DecodeResult.Ok(decodedPubKey) =>
+                      checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
 
-                  case _ =>
-                    if (state.ScriptFlags.strictEncoding()) {
-                      throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
-                    } else {
-                      false
-                    }
+                    case _ =>
+                      if (state.ScriptFlags.strictEncoding()) {
+                        throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
+                      } else {
+                        false
+                      }
+                  }
+                } else {
+                  throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
                 }
-              } else {
-                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-              }
 
-            case None =>
-              if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
-                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-              } else {
-                false
-              }
+              case None =>
+                if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
+                  throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
+                } else {
+                  false
+                }
+            }
           }
-        }
 
-        maybeEncodedPubKeyWithSignature match {
-          case Some(true) =>
-            checkSignatures(encodedPublicKeys.tail, tail, state)
-          case _ =>
-            false
-        }
+          maybeEncodedPubKeyWithSignature match {
+            case Some(true) =>
+              checkSignatures(encodedPublicKeys.tail, tail, state)
+            case _ =>
+              checkSignatures(encodedPublicKeys.tail, encodedSignatures, state)
+          }
 
-      case Nil =>
-        true
+        case Nil =>
+          true
+      }
     }
   }
 
