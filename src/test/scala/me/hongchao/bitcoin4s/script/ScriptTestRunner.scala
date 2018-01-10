@@ -111,7 +111,7 @@ trait ScriptTestRunner { self: Spec =>
       expectedResult match {
         case ExpectedResult.OK =>
           result match {
-            case Right((finalState, result)) =>
+            case Right((finalState@_, result)) =>
               result shouldEqual Some(true)
             case Left(error) =>
               fail(error.toString, error)
@@ -119,7 +119,7 @@ trait ScriptTestRunner { self: Spec =>
 
         case ExpectedResult.EVAL_FALSE =>
           result match {
-            case Right((finalState, result)) =>
+            case Right((finalState@_, result)) =>
               result shouldEqual Some(false)
             case Left(error) =>
               fail(error)

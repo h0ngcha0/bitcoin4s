@@ -22,6 +22,10 @@ package object Utils {
   }
 
   implicit class RichBoolean(b: Boolean) {
+    def flatOption[T](f: => Option[T]): Option[T] = {
+      if (b) f else None
+    }
+
     def option[T](f: => T): Option[T] = {
       if (b) Some(f) else None
     }

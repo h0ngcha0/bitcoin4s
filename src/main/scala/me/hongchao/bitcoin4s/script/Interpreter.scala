@@ -373,39 +373,41 @@ object Interpreter {
                 tailRecMEvaluated(false)
 
               case head :: tail =>
-                val maybeRebuiltScriptPubkeyAndStackFromWitness = tryRebuildScriptPubkeyAndStackFromWitness(state.scriptPubKey, state.scriptWitnessStack)
-                if (state.ScriptFlags.witness() && maybeRebuiltScriptPubkeyAndStackFromWitness.isDefined) {
-                  maybeExecuteWitnessProgram(Some(state.scriptPubKey), state)
-                } else if (state.ScriptFlags.p2sh() && isP2SHScript(state.scriptPubKey)) {
-                  getSerializedScript(state.scriptSig) match {
-                    case Some(serializedScript) =>
-                      val payToScript = Parser.parse(serializedScript.bytes)
+                maybeExecuteWitnessProgram(Some(state.scriptPubKey), state) match {
+                  case Some(nextState) =>
+                    nextState
+                  case None =>
+                    if (state.ScriptFlags.p2sh() && isP2SHScript(state.scriptPubKey)) {
+                      getSerializedScript(state.scriptSig) match {
+                        case Some(serializedScript) =>
+                          val payToScript = Parser.parse(serializedScript.bytes)
 
-                      for {
-                        _ <- setState(state.copy(
-                          currentScript = payToScript,
-                          stack = tail,
-                          altStack = Seq.empty,
-                          opCount = 0,
-                          scriptP2sh = Some(payToScript),
-                          scriptExecutionStage = ExecutingScriptP2SH
-                        ))
-                        _ <- checkInvalidOpCode()
-                        _ <- checkDisabledOpCode()
-                        _ <- checkMaxPushSize()
-                        _ <- checkMaxScriptSize()
-                      } yield {
-                        Left(None)
+                          for {
+                            _ <- setState(state.copy(
+                              currentScript = payToScript,
+                              stack = tail,
+                              altStack = Seq.empty,
+                              opCount = 0,
+                              scriptP2sh = Some(payToScript),
+                              scriptExecutionStage = ExecutingScriptP2SH
+                            ))
+                            _ <- checkInvalidOpCode()
+                            _ <- checkDisabledOpCode()
+                            _ <- checkMaxPushSize()
+                            _ <- checkMaxScriptSize()
+                          } yield {
+                            Left(None)
+                          }
+                        case None =>
+                          tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
                       }
-                    case None =>
-                      tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
-                  }
-                } else {
-                  if (state.ScriptFlags.requireCleanStack()) {
-                    tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
-                  } else {
-                    tailRecMEvaluated(head.bytes.toBoolean())
-                  }
+                    } else {
+                      if (state.ScriptFlags.requireCleanStack()) {
+                        tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
+                      } else {
+                        tailRecMEvaluated(head.bytes.toBoolean())
+                      }
+                    }
                 }
             }
 
@@ -415,14 +417,15 @@ object Interpreter {
                 StateT.pure(Right(Some(false)))
 
               case head :: tail =>
-                if (state.ScriptFlags.witness()) {
-                  maybeExecuteWitnessProgram(state.scriptP2sh, state)
-                } else {
-                  if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
-                    tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
-                  } else {
-                    StateT.pure(Right(Some(head.bytes.toBoolean())))
-                  }
+                maybeExecuteWitnessProgram(state.scriptP2sh, state) match {
+                  case Some(nextState) =>
+                    nextState
+                  case None =>
+                    if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
+                      tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
+                    } else {
+                      StateT.pure(Right(Some(head.bytes.toBoolean())))
+                    }
                 }
             }
 
@@ -470,12 +473,12 @@ object Interpreter {
     }
   }
 
-  private def maybeExecuteWitnessProgram(maybeScript: Option[Seq[ScriptElement]], state: InterpreterState): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
+  private def maybeExecuteWitnessProgram(maybeScript: Option[Seq[ScriptElement]], state: InterpreterState): Option[InterpreterContext[Either[Option[Boolean], Option[Boolean]]]] = {
     (for {
-      script <- maybeScript
+      script <- state.ScriptFlags.witness().flatOption(maybeScript)
       result <- tryRebuildScriptPubkeyAndStackFromWitness(script, state.scriptWitnessStack)
-    } yield result) match {
-      case Some((rebuiltScript, rebuiltStack)) =>
+    } yield result).map {
+      case (rebuiltScript, rebuiltStack) =>
         for {
           _ <- setState(state.copy(
             currentScript = rebuiltScript,
@@ -493,9 +496,6 @@ object Interpreter {
         } yield {
           Left(None)
         }
-
-      case None =>
-        tailRecMAbort(GeneralError(OP_UNKNOWN, state))
     }
   }
 
