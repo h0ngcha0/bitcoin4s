@@ -127,11 +127,8 @@ class ScriptSpec extends Spec with ScriptTestRunner {
 
     val filteredScriptTests = scriptTests.filter { test =>
       checkedExpectedResults.contains(test.expectedResult)
-      // && test.raw.contains("Invalid witness script")
-      // checkedExpectedResults.contains(test.expectedResult)
-    }.take(1035)
+    }
 
-    //println(s"filteredScriptTests.length: ${filteredScriptTests.length}")
     filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
 
