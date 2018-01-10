@@ -2,6 +2,9 @@ package me.hongchao.bitcoin4s
 
 import java.nio.{ByteBuffer, ByteOrder}
 
+import scodec.Attempt
+import scodec.bits.BitVector
+
 package object Utils {
   implicit class Rich[T](value: T) {
     def toHex: String = "%02x".format(value)
@@ -19,8 +22,23 @@ package object Utils {
   }
 
   implicit class RichBoolean(b: Boolean) {
+    def flatOption[T](f: => Option[T]): Option[T] = {
+      if (b) f else None
+    }
+
     def option[T](f: => T): Option[T] = {
       if (b) Some(f) else None
+    }
+  }
+
+  implicit class RichAttemptByteVector(attemptByteVector: Attempt[BitVector]) {
+    def toBytes(): Array[Byte] = {
+      attemptByteVector.toEither match {
+        case Left(error) =>
+          throw new RuntimeException(error.messageWithContext)
+        case Right(v) =>
+          v.toByteArray
+      }
     }
   }
 
@@ -84,4 +102,14 @@ package object Utils {
     buffer.putInt((input & 0xffffffff).toInt)
     bin
   }
+
+  def uInt64ToBytes(input: Long): Seq[Byte] = uInt64ToBytes(input, ByteOrder.LITTLE_ENDIAN)
+
+  def uInt64ToBytes(input: Long, order: ByteOrder): Seq[Byte] = {
+    val bin = new Array[Byte](8)
+    val buffer = ByteBuffer.wrap(bin).order(order)
+    buffer.putLong(input)
+    bin
+  }
+
 }

@@ -69,52 +69,54 @@ object Parser {
   }
 
   @tailrec
-  private def parse(bytes: Seq[Byte], acc: Seq[Seq[ScriptElement]]): Seq[Seq[ScriptElement]] = bytes match {
-    case Nil => acc
-    case head :: tail =>
-      val opCode = OpCodes.all
-        .find(_.hex == head.toHex)
-        .orElse {
-          val opCodeValue = Integer.parseInt(head.toHex, 16)
-          val isInvalidOpCode = (opCodeValue > OP_NOP10.value) && (opCodeValue < OP_INVALIDOPCODE.value)
-          isInvalidOpCode.option(OP_INVALIDOPCODE)
+  private def parse(bytes: Seq[Byte], acc: Seq[Seq[ScriptElement]]): Seq[Seq[ScriptElement]] = {
+    bytes match {
+      case Nil => acc
+      case head +: tail =>
+        val opCode = OpCodes.all
+          .find(_.hex == head.toHex)
+          .orElse {
+            val opCodeValue = Integer.parseInt(head.toHex, 16)
+            val isInvalidOpCode = (opCodeValue > OP_NOP10.value) && (opCodeValue < OP_INVALIDOPCODE.value)
+            isInvalidOpCode.option(OP_INVALIDOPCODE)
+          }
+          .getOrElse {
+            // FIXME: better exception
+            throw new RuntimeException(s"No opcode found: $bytes")
+          }
+
+        def pushData(opCode: ScriptOpCode, numberOfBytesToPush: Int, restOfData: Seq[Byte]): (Seq[Byte], Seq[Seq[ScriptElement]]) = {
+          val maybeBytesToPush = restOfData.takeOpt(numberOfBytesToPush)
+          val restOfBytes = restOfData.drop(numberOfBytesToPush)
+          val maybeConstantToBePushed = maybeBytesToPush.map { bytesToPush =>
+            (bytesToPush.isEmpty).option(OP_0).getOrElse(ScriptConstant(bytesToPush))
+          }
+
+          (restOfBytes, (Seq(opCode) ++ maybeConstantToBePushed.toList) +: acc)
         }
-        .getOrElse {
-          // FIXME: better exception
-          throw new RuntimeException(s"No opcode found: $bytes")
+
+        val (restOfBytes, newAcc) = opCode match {
+          case OP_PUSHDATA(value) =>
+            pushData(opCode, value.toInt, tail)
+
+          case OP_PUSHDATA1 =>
+            val numberOfBytesToPush = bytesToUInt8(tail.forceTake(1))
+            pushData(opCode, numberOfBytesToPush, tail.drop(1))
+
+          case OP_PUSHDATA2 =>
+            val numberOfBytesToPush = bytesToUInt16(tail.forceTake(2))
+            pushData(opCode, numberOfBytesToPush, tail.drop(2))
+
+          case OP_PUSHDATA4 =>
+            val numberOfBytesToPush = bytesToUInt32(tail.forceTake(4))
+            pushData(opCode, numberOfBytesToPush, tail.drop(4))
+
+          case otherOpCode =>
+            (tail, Seq(otherOpCode) +: acc)
         }
 
-      def pushData(opCode: ScriptOpCode, numberOfBytesToPush: Int, restOfData: Seq[Byte]): (Seq[Byte], Seq[Seq[ScriptElement]]) = {
-        val maybeBytesToPush = restOfData.takeOpt(numberOfBytesToPush)
-        val restOfBytes = restOfData.drop(numberOfBytesToPush)
-        val maybeConstantToBePushed = maybeBytesToPush.map { bytesToPush =>
-          (bytesToPush.isEmpty).option(OP_0).getOrElse(ScriptConstant(bytesToPush))
-        }
-
-        (restOfBytes, (Seq(opCode) ++ maybeConstantToBePushed.toList) +: acc)
-      }
-
-      val (restOfBytes, newAcc) = opCode match {
-        case OP_PUSHDATA(value) =>
-          pushData(opCode, value.toInt, tail)
-
-        case OP_PUSHDATA1 =>
-          val numberOfBytesToPush = bytesToUInt8(tail.forceTake(1))
-          pushData(opCode, numberOfBytesToPush, tail.drop(1))
-
-        case OP_PUSHDATA2 =>
-          val numberOfBytesToPush = bytesToUInt16(tail.forceTake(2))
-          pushData(opCode, numberOfBytesToPush, tail.drop(2))
-
-        case OP_PUSHDATA4 =>
-          val numberOfBytesToPush = bytesToUInt32(tail.forceTake(4))
-          pushData(opCode, numberOfBytesToPush, tail.drop(4))
-
-        case otherOpCode =>
-          (tail,  Seq(otherOpCode) +: acc)
-      }
-
-      parse(restOfBytes, newAcc)
+        parse(restOfBytes, newAcc)
+    }
   }
 
   private def bytesAndLength(dataBytes: Seq[Byte]): Seq[Byte] = {

@@ -42,7 +42,7 @@ object FlowControlOp {
                     val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
                     val positiveBranches = branches.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
                     val negativeBranches = branches.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
-                    val pickNegativeBranches = firstNumber == 0 && opCode == OP_IF || firstNumber == 1 && opCode == OP_NOTIF
+                    val pickNegativeBranches = firstNumber == 0 && opCode == OP_IF || firstNumber != 0 && opCode == OP_NOTIF
                     val updatedScript = pickNegativeBranches
                       .option(negativeBranches.flatten ++ rest)
                       .getOrElse(positiveBranches.flatten ++ rest)

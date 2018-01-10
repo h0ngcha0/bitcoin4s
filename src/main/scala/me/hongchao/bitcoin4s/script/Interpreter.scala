@@ -5,7 +5,7 @@ import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
 import me.hongchao.bitcoin4s.script.ConstantOp._
-import me.hongchao.bitcoin4s.script.CryptoOp.OP_HASH160
+import me.hongchao.bitcoin4s.script.CryptoOp.{OP_CHECKSIG, OP_HASH160}
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.Utils._
@@ -14,30 +14,38 @@ import simulacrum._
 import cats.FlatMap
 import cats.data._
 import cats.implicits._
+import me.hongchao.bitcoin4s.crypto.Hash
+import me.hongchao.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
+import me.hongchao.bitcoin4s.script.StackOp.OP_DUP
 
 sealed trait ScriptExecutionStage
 object ScriptExecutionStage {
   case object ExecutingScriptSig extends ScriptExecutionStage
   case object ExecutingScriptPubKey extends ScriptExecutionStage
   case object ExecutingScriptP2SH extends ScriptExecutionStage
+  case object ExecutingScriptWitness extends ScriptExecutionStage
 }
 
 object InterpreterState {
   def apply(
     scriptPubKey: Seq[ScriptElement],
     scriptSig: Seq[ScriptElement],
+    scriptWitnessStack: Option[Seq[ScriptElement]],
     flags: Seq[ScriptFlag],
     transaction: Tx,
-    inputIndex: Int
+    inputIndex: Int,
+    amount: Long
   ): InterpreterState = {
     InterpreterState(
       scriptPubKey = scriptPubKey,
       scriptSig = scriptSig,
+      scriptWitnessStack = scriptWitnessStack,
       currentScript = scriptSig,
       transaction = transaction,
       inputIndex = inputIndex,
       flags = flags,
-      sigVersion = SigVersion.SIGVERSION_BASE
+      sigVersion = SigVersion.SIGVERSION_BASE,
+      amount = amount
     )
   }
 }
@@ -46,13 +54,16 @@ case class InterpreterState(
   scriptPubKey: Seq[ScriptElement],
   scriptSig: Seq[ScriptElement],
   currentScript: Seq[ScriptElement],
-  p2shScript: Option[Seq[ScriptElement]] = None,
+  scriptP2sh: Option[Seq[ScriptElement]] = None,
+  scriptWitness: Option[Seq[ScriptElement]] = None,
+  scriptWitnessStack: Option[Seq[ScriptElement]] = None,
   stack: Seq[ScriptElement] = Seq.empty,
   altStack: Seq[ScriptElement] = Seq.empty,
   flags: Seq[ScriptFlag],
   opCount: Int = 0,
   transaction: Tx,
   inputIndex: Int,
+  amount: Long,
   sigVersion: SigVersion,
   scriptExecutionStage: ScriptExecutionStage = ScriptExecutionStage.ExecutingScriptSig
 ) {
@@ -124,144 +135,10 @@ case class InterpreterState(
     def nulldummy(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLDUMMY)
     }
-  }
-}
 
-
-sealed trait InterpreterError extends RuntimeException with Product {
-  val opCode: ScriptOpCode
-  val state: InterpreterState
-  val description: String
-
-  super.initCause(new Throwable(s"$description\nopCode: $opCode\nstate: $state"))
-}
-
-object InterpreterError {
-  case class BadOpCode(opCode: ScriptOpCode, state: InterpreterState, description: String) extends InterpreterError {
-  }
-
-  object NotEnoughElementsInStack {
-    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
-      BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Not enough elements in the stack")
+    def witness(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS)
     }
-  }
-
-  object NotExecutableReservedOpcode{
-    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
-      BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Found not executable reserved opcode")
-    }
-  }
-
-  case class InvalidStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Invalid stack operation"
-  }
-
-  case class InvalidAltStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Invalid alt stack operation"
-  }
-
-  case class RequireCleanStack(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Stack is not clean when SCRIPT_VERIFY_CLEANSTACK flag is set"
-  }
-
-  case class NotMinimalEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "MINIMALENCODING flags is set but it's not minimal encoded"
-  }
-
-  case class ExceedMaxOpCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "More than max op count"
-  }
-
-  case class FoundOpReturn(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Found OP_RETURN"
-  }
-
-  case class ExceedMaxPushSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Exceed the maximum push size"
-  }
-
-  case class ExceedMaxStackSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Exceed the maximum stack size"
-  }
-
-  case class ExceedMaxScriptSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Exceed the maximum script size"
-  }
-
-  case class WrongPubKeyCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Wrong pubkey count"
-  }
-
-  case class WrongSignaturesCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Wrong signatures count"
-  }
-
-  case class ScriptSigPushOnly(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Script sig should only contain pusheOnly ops"
-  }
-
-  case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Not all operants are constant"
-  }
-
-  case class OperantMustBeScriptNum(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Operant must be ScriptNum"
-  }
-
-  case class OperantMustBeScriptConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Operant must be ScriptConstant"
-  }
-
-  case class OpcodeDisabled(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Opcode is disabled"
-  }
-
-  case class DiscourageUpgradableNops(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Found not executable reserved opcode"
-  }
-
-  case class InValidReservedOpcode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Found executable reserved opcode that invalidates the transaction"
-  }
-
-  case class PublicKeyWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Public key encoding wrong"
-  }
-
-  case class SignatureWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Signature encoding wrong"
-  }
-
-  case class InvalidSigHashType(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "SigHash type invalid"
-  }
-
-  case class MultiSigNullDummy(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Multisig dummy element is not null"
-  }
-
-  case class VerificationFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Verification on top of the stack failed"
-  }
-
-  case class SignatureVerificationNullFail(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "If NULLFAIL flag is on and signature verification fails, signature has to be empty for script to continue"
-  }
-
-  case class CLTVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "CheckLockTimeVerify failed"
-  }
-
-  case class CSVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "CheckSequenceVerify failed"
-  }
-
-  case class UnbalancedConditional(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Unbalanced conditional"
-  }
-
-  case class NoSerializedScriptFound(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "No serialized script found for p2sh"
   }
 }
 
@@ -494,44 +371,69 @@ object Interpreter {
             state.stack match {
               case Nil =>
                 tailRecMEvaluated(false)
-              case head :: Nil =>
-                tailRecMEvaluated(head.bytes.toBoolean())
-              case head :: tail =>
-                if (state.ScriptFlags.p2sh() && isP2SHScript(state.scriptPubKey)) {
-                  getSerializedScript(state.scriptSig) match {
-                    case Some(serializedScript) =>
-                      val payToScript = Parser.parse(serializedScript.bytes)
 
-                      for {
-                        _ <- setState(state.copy(
-                          currentScript = payToScript,
-                          stack = tail,
-                          altStack = Seq.empty,
-                          opCount = 0,
-                          p2shScript = Some(payToScript),
-                          scriptExecutionStage = ExecutingScriptP2SH
-                        ))
-                        _ <- checkInvalidOpCode()
-                        _ <- checkDisabledOpCode()
-                        _ <- checkMaxPushSize()
-                        _ <- checkMaxScriptSize()
-                      } yield {
-                        Left(None)
+              case head :: tail =>
+                maybeExecuteWitnessProgram(Some(state.scriptPubKey), state) match {
+                  case Some(nextState) =>
+                    nextState
+                  case None =>
+                    if (state.ScriptFlags.p2sh() && isP2SHScript(state.scriptPubKey)) {
+                      getSerializedScript(state.scriptSig) match {
+                        case Some(serializedScript) =>
+                          val payToScript = Parser.parse(serializedScript.bytes)
+
+                          for {
+                            _ <- setState(state.copy(
+                              currentScript = payToScript,
+                              stack = tail,
+                              altStack = Seq.empty,
+                              opCount = 0,
+                              scriptP2sh = Some(payToScript),
+                              scriptExecutionStage = ExecutingScriptP2SH
+                            ))
+                            _ <- checkInvalidOpCode()
+                            _ <- checkDisabledOpCode()
+                            _ <- checkMaxPushSize()
+                            _ <- checkMaxScriptSize()
+                          } yield {
+                            Left(None)
+                          }
+                        case None =>
+                          tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
                       }
-                    case None =>
-                      tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
-                  }
-                } else {
-                  if (state.ScriptFlags.requireCleanStack()) {
-                    tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
-                  } else {
-                    tailRecMEvaluated(head.bytes.toBoolean())
-                  }
+                    } else {
+                      if (state.ScriptFlags.requireCleanStack()) {
+                        tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
+                      } else {
+                        tailRecMEvaluated(head.bytes.toBoolean())
+                      }
+                    }
                 }
             }
 
           case ExecutingScriptP2SH =>
             state.stack match {
+              case Nil =>
+                StateT.pure(Right(Some(false)))
+
+              case head :: tail =>
+                maybeExecuteWitnessProgram(state.scriptP2sh, state) match {
+                  case Some(nextState) =>
+                    nextState
+                  case None =>
+                    if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
+                      tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
+                    } else {
+                      StateT.pure(Right(Some(head.bytes.toBoolean())))
+                    }
+                }
+            }
+
+          case ExecutingScriptP2SH | ExecutingScriptWitness =>
+            state.stack match {
+              case Nil =>
+                StateT.pure(Right(Some(false)))
+
               case head :: tail =>
                 if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
                   tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
@@ -545,7 +447,85 @@ object Interpreter {
 
   private def isP2SHScript(scriptPubkey: Seq[ScriptElement]): Boolean = {
     scriptPubkey.headOption.exists(_ == CryptoOp.OP_HASH160) &&
+      scriptPubkey.tail.headOption.exists(_ == ConstantOp.OP_PUSHDATA(20)) &&
       scriptPubkey.lastOption.exists(_ == BitwiseLogicOp.OP_EQUAL)
+  }
+
+  private def getWitnessScript(scriptPubkey: Seq[ScriptElement]): Option[(ConstantOp, ScriptConstant)] = {
+    import ConstantOp._
+
+    val possibleVersionNumbers = Seq(
+      OP_0, OP_FALSE, OP_1, OP_TRUE, OP_2, OP_3, OP_4, OP_5, OP_6, OP_7,
+      OP_8, OP_9, OP_10, OP_11, OP_12, OP_13, OP_14, OP_15, OP_16
+    )
+
+    scriptPubkey match {
+      case (version: ConstantOp) :: (_: OP_PUSHDATA) :: (scriptConstant: ScriptConstant) :: Nil =>
+        val scriptLength = scriptConstant.bytes.length
+        val isWitnessScript = possibleVersionNumbers.contains(version) && (
+          scriptLength >= 2 && scriptLength <= 40
+        )
+
+        isWitnessScript.option((version, scriptConstant))
+
+      case _ =>
+        None
+    }
+  }
+
+  private def maybeExecuteWitnessProgram(maybeScript: Option[Seq[ScriptElement]], state: InterpreterState): Option[InterpreterContext[Either[Option[Boolean], Option[Boolean]]]] = {
+    (for {
+      script <- state.ScriptFlags.witness().flatOption(maybeScript)
+      result <- tryRebuildScriptPubkeyAndStackFromWitness(script, state.scriptWitnessStack)
+    } yield result).map {
+      case (rebuiltScript, rebuiltStack) =>
+        for {
+          _ <- setState(state.copy(
+            currentScript = rebuiltScript,
+            stack = rebuiltStack,
+            altStack = Seq.empty,
+            opCount = 0,
+            scriptWitness = Some(rebuiltScript),
+            sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
+            scriptExecutionStage = ExecutingScriptWitness
+          ))
+          _ <- checkInvalidOpCode()
+          _ <- checkDisabledOpCode()
+          _ <- checkMaxPushSize()
+          _ <- checkMaxScriptSize()
+        } yield {
+          Left(None)
+        }
+    }
+  }
+
+  private def tryRebuildScriptPubkeyAndStackFromWitness(
+    scriptPubkey: Seq[ScriptElement],
+    maybeWitnessStack: Option[Seq[ScriptElement]]
+  ): Option[(Seq[ScriptElement], Seq[ScriptElement])] = {
+    def rebuildScriptPubkeyAndStackFromWitness(witnessHash: ScriptConstant, witnessStack: Seq[ScriptElement]) = {
+      if (witnessHash.bytes.length == 20) {
+        // P2WPKH
+        val scriptPubKey = OP_DUP :: OP_HASH160 :: OP_PUSHDATA(20) :: witnessHash :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil
+        Some((scriptPubKey, witnessStack))
+      } else if (witnessHash.bytes.length == 32) {
+        // P2WSH
+        for {
+          head <- witnessStack.headOption
+          scriptPubKey <- (Hash.Sha256(head.bytes.toArray).toSeq == witnessHash.bytes).option(Parser.parse(head.bytes))
+        } yield {
+          (scriptPubKey, removePushOps(witnessStack.tail))
+        }
+      } else {
+        None
+      }
+    }
+
+    for {
+      (version, witnessHash) <- getWitnessScript(scriptPubkey)
+      witnessStack <- maybeWitnessStack
+      result <- rebuildScriptPubkeyAndStackFromWitness(witnessHash, witnessStack)
+    } yield result
   }
 
   private def isPushOnly(script: Seq[ScriptElement]): Boolean = {
@@ -561,6 +541,15 @@ object Interpreter {
     }
 
     fromLastPushOp.headOption
+  }
+
+  private def removePushOps(script: Seq[ScriptElement]): Seq[ScriptElement] = {
+    script.filterNot { element =>
+      element.isInstanceOf[OP_PUSHDATA] ||
+        element == OP_PUSHDATA1 ||
+        element == OP_PUSHDATA2 ||
+        element == OP_PUSHDATA4
+    }
   }
 
   def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.lift {

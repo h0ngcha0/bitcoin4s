@@ -25,6 +25,7 @@ trait ScriptNum extends ScriptConstant {
 
   def == (that: ScriptNum) = value == that.value
   def == (that: Long) = value == that
+  def != (that: Long) = value != that
   def != (that: ScriptNum) = value != that.value
   def <= (that: ScriptNum) = value <= that.value
   def <  (that: ScriptNum) = value < that.value

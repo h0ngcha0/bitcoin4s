@@ -7,10 +7,10 @@ import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import me.hongchao.bitcoin4s.script.TransactionOps._
 import me.hongchao.bitcoin4s.script.Interpreter._
-import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
 
 import scala.annotation.tailrec
 import cats.implicits._
+import io.github.yzernik.bitcoinscodec.messages.{RegularTx, TxWitness}
 import me.hongchao.bitcoin4s.crypto.PublicKey.DecodeResult
 import me.hongchao.bitcoin4s.crypto.Signature.{ECDSASignature, EmptySignature}
 import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
@@ -89,14 +89,17 @@ object CryptoOp {
                         case DecodeResult.Ok(decodedPublicKey) =>
                           val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
                           handleResult(checkResult)
+
                         case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
                           abort(PublicKeyWrongEncoding(opCode, state))
+
                         case DecodeResult.Failure =>
                           handleResult(false)
                       }
                     } else {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     }
+
                   case None =>
                     if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
@@ -149,7 +152,6 @@ object CryptoOp {
               val (signatures, rest) = v4
             } yield (pubKeys, signatures, rest)
 
-
             maybeSplitStack match {
               case Right((pubKeys, signatures, rest)) =>
                 val nonEmptyEncodedPubKeys = pubKeys.filter(_ != ConstantOp.OP_0)
@@ -158,6 +160,7 @@ object CryptoOp {
                   checkSignatures(nonEmptyEncodedPubKeys, signatures, state)
                 } match {
                   case Success(checkResult) =>
+
                     if (state.ScriptFlags.nullfail() && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
                       abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {
@@ -233,44 +236,49 @@ object CryptoOp {
 
   @tailrec
   def checkSignatures(encodedPublicKeys: Seq[ScriptElement], encodedSignatures: Seq[ScriptElement], state: InterpreterState, strictEnc: Boolean = true): Boolean = {
-    encodedSignatures match {
-      case encodedSignature :: tail =>
-        val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
-          Signature.decode(encodedSignature.bytes) match {
-            case Some((signature, sigHashFlagBytes)) =>
-              if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
-                PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
-                  case DecodeResult.Ok(decodedPubKey) =>
-                    checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
-                  case _ =>
-                    if (state.ScriptFlags.strictEncoding()) {
-                      throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
-                    } else {
-                      false
-                    }
+    if (encodedSignatures.length > encodedPublicKeys.length) {
+      false
+    } else {
+      encodedSignatures match {
+        case encodedSignature :: tail =>
+          val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
+            Signature.decode(encodedSignature.bytes) match {
+              case Some((signature, sigHashFlagBytes)) =>
+                if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
+                  PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
+                    case DecodeResult.Ok(decodedPubKey) =>
+                      checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
+
+                    case _ =>
+                      if (state.ScriptFlags.strictEncoding()) {
+                        throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
+                      } else {
+                        false
+                      }
+                  }
+                } else {
+                  throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
                 }
-              } else {
-                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-              }
 
-            case None =>
-              if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
-                throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-              } else {
-                false
-              }
+              case None =>
+                if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
+                  throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
+                } else {
+                  false
+                }
+            }
           }
-        }
 
-        maybeEncodedPubKeyWithSignature match {
-          case Some(true) =>
-            checkSignatures(encodedPublicKeys.tail, tail, state)
-          case _ =>
-            false
-        }
+          maybeEncodedPubKeyWithSignature match {
+            case Some(true) =>
+              checkSignatures(encodedPublicKeys.tail, tail, state)
+            case _ =>
+              checkSignatures(encodedPublicKeys.tail, encodedSignatures, state)
+          }
 
-      case Nil =>
-        true
+        case Nil =>
+          true
+      }
     }
   }
 
@@ -286,12 +294,22 @@ object CryptoOp {
           throw InvalidSigHashType(OP_UNKNOWN, state)
         }
 
-        val hashedTransaction = state.transaction.signingHash(
-          currentScript = currentScript,
-          inputIndex = state.inputIndex,
-          sigHashType = sigHashType,
-          sigVersion = SIGVERSION_BASE
-        )
+        val hashedTransaction = state.transaction match {
+          case regularTx: RegularTx =>
+            regularTx.signingHash(
+              currentScript,
+              inputIndex = state.inputIndex,
+              sigHashType = sigHashType
+            )
+
+          case segwitTx: TxWitness =>
+            segwitTx.signingHash(
+              currentScript,
+              inputIndex = state.inputIndex,
+              amount = state.amount,
+              sigHashType = sigHashType
+            )
+        }
 
         pubKey.verify(hashedTransaction, ecdsaSignature)
     }
@@ -304,7 +322,9 @@ object CryptoOp {
       case ScriptExecutionStage.ExecutingScriptSig =>
         state.scriptSig
       case ScriptExecutionStage.ExecutingScriptP2SH =>
-        state.p2shScript.get // FIXME: get rid of get
+        state.scriptP2sh.get // FIXME: get rid of get
+      case ScriptExecutionStage.ExecutingScriptWitness =>
+        state.scriptWitness.get
     }
   }
 

@@ -21,7 +21,7 @@ object Signature {
         Some((EmptySignature, Seq.empty))
       case _ :: _ if bytes.length > MaxDerSignatureSize || bytes.length < MinDerSignatureSize =>
         None
-      case 0x30 :: tail =>
+      case head +: tail if head == 0x30 =>
         for {
           (_, restOfBytesAfterRlength) <- getLength(tail)
           _ <- checkHeadTypeIsInt(restOfBytesAfterRlength)
@@ -89,7 +89,7 @@ object Signature {
 
   private def getLength(bytesIn: Seq[Byte]): Option[(Int, Seq[Byte])] = {
     bytesIn match {
-      case head :: tail =>
+      case head +: tail =>
         if ((head & 0x80) == 0) {
           Some((head, tail))
         } else {
