@@ -11,7 +11,6 @@ import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
 
-import scala.collection.immutable
 import scala.reflect.ClassTag
 
 trait ScriptTestRunner { self: Spec =>
@@ -58,7 +57,7 @@ trait ScriptTestRunner { self: Spec =>
     case object WITNESS_PUBKEYTYPE extends ExpectedResult
     case object NEGATIVE_LOCKTIME extends ExpectedResult
     case object UNSATISFIED_LOCKTIME extends ExpectedResult
-    case object MINIMALIF extends ExpectedResult
+    case object MINIMALIF extends ExpectedResult // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2016-August/013014.html
 
     val all = Seq(
       OK, EVAL_FALSE, BAD_OPCODE, UNBALANCED_CONDITIONAL, OP_RETURN, VERIFY,
