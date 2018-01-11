@@ -11,7 +11,7 @@ Scala library for experimenting with Bitcoin
 Add the following to your build.sbt
 
 ```scala
-libraryDependencies += "me.hongchao" %% "bitcoin4s" % "0.0.1"
+libraryDependencies += "me.hongchao" %% "bitcoin4s" % "0.0.2"
 ```
 
 with the following resolver
@@ -20,7 +20,7 @@ with the following resolver
 resolvers += Resolver.bintrayRepo("liuhongchao", "maven")
 ```
 
-# Parse Bitcoin script
+# Parse bitcoin script
 
 ```scala
 scala> import me.hongchao.bitcoin4s.script.Parser
