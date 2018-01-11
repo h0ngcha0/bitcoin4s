@@ -131,7 +131,7 @@ object CryptoOp {
 
             val maybeSplitStack = for {
               v1                   <- state.stack.splitAtEither(1, NotEnoughElements)
-              val (ms, rest0)      = v1
+              (ms, rest0)          = v1
               numberOfPubKeys      <- ms.headEither(NotEnoughElements).flatMap { m =>
                 val numOfPubKeys = ScriptNum.toLong(m.bytes).toInt
                 (numOfPubKeys >= 0 && numOfPubKeys <= 20)
@@ -139,9 +139,9 @@ object CryptoOp {
                   .getOrElse(Left(WrongNumberOfPubKeys))
               }
               v2                   <- rest0.splitAtEither(numberOfPubKeys, NotEnoughElements)
-              val (pubKeys, rest1) = v2
+              (pubKeys, rest1)     = v2
               v3                   <- rest1.splitAtEither(1, NotEnoughElements)
-              val (ns, rest2)      = v3
+              (ns, rest2)          = v3
               numberOfSignatures   <- ns.headEither(NotEnoughElements).flatMap { n =>
                 val numOfSignatures = ScriptNum.toLong(n.bytes).toInt
                 (numOfSignatures >= 0 && numOfSignatures <= numberOfPubKeys)
@@ -149,7 +149,7 @@ object CryptoOp {
                   .getOrElse(Left(WrongNumberOfSignatures))
               }
               v4                   <- rest2.splitAtEither(numberOfSignatures, NotEnoughElements)
-              val (signatures, rest) = v4
+              (signatures, rest)   = v4
             } yield (pubKeys, signatures, rest)
 
             maybeSplitStack match {

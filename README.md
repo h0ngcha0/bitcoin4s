@@ -60,59 +60,59 @@ scala> :paste
 // Entering paste mode (ctrl-D to finish)
 
 import io.github.yzernik.bitcoinscodec.messages.TxWitness
-  import io.github.yzernik.bitcoinscodec.structures.{Hash, OutPoint, TxIn, TxOutWitness}
-  import me.hongchao.bitcoin4s.script.ConstantOp._
-  import me.hongchao.bitcoin4s.script.ScriptFlag._
-  import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
-  import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptSig
-  import me.hongchao.bitcoin4s.script._
-  import scodec.bits._
-  import cats.implicits._
+import io.github.yzernik.bitcoinscodec.structures.{Hash, OutPoint, TxIn, TxOutWitness}
+import me.hongchao.bitcoin4s.script.ConstantOp._
+import me.hongchao.bitcoin4s.script.ScriptFlag._
+import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
+import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptSig
+import me.hongchao.bitcoin4s.script._
+import scodec.bits._
+import cats.implicits._
 
-  val transaction = TxWitness(
-    version = 1,
-    tx_in = List(
-      TxIn(
-        previous_output = OutPoint(Hash(hex"7ca98806a4b4ab8d2952d3d65ccb450b411def420b3f8f0140bf11d8991ac5ab"), 0),
-        sig_script = ByteVector.empty,
-        sequence = -1
-      )
+val transaction = TxWitness(
+  version = 1,
+  tx_in = List(
+    TxIn(
+      previous_output = OutPoint(Hash(hex"7ca98806a4b4ab8d2952d3d65ccb450b411def420b3f8f0140bf11d8991ac5ab"), 0),
+      sig_script = ByteVector.empty,
+      sequence = -1
     )
-    ,tx_out = List(
-      TxOutWitness(
-        value = 1,
-        pk_script = ByteVector.empty
-      )
-    ),
-    lock_time = 0
   )
+  ,tx_out = List(
+    TxOutWitness(
+      value = 1,
+      pk_script = ByteVector.empty
+    )
+  ),
+  lock_time = 0
+)
 
-  val initialState = InterpreterState(
-    scriptPubKey = Seq(
-      OP_0, OP_PUSHDATA(32),
-      ScriptConstant(List(24, 99, 20, 60, 20, -59, 22, 104, 4, -67, 25, 32, 51, 86, -38, 19, 108, -104, 86, 120, -51, 77, 39, -95, -72, -58, 50, -106, 4, -112, 50, 98))
-    ),
-    scriptSig = Seq.empty[ScriptElement],
-    currentScript = Seq.empty[ScriptElement],
-    scriptP2sh = None,
-    scriptWitness = None,
-    scriptWitnessStack = Some(
-      List(
-        ScriptConstant(Seq(33, 2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23, -104, -84)),
-        ScriptConstant(Seq(48, 68, 2, 32, 66, 86, 20, 111, -49, -114, 115, -80, -3, -127, 127, -6, 42, 78, 64, -113, -16, 65, -113, -7, -121, -35, 8, -92, -12, -123, -74, 37, 70, -10, -60, 60, 2, 32, 63, 60, -116, 62, 47, -21, -64, 81, -31, 34, 40, 103, -11, -7, -48, -22, -16, 57, -42, 121, 41, 17, -63, 9, 64, -86,
-60, -57, 65, 35, 55, -114, 1))
-      )
-    ),
-    stack = List(),
-    altStack = List(),
-    flags = Seq(SCRIPT_VERIFY_P2SH, SCRIPT_VERIFY_WITNESS, SCRIPT_VERIFY_WITNESS_PUBKEYTYPE),
-    opCount = 0,
-    transaction = transaction,
-    inputIndex = 0,
-    amount = 1,
-    sigVersion = SIGVERSION_BASE,
-    scriptExecutionStage = ExecutingScriptSig
-  )
+val initialState = InterpreterState(
+  scriptPubKey = Seq(
+    OP_0, OP_PUSHDATA(32),
+    ScriptConstant(List(24, 99, 20, 60, 20, -59, 22, 104, 4, -67, 25, 32, 51, 86, -38, 19, 108, -104, 86, 120, -51, 77, 39, -95, -72, -58, 50, -106, 4, -112, 50, 98))
+  ),
+  scriptSig = Seq.empty[ScriptElement],
+  currentScript = Seq.empty[ScriptElement],
+  scriptP2sh = None,
+  scriptWitness = None,
+  scriptWitnessStack = Some(
+    List(
+      ScriptConstant(Seq(33, 2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23, -104, -84)),
+      ScriptConstant(Seq(48, 68, 2, 32, 66, 86, 20, 111, -49, -114, 115, -80, -3, -127, 127, -6, 42, 78, 64, -113, -16, 65, -113, -7, -121, -35, 8, -92, -12, -123, -74, 37, 70, -10, -60, 60, 2, 32, 63, 60, -116, 62, 47, -21, -64, 81, -31, 34, 40, 103, -11, -7, -48, -22, -16, 57, -42, 121, 41, 17, -63, 9, 64, -86,
+, -57, 65, 35, 55, -114, 1))
+    )
+  ),
+  stack = List(),
+  altStack = List(),
+  flags = Seq(SCRIPT_VERIFY_P2SH, SCRIPT_VERIFY_WITNESS, SCRIPT_VERIFY_WITNESS_PUBKEYTYPE),
+  opCount = 0,
+  transaction = transaction,
+  inputIndex = 0,
+  amount = 1,
+  sigVersion = SIGVERSION_BASE,
+  scriptExecutionStage = ExecutingScriptSig
+)
 
 // Exiting paste mode, now interpreting.
 

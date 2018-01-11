@@ -17,6 +17,7 @@ import cats.implicits._
 import me.hongchao.bitcoin4s.crypto.Hash
 import me.hongchao.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
 import me.hongchao.bitcoin4s.script.StackOp.OP_DUP
+import scala.language.implicitConversions
 
 sealed trait ScriptExecutionStage
 object ScriptExecutionStage {

@@ -8,8 +8,12 @@ scalaVersion in ThisBuild := "2.12.3"
 
 scalacOptions := Seq(
   "-unchecked",
+  "-feature",
   "-deprecation",
-  "-Ywarn-dead-code"
+  "-Ywarn-dead-code",
+  "-Ywarn-extra-implicit",
+  "-Ywarn-inaccessible",
+  "-Xfatal-warnings"
 )
 
 libraryDependencies ++= Seq(
