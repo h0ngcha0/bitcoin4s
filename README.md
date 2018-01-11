@@ -130,9 +130,9 @@ initialState: me.hongchao.bitcoin4s.script.Interprete...
 
 ```
 
-then we can execute the following code to execute the script
+then we can run the following code to execute the script
 
-```$scala
+```scala
 scala> val interpretedOutcome = Interpreter.interpret().run(initialState)
 interpreterOutcome: me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler[(me.hongchao.bitcoin4s.script.InterpreterState, Option[Boolean])] = Right((InterpreterState(List(OP_0, OP_PUSHDATA(32), ScriptConstant: List(24, 99, 20, 60, 20, -59, 22, 104, 4, -67, 25, 32, 51, 86, -38, 19, 108, -104, 86, 120, -51, 77, 39, -95, -72, -58, 50, -106, 4, -112, 50, 98)),List(),List(),None,Some(List(OP_PUSHDATA(33), ScriptConstant: List(2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23, -104), OP_CHECKSIG)),Some(List(ScriptConstant: List(33, 2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23,...
 
