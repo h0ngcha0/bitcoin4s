@@ -456,7 +456,7 @@ object Interpreter {
   private def rebuildScriptPubkeyAndStackFromWitness(witnessHash: ScriptConstant, witnessStack: Seq[ScriptElement]) = {
     witnessStack match {
       case Nil =>
-        Left(WitnessRebuiltError.WitnessProgramMismatch)
+        Left(WitnessRebuiltError.WitnessStackEmpty)
 
       case head :: tail =>
         witnessHash.bytes.length match {
@@ -543,6 +543,12 @@ object Interpreter {
 
         case Left(WitnessRebuiltError.WitnessScriptNotFound) =>
           None
+
+        case Left(WitnessRebuiltError.WitnessHashWrongLength) =>
+          Some(abort(WitnessProgramWrongLength(OP_UNKNOWN, state)))
+
+        case Left(WitnessRebuiltError.WitnessStackEmpty) =>
+          Some(abort(WitnessProgramWitnessEmpty(OP_UNKNOWN, state)))
 
         case Left(error) =>
           Some(abort(GeneralError(OP_UNKNOWN, state)))

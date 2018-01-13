@@ -196,6 +196,12 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.WITNESS_PROGRAM_MISMATCH =>
           checkError[WitnessProgramMismatch](result)
 
+        case ExpectedResult.WITNESS_PROGRAM_WRONG_LENGTH =>
+          checkError[WitnessProgramWrongLength](result)
+
+        case ExpectedResult.WITNESS_PROGRAM_WITNESS_EMPTY =>
+          checkError[WitnessProgramWitnessEmpty](result)
+
         case _ =>
           throw new NotImplementedError()
       }
