@@ -138,6 +138,10 @@ object InterpreterError {
     val description: String = "No serialized script found for p2sh"
   }
 
+  case class WitnessProgramMismatch(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "No serialized script found for p2sh"
+  }
+
   case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Not implemented"
   }

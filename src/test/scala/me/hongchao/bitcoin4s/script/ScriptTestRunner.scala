@@ -193,6 +193,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.SIG_NULLDUMMY =>
           checkError[MultiSigNullDummy](result)
 
+        case ExpectedResult.WITNESS_PROGRAM_MISMATCH =>
+          checkError[WitnessProgramMismatch](result)
+
         case _ =>
           throw new NotImplementedError()
       }

@@ -376,7 +376,8 @@ object Interpreter {
               case head :: tail =>
                 maybeExecuteWitnessProgram(Some(state.scriptPubKey), state) match {
                   case Some(nextState) =>
-                    nextState
+                    nextState.map(_ => Left(None))
+
                   case None =>
                     if (state.ScriptFlags.p2sh() && isP2SHScript(state.scriptPubKey)) {
                       getSerializedScript(state.scriptSig) match {
@@ -420,7 +421,7 @@ object Interpreter {
               case head :: tail =>
                 maybeExecuteWitnessProgram(state.scriptP2sh, state) match {
                   case Some(nextState) =>
-                    nextState
+                    nextState.map(_ => Left(None))
                   case None =>
                     if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
                       tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
@@ -452,7 +453,39 @@ object Interpreter {
       scriptPubkey.lastOption.exists(_ == BitwiseLogicOp.OP_EQUAL)
   }
 
-  private def getWitnessScript(scriptPubkey: Seq[ScriptElement]): Option[(ConstantOp, ScriptConstant)] = {
+  private def rebuildScriptPubkeyAndStackFromWitness(witnessHash: ScriptConstant, witnessStack: Seq[ScriptElement]) = {
+    witnessStack match {
+      case Nil =>
+        Left(WitnessRebuiltError.WitnessProgramMismatch)
+
+      case head :: tail =>
+        witnessHash.bytes.length match {
+          case 20 =>
+            // P2WPKH
+            val witnessProgramMatch = (Hash.Hash160(head.bytes.toArray).toSeq == witnessHash.bytes)
+            if (witnessProgramMatch) {
+              val witnessProgram = OP_DUP :: OP_HASH160 :: OP_PUSHDATA(20) :: witnessHash :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil
+              Right((witnessProgram, witnessStack))
+            } else {
+              Left(WitnessRebuiltError.WitnessProgramMismatch)
+            }
+
+          case 32 =>
+            val witnessProgramMatch = (Hash.Sha256(head.bytes.toArray).toSeq == witnessHash.bytes)
+            if (witnessProgramMatch) {
+              val witnessProgram = Parser.parse(head.bytes)
+              Right((witnessProgram, removePushOps(tail)))
+            } else {
+              Left(WitnessRebuiltError.WitnessProgramMismatch)
+            }
+
+          case _ =>
+            Left(WitnessRebuiltError.WitnessHashWrongLength)
+        }
+    }
+  }
+
+  private def getWitnessScript(scriptPubkey: Seq[ScriptElement]): Either[WitnessRebuiltError, (ConstantOp, ScriptConstant)] = {
     import ConstantOp._
 
     val possibleVersionNumbers = Seq(
@@ -465,68 +498,74 @@ object Interpreter {
         val scriptLength = scriptConstant.bytes.length
         val isWitnessScript = possibleVersionNumbers.contains(version) && (
           scriptLength >= 2 && scriptLength <= 40
-        )
+          )
 
-        isWitnessScript.option((version, scriptConstant))
+        if (isWitnessScript) {
+          Right((version, scriptConstant))
+        } else {
+          Left(WitnessRebuiltError.WitnessScriptNotFound)
+        }
 
       case _ =>
-        None
+        Left(WitnessRebuiltError.WitnessScriptNotFound)
     }
   }
 
-  private def maybeExecuteWitnessProgram(maybeScript: Option[Seq[ScriptElement]], state: InterpreterState): Option[InterpreterContext[Either[Option[Boolean], Option[Boolean]]]] = {
-    (for {
-      script <- state.ScriptFlags.witness().flatOption(maybeScript)
-      result <- tryRebuildScriptPubkeyAndStackFromWitness(script, state.scriptWitnessStack)
-    } yield result).map {
-      case (rebuiltScript, rebuiltStack) =>
-        for {
-          _ <- setState(state.copy(
-            currentScript = rebuiltScript,
-            stack = rebuiltStack,
-            altStack = Seq.empty,
-            opCount = 0,
-            scriptWitness = Some(rebuiltScript),
-            sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
-            scriptExecutionStage = ExecutingScriptWitness
-          ))
-          _ <- checkInvalidOpCode()
-          _ <- checkDisabledOpCode()
-          _ <- checkMaxPushSize()
-          _ <- checkMaxScriptSize()
-        } yield {
-          Left(None)
-        }
+  private def maybeExecuteWitnessProgram(
+    maybeScript: Option[Seq[ScriptElement]],
+    state: InterpreterState
+  ): Option[InterpreterContext[Option[Boolean]]] = {
+    state.ScriptFlags.witness().flatOption(maybeScript).flatMap { script =>
+      tryRebuildScriptPubkeyAndStackFromWitness(script, state.scriptWitnessStack) match {
+        case Right((rebuiltScript, rebuiltStack)) =>
+          val interpreterContext = for {
+            _ <- setState(state.copy(
+              currentScript = rebuiltScript,
+              stack = rebuiltStack,
+              altStack = Seq.empty,
+              opCount = 0,
+              scriptWitness = Some(rebuiltScript),
+              sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
+              scriptExecutionStage = ExecutingScriptWitness
+            ))
+            _ <- checkInvalidOpCode()
+            _ <- checkDisabledOpCode()
+            _ <- checkMaxPushSize()
+            result <- checkMaxScriptSize()
+          } yield {
+            result
+          }
+
+          Some(interpreterContext)
+
+        case Left(WitnessRebuiltError.WitnessProgramMismatch) =>
+          Some(abort(WitnessProgramMismatch(OP_UNKNOWN, state)))
+
+        case Left(WitnessRebuiltError.WitnessScriptNotFound) =>
+          None
+
+        case Left(error) =>
+          Some(abort(GeneralError(OP_UNKNOWN, state)))
+      }
     }
+  }
+
+  sealed trait WitnessRebuiltError
+  object WitnessRebuiltError {
+    case object WitnessScriptNotFound extends WitnessRebuiltError
+    case object WitnessProgramMismatch extends WitnessRebuiltError
+    case object WitnessStackEmpty extends WitnessRebuiltError
+    case object WitnessHashWrongLength extends WitnessRebuiltError
   }
 
   private def tryRebuildScriptPubkeyAndStackFromWitness(
-    scriptPubkey: Seq[ScriptElement],
+    script: Seq[ScriptElement],
     maybeWitnessStack: Option[Seq[ScriptElement]]
-  ): Option[(Seq[ScriptElement], Seq[ScriptElement])] = {
-    def rebuildScriptPubkeyAndStackFromWitness(witnessHash: ScriptConstant, witnessStack: Seq[ScriptElement]) = {
-      if (witnessHash.bytes.length == 20) {
-        // P2WPKH
-        val scriptPubKey = OP_DUP :: OP_HASH160 :: OP_PUSHDATA(20) :: witnessHash :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil
-        Some((scriptPubKey, witnessStack))
-      } else if (witnessHash.bytes.length == 32) {
-        // P2WSH
-        for {
-          head <- witnessStack.headOption
-          scriptPubKey <- (Hash.Sha256(head.bytes.toArray).toSeq == witnessHash.bytes).option(Parser.parse(head.bytes))
-        } yield {
-          (scriptPubKey, removePushOps(witnessStack.tail))
-        }
-      } else {
-        None
-      }
+  ): Either[WitnessRebuiltError, (Seq[ScriptElement], Seq[ScriptElement])] = {
+    getWitnessScript(script).right.flatMap {
+      case (version@_, witnessHash) =>
+        rebuildScriptPubkeyAndStackFromWitness(witnessHash, maybeWitnessStack.getOrElse(Seq.empty))
     }
-
-    for {
-      (version, witnessHash) <- getWitnessScript(scriptPubkey)
-      witnessStack <- maybeWitnessStack
-      result <- rebuildScriptPubkeyAndStackFromWitness(witnessHash, witnessStack)
-    } yield result
   }
 
   private def isPushOnly(script: Seq[ScriptElement]): Boolean = {
