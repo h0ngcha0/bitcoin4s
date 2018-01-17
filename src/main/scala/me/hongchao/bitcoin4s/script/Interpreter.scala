@@ -140,6 +140,10 @@ case class InterpreterState(
     def witness(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS)
     }
+
+    def lowS(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S)
+    }
   }
 }
 

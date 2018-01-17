@@ -150,6 +150,10 @@ object InterpreterError {
     val description: String = "Witness program witness empty"
   }
 
+  case class SignatureHighS(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Secp256k1 signature has higher S value than half curve"
+  }
+
   case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Not implemented"
   }

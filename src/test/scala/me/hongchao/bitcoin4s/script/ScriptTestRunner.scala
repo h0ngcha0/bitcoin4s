@@ -202,6 +202,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.WITNESS_PROGRAM_WITNESS_EMPTY =>
           checkError[WitnessProgramWitnessEmpty](result)
 
+        case ExpectedResult.SIG_HIGH_S =>
+          checkError[SignatureHighS](result)
+
         case _ =>
           throw new NotImplementedError()
       }

@@ -1,7 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.crypto.Hash._
-import me.hongchao.bitcoin4s.crypto.{PublicKey, Signature}
+import me.hongchao.bitcoin4s.crypto.{PublicKey, Secp256k1, Signature}
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError._
@@ -84,20 +84,26 @@ object CryptoOp {
                 import PublicKey._
                 Signature.decode(encodedSignature.bytes) match {
                   case Some((signature, sigHashFlagBytes)) =>
-                    if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
-                      PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
-                        case DecodeResult.Ok(decodedPublicKey) =>
-                          val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
-                          handleResult(checkResult)
+                    signature match {
+                      case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.ScriptFlags.lowS() =>
+                        abort(SignatureHighS(opCode, state))
 
-                        case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
-                          abort(PublicKeyWrongEncoding(opCode, state))
+                      case _ =>
+                        if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
+                          PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
+                            case DecodeResult.Ok(decodedPublicKey) =>
+                              val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
+                              handleResult(checkResult)
 
-                        case DecodeResult.Failure =>
-                          handleResult(false)
-                      }
-                    } else {
-                      abort(SignatureWrongEncoding(OP_CHECKSIG, state))
+                            case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
+                              abort(PublicKeyWrongEncoding(opCode, state))
+
+                            case DecodeResult.Failure =>
+                              handleResult(false)
+                          }
+                        } else {
+                          abort(SignatureWrongEncoding(OP_CHECKSIG, state))
+                        }
                     }
 
                   case None =>
@@ -244,20 +250,26 @@ object CryptoOp {
           val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
             Signature.decode(encodedSignature.bytes) match {
               case Some((signature, sigHashFlagBytes)) =>
-                if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
-                  PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
-                    case DecodeResult.Ok(decodedPubKey) =>
-                      checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
+                signature match {
+                  case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.ScriptFlags.lowS() =>
+                    throw SignatureHighS(OP_CHECKMULTISIG, state)
 
-                    case _ =>
-                      if (state.ScriptFlags.strictEncoding()) {
-                        throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
-                      } else {
-                        false
+                  case _ =>
+                    if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
+                      PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
+                        case DecodeResult.Ok(decodedPubKey) =>
+                          checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
+
+                        case _ =>
+                          if (state.ScriptFlags.strictEncoding()) {
+                            throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
+                          } else {
+                            false
+                          }
                       }
-                  }
-                } else {
-                  throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
+                    } else {
+                      throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
+                    }
                 }
 
               case None =>
@@ -329,7 +341,7 @@ object CryptoOp {
   }
 
   // Check that an encoding is correct
-  private def checkSignatureEncoding(signatureBytes: Seq[Byte], flags: Seq[ScriptFlag]) = {
+  private def checkSignatureEncoding(signatureBytes: Seq[Byte], flags: Seq[ScriptFlag]): Boolean = {
     val notValidDerEncoded = !Signature.isValidSignatureEncoding(signatureBytes)
     val nonEmptySignature = signatureBytes.nonEmpty
     val derSigOrStrictEnc = Seq(ScriptFlag.SCRIPT_VERIFY_DERSIG, ScriptFlag.SCRIPT_VERIFY_STRICTENC).exists(flags.contains)
