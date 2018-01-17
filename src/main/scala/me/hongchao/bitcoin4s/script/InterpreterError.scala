@@ -94,6 +94,10 @@ object InterpreterError {
     val description = "Found not executable reserved opcode"
   }
 
+  case class DiscourageUpgradableWitnessProgram(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description = "Witness program version is too high"
+  }
+
   case class InValidReservedOpcode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description = "Found executable reserved opcode that invalidates the transaction"
   }

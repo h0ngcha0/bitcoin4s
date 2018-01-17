@@ -105,6 +105,10 @@ case class InterpreterState(
       flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
     }
 
+    def disCourageUpgradableWitnessProgram(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)
+    }
+
     def requireMinimalEncoding(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALDATA)
     }
@@ -489,7 +493,7 @@ object Interpreter {
     }
   }
 
-  private def getWitnessScript(scriptPubkey: Seq[ScriptElement]): Either[WitnessRebuiltError, (ConstantOp, ScriptConstant)] = {
+  private def getWitnessScript(scriptPubkey: Seq[ScriptElement], state: InterpreterState): Either[WitnessRebuiltError, (ConstantOp, ScriptConstant)] = {
     import ConstantOp._
 
     val possibleVersionNumbers = Seq(
@@ -500,12 +504,14 @@ object Interpreter {
     scriptPubkey match {
       case (version: ConstantOp) :: (_: OP_PUSHDATA) :: (scriptConstant: ScriptConstant) :: Nil =>
         val scriptLength = scriptConstant.bytes.length
-        val isWitnessScript = possibleVersionNumbers.contains(version) && (
-          scriptLength >= 2 && scriptLength <= 40
-          )
+        val isWitnessScript = possibleVersionNumbers.contains(version) && (scriptLength >= 2 && scriptLength <= 40)
 
         if (isWitnessScript) {
-          Right((version, scriptConstant))
+          if (version != OP_0 && state.ScriptFlags.disCourageUpgradableWitnessProgram()) {
+            Left(WitnessRebuiltError.WitnessProgramUpgradableVersion)
+          } else {
+            Right((version, scriptConstant))
+          }
         } else {
           Left(WitnessRebuiltError.WitnessScriptNotFound)
         }
@@ -520,7 +526,7 @@ object Interpreter {
     state: InterpreterState
   ): Option[InterpreterContext[Option[Boolean]]] = {
     state.ScriptFlags.witness().flatOption(maybeScript).flatMap { script =>
-      tryRebuildScriptPubkeyAndStackFromWitness(script, state.scriptWitnessStack) match {
+      tryRebuildScriptPubkeyAndStackFromWitness(script, state) match {
         case Right((rebuiltScript, rebuiltStack)) =>
           val interpreterContext = for {
             _ <- setState(state.copy(
@@ -554,7 +560,10 @@ object Interpreter {
         case Left(WitnessRebuiltError.WitnessStackEmpty) =>
           Some(abort(WitnessProgramWitnessEmpty(OP_UNKNOWN, state)))
 
-        case Left(error) =>
+        case Left(WitnessRebuiltError.WitnessProgramUpgradableVersion) =>
+          Some(abort(DiscourageUpgradableWitnessProgram(OP_UNKNOWN, state)))
+
+        case Left(error@_) =>
           Some(abort(GeneralError(OP_UNKNOWN, state)))
       }
     }
@@ -566,15 +575,16 @@ object Interpreter {
     case object WitnessProgramMismatch extends WitnessRebuiltError
     case object WitnessStackEmpty extends WitnessRebuiltError
     case object WitnessHashWrongLength extends WitnessRebuiltError
+    case object WitnessProgramUpgradableVersion extends WitnessRebuiltError
   }
 
   private def tryRebuildScriptPubkeyAndStackFromWitness(
     script: Seq[ScriptElement],
-    maybeWitnessStack: Option[Seq[ScriptElement]]
+    state: InterpreterState
   ): Either[WitnessRebuiltError, (Seq[ScriptElement], Seq[ScriptElement])] = {
-    getWitnessScript(script).right.flatMap {
+    getWitnessScript(script, state).right.flatMap {
       case (version@_, witnessHash) =>
-        rebuildScriptPubkeyAndStackFromWitness(witnessHash, maybeWitnessStack.getOrElse(Seq.empty))
+        rebuildScriptPubkeyAndStackFromWitness(witnessHash, state.scriptWitnessStack.getOrElse(Seq.empty))
     }
   }
 

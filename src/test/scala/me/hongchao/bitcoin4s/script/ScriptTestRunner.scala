@@ -208,6 +208,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.SIG_HASHTYPE =>
           checkError[InvalidSigHashType](result)
 
+        case ExpectedResult.DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM =>
+          checkError[DiscourageUpgradableWitnessProgram](result)
+
         case _ =>
           throw new NotImplementedError()
       }
