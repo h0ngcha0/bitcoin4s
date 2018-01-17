@@ -108,12 +108,12 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.WITNESS_PROGRAM_MISMATCH,
       ExpectedResult.WITNESS_PROGRAM_WRONG_LENGTH,
       ExpectedResult.WITNESS_PROGRAM_WITNESS_EMPTY,
-      ExpectedResult.SIG_HIGH_S
+      ExpectedResult.SIG_HIGH_S,
+      ExpectedResult.SIG_HASHTYPE
     )
 
     val notCheckedExpectedResults = Seq(
       ExpectedResult.UNKNOWN_ERROR,
-      ExpectedResult.SIG_HASHTYPE,
       ExpectedResult.DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,
       ExpectedResult.WITNESS_MALLEATED,
       ExpectedResult.WITNESS_MALLEATED_P2SH,

@@ -205,6 +205,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.SIG_HIGH_S =>
           checkError[SignatureHighS](result)
 
+        case ExpectedResult.SIG_HASHTYPE =>
+          checkError[InvalidSigHashType](result)
+
         case _ =>
           throw new NotImplementedError()
       }

@@ -92,8 +92,18 @@ object CryptoOp {
                         if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
                           PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
                             case DecodeResult.Ok(decodedPublicKey) =>
-                              val checkResult = checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
-                              handleResult(checkResult)
+                              Try {
+                                checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
+                              } match {
+                                case Success(result) =>
+                                  handleResult(result)
+
+                                case Failure(_: InvalidSigHashType) =>
+                                  abort(InvalidSigHashType(opCode, state))
+
+                                case Failure(e) =>
+                                  throw e
+                              }
 
                             case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
                               abort(PublicKeyWrongEncoding(opCode, state))
