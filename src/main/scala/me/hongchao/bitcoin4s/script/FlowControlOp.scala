@@ -5,6 +5,7 @@ import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import cats.implicits._
+import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptWitness
 
 import scala.util.{Failure, Success, Try}
 
@@ -42,27 +43,36 @@ object FlowControlOp {
                     val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
                     val positiveBranches = branches.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
                     val negativeBranches = branches.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
-                    val pickNegativeBranches = firstNumber == 0 && opCode == OP_IF || firstNumber != 0 && opCode == OP_NOTIF
-                    val updatedScript = pickNegativeBranches
-                      .option(negativeBranches.flatten ++ rest)
-                      .getOrElse(positiveBranches.flatten ++ rest)
 
-                    // Even if other branch is not executed, need to take it into consideration
-                    // when calculating opCodes
-                    val otherBranchOpCount: Seq[ScriptElement] = pickNegativeBranches
-                      .option(positiveBranches.flatten.filter(OpCodes.isNonReservedOpCode))
-                      .getOrElse(negativeBranches.flatten.filter(OpCodes.isNonReservedOpCode))
+                    val isP2WSH = state.scriptExecutionStage == ExecutingScriptWitness
+                    val stackTopMinimal = first.bytes == Seq.empty || first.bytes == Seq(1.byteValue)
 
-                    // numberOfBranches should be added to the opCode as well since it requires either a OP_ELSE
-                    // or OP_ENDIF to create a new branch.
-                    val numberOfBranches = branches.length
+                    if (isP2WSH && state.ScriptFlags.minimalIf() && !stackTopMinimal) {
+                      abort(MinimalIf(opCode, state))
+                    } else {
+                      val pickNegativeBranches = firstNumber == 0 && opCode == OP_IF || firstNumber != 0 && opCode == OP_NOTIF
+                      val updatedScript = pickNegativeBranches
+                        .option(negativeBranches.flatten ++ rest)
+                        .getOrElse(positiveBranches.flatten ++ rest)
 
-                    val updatedState = state.copy(
-                      currentScript = updatedScript,
-                      stack = tail,
-                      opCount = state.opCount + otherBranchOpCount.length + numberOfBranches + 1
-                    )
-                    setState(updatedState).flatMap(continue)
+                      // Even if other branch is not executed, need to take it into consideration
+                      // when calculating opCodes
+                      val otherBranchOpCount: Seq[ScriptElement] = pickNegativeBranches
+                        .option(positiveBranches.flatten.filter(OpCodes.isNonReservedOpCode))
+                        .getOrElse(negativeBranches.flatten.filter(OpCodes.isNonReservedOpCode))
+
+                      // numberOfBranches should be added to the opCode as well since it requires either a OP_ELSE
+                      // or OP_ENDIF to create a new branch.
+                      val numberOfBranches = branches.length
+
+                      val updatedState = state.copy(
+                        currentScript = updatedScript,
+                        stack = tail,
+                        opCount = state.opCount + otherBranchOpCount.length + numberOfBranches + 1
+                      )
+                      setState(updatedState).flatMap(continue)
+                    }
+
                   case _ =>
                     abort(UnbalancedConditional(opCode, state))
                 }

@@ -211,6 +211,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM =>
           checkError[DiscourageUpgradableWitnessProgram](result)
 
+        case ExpectedResult.MINIMALIF =>
+          checkError[MinimalIf](result)
+
         case _ =>
           throw new NotImplementedError()
       }

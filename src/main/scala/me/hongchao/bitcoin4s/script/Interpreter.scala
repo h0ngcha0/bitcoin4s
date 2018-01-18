@@ -148,6 +148,10 @@ case class InterpreterState(
     def lowS(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S)
     }
+
+    def minimalIf(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALIF)
+    }
   }
 }
 

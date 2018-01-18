@@ -158,6 +158,10 @@ object InterpreterError {
     val description: String = "Secp256k1 signature has higher S value than half curve"
   }
 
+  case class MinimalIf(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Argument of OP_IF/OP_NOTIF is not empty bytes or 0x01"
+  }
+
   case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Not implemented"
   }
