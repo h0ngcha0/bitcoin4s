@@ -5,7 +5,7 @@ import me.hongchao.bitcoin4s.crypto.{PublicKey, Secp256k1, Signature}
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError._
-import me.hongchao.bitcoin4s.script.TransactionOps._
+import me.hongchao.bitcoin4s.script.RichTransaction._
 import me.hongchao.bitcoin4s.script.Interpreter._
 
 import scala.annotation.tailrec

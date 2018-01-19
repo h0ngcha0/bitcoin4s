@@ -5,7 +5,7 @@ import io.github.yzernik.bitcoinscodec.structures._
 import me.hongchao.bitcoin4s.crypto.Hash.Hash256
 import me.hongchao.bitcoin4s.script.ConstantOp.OP_0
 import scodec.bits.ByteVector
-import me.hongchao.bitcoin4s.script.TransactionOps._
+import me.hongchao.bitcoin4s.script.RichTransaction._
 import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
@@ -213,6 +213,9 @@ trait ScriptTestRunner { self: Spec =>
 
         case ExpectedResult.MINIMALIF =>
           checkError[MinimalIf](result)
+
+        case ExpectedResult.UNSATISFIED_LOCKTIME =>
+          checkError[CSVFailed](result)
 
         case _ =>
           throw new NotImplementedError()
