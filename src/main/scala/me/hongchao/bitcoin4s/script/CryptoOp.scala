@@ -92,20 +92,27 @@ object CryptoOp {
                         if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
                           PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
                             case DecodeResult.Ok(decodedPublicKey) =>
-                              Try {
-                                checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
-                              } match {
-                                case Success(result) =>
-                                  handleResult(result)
+                              val notCompressed = !decodedPublicKey.compressed
+                              val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
 
-                                case Failure(_: InvalidSigHashType) =>
-                                  abort(InvalidSigHashType(opCode, state))
+                              if (executingP2WSH && notCompressed && state.ScriptFlags.witnessPubkeyType()) {
+                                abort(WitnessPubkeyUncompressed(opCode, state))
+                              } else {
+                                Try {
+                                  checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
+                                } match {
+                                  case Success(result) =>
+                                    handleResult(result)
 
-                                case Failure(e) =>
-                                  throw e
+                                  case Failure(_: InvalidSigHashType) =>
+                                    abort(InvalidSigHashType(opCode, state))
+
+                                  case Failure(e) =>
+                                    throw e
+                                }
                               }
 
-                            case DecodeResult.OkButNotStrictEncoded(decodedPublicKey) =>
+                            case DecodeResult.OkButNotStrictEncoded(decodedPublicKey@_) =>
                               abort(PublicKeyWrongEncoding(opCode, state))
 
                             case DecodeResult.Failure =>
@@ -208,6 +215,9 @@ object CryptoOp {
                   case Failure(err: SignatureVerificationNullFail) =>
                     abort(err)
 
+                  case Failure(err: WitnessPubkeyUncompressed) =>
+                    abort(err)
+
                   case Failure(e) =>
                     throw e
                 }
@@ -267,8 +277,15 @@ object CryptoOp {
                   case _ =>
                     if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
                       PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
-                        case DecodeResult.Ok(decodedPubKey) =>
-                          checkSignature(decodedPubKey, signature, sigHashFlagBytes, state)
+                        case DecodeResult.Ok(decodedPublicKey) =>
+                          val notCompressed = !decodedPublicKey.compressed
+                          val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
+
+                          if (executingP2WSH && notCompressed && state.ScriptFlags.witnessPubkeyType()) {
+                            throw WitnessPubkeyUncompressed(OP_CHECKMULTISIG, state)
+                          } else {
+                            checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
+                          }
 
                         case _ =>
                           if (state.ScriptFlags.strictEncoding()) {

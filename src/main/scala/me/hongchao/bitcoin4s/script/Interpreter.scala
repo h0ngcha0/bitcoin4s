@@ -152,6 +152,10 @@ case class InterpreterState(
     def minimalIf(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALIF)
     }
+
+    def witnessPubkeyType(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)
+    }
   }
 }
 

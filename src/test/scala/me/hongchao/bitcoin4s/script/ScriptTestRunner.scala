@@ -217,6 +217,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.UNSATISFIED_LOCKTIME =>
           checkError[CSVFailed](result)
 
+        case ExpectedResult.WITNESS_PUBKEYTYPE =>
+          checkError[WitnessPubkeyUncompressed](result)
+
         case _ =>
           throw new NotImplementedError()
       }

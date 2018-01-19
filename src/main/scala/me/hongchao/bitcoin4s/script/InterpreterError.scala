@@ -162,6 +162,10 @@ object InterpreterError {
     val description: String = "Argument of OP_IF/OP_NOTIF is not empty bytes or 0x01"
   }
 
+  case class WitnessPubkeyUncompressed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Pubkey not compressed for witness program"
+  }
+
   case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Not implemented"
   }
