@@ -112,6 +112,7 @@ trait ScriptTestRunner { self: Spec =>
           result match {
             case Right((finalState@_, result)) =>
               result shouldEqual Some(true)
+
             case Left(error) =>
               fail(error.toString, error)
           }
@@ -219,6 +220,9 @@ trait ScriptTestRunner { self: Spec =>
 
         case ExpectedResult.WITNESS_PUBKEYTYPE =>
           checkError[WitnessPubkeyUncompressed](result)
+
+        case ExpectedResult.WITNESS_UNEXPECTED =>
+          checkError[WitnessProgramUnexpected](result)
 
         case _ =>
           throw new NotImplementedError()

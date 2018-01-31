@@ -168,8 +168,15 @@ case class InterpreterState(
         oldState <- StateT.get[InterpreterErrorHandler, InterpreterState]
         newContext <- interpret(opCode)
       } yield {
-        logger.info(s"State\nscript: ${opCode +: oldState.currentScript}\nstack: ${oldState.stack}\naltstack: ${oldState.altStack}")
-        logger.info("~~~~~~~~~~~~~~~~~~~~~")
+        logger.info(
+          s"""
+             |
+             |Script: ${opCode +: oldState.currentScript}
+             |stack: ${oldState.stack}
+             |altstack: ${oldState.altStack}
+             |executingStage: ${oldState.scriptExecutionStage}
+             |
+           """.stripMargin)
         newContext
       }
     } else {
@@ -419,6 +426,12 @@ object Interpreter {
                         case None =>
                           tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
                       }
+                    } else if (state.ScriptFlags.p2sh() && state.ScriptFlags.witness()) {
+                      if (state.scriptWitnessStack.isEmpty) {
+                        tailRecMEvaluated(head.bytes.toBoolean())
+                      } else {
+                        tailRecMAbort(WitnessProgramUnexpected(OP_UNKNOWN, state))
+                      }
                     } else {
                       if (state.ScriptFlags.requireCleanStack()) {
                         tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
@@ -521,11 +534,11 @@ object Interpreter {
             Right((version, scriptConstant))
           }
         } else {
-          Left(WitnessRebuiltError.WitnessScriptNotFound)
+          Left(WitnessRebuiltError.WitnessScriptUnableToExtract)
         }
 
       case _ =>
-        Left(WitnessRebuiltError.WitnessScriptNotFound)
+        Left(WitnessRebuiltError.WitnessScriptUnableToExtract)
     }
   }
 
@@ -533,6 +546,7 @@ object Interpreter {
     maybeScript: Option[Seq[ScriptElement]],
     state: InterpreterState
   ): Option[InterpreterContext[Option[Boolean]]] = {
+
     state.ScriptFlags.witness().flatOption(maybeScript).flatMap { script =>
       tryRebuildScriptPubkeyAndStackFromWitness(script, state) match {
         case Right((rebuiltScript, rebuiltStack)) =>
@@ -559,7 +573,7 @@ object Interpreter {
         case Left(WitnessRebuiltError.WitnessProgramMismatch) =>
           Some(abort(WitnessProgramMismatch(OP_UNKNOWN, state)))
 
-        case Left(WitnessRebuiltError.WitnessScriptNotFound) =>
+        case Left(WitnessRebuiltError.WitnessScriptUnableToExtract) =>
           None
 
         case Left(WitnessRebuiltError.WitnessHashWrongLength) =>
@@ -579,7 +593,7 @@ object Interpreter {
 
   sealed trait WitnessRebuiltError
   object WitnessRebuiltError {
-    case object WitnessScriptNotFound extends WitnessRebuiltError
+    case object WitnessScriptUnableToExtract extends WitnessRebuiltError
     case object WitnessProgramMismatch extends WitnessRebuiltError
     case object WitnessStackEmpty extends WitnessRebuiltError
     case object WitnessHashWrongLength extends WitnessRebuiltError

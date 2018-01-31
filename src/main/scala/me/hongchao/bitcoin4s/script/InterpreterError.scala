@@ -146,6 +146,10 @@ object InterpreterError {
     val description: String = "Witness program mismatch"
   }
 
+  case class WitnessProgramUnexpected(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Unexpected witness program"
+  }
+
   case class WitnessProgramWrongLength(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Witness program wrong length"
   }
