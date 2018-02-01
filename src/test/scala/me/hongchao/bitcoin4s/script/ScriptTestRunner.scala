@@ -8,12 +8,13 @@ import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.script.RichTransaction._
 import me.hongchao.bitcoin4s.Spec
 import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
 
 import scala.reflect.ClassTag
 
-trait ScriptTestRunner { self: Spec =>
+trait ScriptTestRunner extends StrictLogging { self: Spec =>
   sealed trait ExpectedResult extends Product {
     val name = productPrefix
     override def toString: String = name
@@ -87,7 +88,7 @@ trait ScriptTestRunner { self: Spec =>
 
 
   def run(test: TestCase, testNumber: Int) = {
-    println(s"\n\nTest $testNumber: $test\n\n")
+    logger.info(s"\n\nTest $testNumber: $test\n\n")
 
     val amount = test.witness.map(_._2)
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), amount)
@@ -226,6 +227,9 @@ trait ScriptTestRunner { self: Spec =>
 
         case ExpectedResult.WITNESS_MALLEATED =>
           checkError[WitnessMalleated](result)
+
+        case ExpectedResult.WITNESS_MALLEATED_P2SH =>
+          checkError[WitnessMalleatedP2SH](result)
 
         case _ =>
           throw new NotImplementedError()

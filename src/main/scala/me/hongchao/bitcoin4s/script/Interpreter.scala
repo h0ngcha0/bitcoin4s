@@ -246,7 +246,20 @@ object Interpreter {
     }
   }
 
-  private def checkP2WPKHScriptSigEmpty(): InterpreterContext[Option[Boolean]] = {
+  // NOTE: Rule 6) in https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki
+  private def checkWitnessSuperfluousScriptSigOperation(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val superfluousScriptSigOperation = state.ScriptFlags.witness() && state.stack.length > 2
+
+      if (superfluousScriptSigOperation) {
+        abort(WitnessMalleatedP2SH(OP_UNKNOWN, state))
+      } else {
+        StateT.pure(None)
+      }
+    }
+  }
+
+  private def checkWitnessP2WPKHScriptSigEmpty(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
       val p2wpkh = (state.scriptExecutionStage == ExecutingScriptPubKey) && state.ScriptFlags.witness()
       val malleated = p2wpkh && !state.scriptSig.isEmpty
@@ -564,7 +577,8 @@ object Interpreter {
       tryRebuildScriptPubkeyAndStackFromWitness(script, state) match {
         case Right((rebuiltScript, rebuiltStack)) =>
           val interpreterContext = for {
-            _ <- checkP2WPKHScriptSigEmpty()
+            _ <- checkWitnessP2WPKHScriptSigEmpty()
+            _ <- checkWitnessSuperfluousScriptSigOperation()
             _ <- setState(state.copy(
               currentScript = rebuiltScript,
               stack = rebuiltStack,

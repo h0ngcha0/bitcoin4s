@@ -174,6 +174,10 @@ object InterpreterError {
     val description: String = "Witness program with malleated components"
   }
 
+  case class WitnessMalleatedP2SH(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Witness program with malleated components p2sh"
+  }
+
   case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Not implemented"
   }
