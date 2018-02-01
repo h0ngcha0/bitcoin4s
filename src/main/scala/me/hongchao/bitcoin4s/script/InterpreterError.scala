@@ -170,6 +170,10 @@ object InterpreterError {
     val description: String = "Pubkey not compressed for witness program"
   }
 
+  case class WitnessMalleated(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
+    val description: String = "Witness program with malleated components"
+  }
+
   case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "Not implemented"
   }

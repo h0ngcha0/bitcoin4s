@@ -114,12 +114,12 @@ class ScriptSpec extends Spec with ScriptTestRunner {
       ExpectedResult.MINIMALIF,
       ExpectedResult.UNSATISFIED_LOCKTIME,
       ExpectedResult.WITNESS_PUBKEYTYPE,
-      ExpectedResult.WITNESS_UNEXPECTED
+      ExpectedResult.WITNESS_UNEXPECTED,
+      ExpectedResult.WITNESS_MALLEATED
     )
 
     val notCheckedExpectedResults = Seq(
       ExpectedResult.UNKNOWN_ERROR,
-      ExpectedResult.WITNESS_MALLEATED,
       ExpectedResult.WITNESS_MALLEATED_P2SH
 
     )

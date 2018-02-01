@@ -224,6 +224,9 @@ trait ScriptTestRunner { self: Spec =>
         case ExpectedResult.WITNESS_UNEXPECTED =>
           checkError[WitnessProgramUnexpected](result)
 
+        case ExpectedResult.WITNESS_MALLEATED =>
+          checkError[WitnessMalleated](result)
+
         case _ =>
           throw new NotImplementedError()
       }

@@ -246,6 +246,19 @@ object Interpreter {
     }
   }
 
+  private def checkP2WPKHScriptSigEmpty(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val p2wpkh = (state.scriptExecutionStage == ExecutingScriptPubKey) && state.ScriptFlags.witness()
+      val malleated = p2wpkh && !state.scriptSig.isEmpty
+
+      if (malleated) {
+        abort(WitnessMalleated(OP_UNKNOWN, state))
+      } else {
+        StateT.pure(None)
+      }
+    }
+  }
+
   private def checkInvalidOpCode(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
       state.currentScript.find(OpCodes.invalid.contains) match {
@@ -551,6 +564,7 @@ object Interpreter {
       tryRebuildScriptPubkeyAndStackFromWitness(script, state) match {
         case Right((rebuiltScript, rebuiltStack)) =>
           val interpreterContext = for {
+            _ <- checkP2WPKHScriptSigEmpty()
             _ <- setState(state.copy(
               currentScript = rebuiltScript,
               stack = rebuiltStack,
