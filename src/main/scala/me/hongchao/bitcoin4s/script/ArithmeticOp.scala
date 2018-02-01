@@ -7,6 +7,8 @@ import me.hongchao.bitcoin4s.script.InterpreterError._
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter._
 
+import scala.util.{Failure, Success, Try}
+
 sealed trait ArithmeticOp extends ScriptOpCode
 
 object ArithmeticOp {
@@ -147,18 +149,28 @@ object ArithmeticOp {
           getState.flatMap { state =>
             state.stack match {
               case (first: ScriptConstant) :: (second: ScriptConstant) :: (third: ScriptConstant) :: rest =>
-                val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
-                val secondNumber = ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding)
-                val thirdNumber = ScriptNum(third.bytes, state.ScriptFlags.requireMinimalEncoding)
-                val isWithin = (thirdNumber < firstNumber && thirdNumber >= secondNumber)
+                Try {
+                  (
+                    ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding),
+                    ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding),
+                    ScriptNum(third.bytes, state.ScriptFlags.requireMinimalEncoding)
+                  )
+                } match {
+                  case Success((firstNumber, secondNumber, thirdNumber)) =>
+                    val isWithin = (thirdNumber < firstNumber && thirdNumber >= secondNumber)
+                    val newState = state.copy(
+                      currentScript = state.currentScript,
+                      stack = isWithin.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: rest,
+                      opCount = state.opCount + 1
+                    )
 
-                val newState = state.copy(
-                  currentScript = state.currentScript,
-                  stack = isWithin.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: rest,
-                  opCount = state.opCount + 1
-                )
+                    setState(newState).flatMap(continue)
 
-                setState(newState).flatMap(continue)
+                  case Failure(_) =>
+                    abort(GeneralError(opCode, state))
+                }
+
+
               case _ :: _ :: _ :: _ =>
                 abort(NotAllOperantsAreConstant(opCode, state))
               case _ =>
@@ -172,13 +184,22 @@ object ArithmeticOp {
       getState.flatMap { state =>
         state.stack match {
           case (first: ScriptConstant) :: rest =>
-            val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
-            val newState = state.copy(
-              currentScript = state.currentScript,
-              stack = convert(firstNumber) +: rest,
-              opCount = state.opCount + 1
-            )
-            setState(newState).flatMap(continue)
+            Try {
+              ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
+            } match {
+              case Success(firstNumber) =>
+                val newState = state.copy(
+                  currentScript = state.currentScript,
+                  stack = convert(firstNumber) +: rest,
+                  opCount = state.opCount + 1
+                )
+
+                setState(newState).flatMap(continue)
+
+              case Failure(_) =>
+                abort(GeneralError(opCode, state))
+            }
+
           case _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state))
           case _ =>
@@ -192,17 +213,28 @@ object ArithmeticOp {
       getState.flatMap { state =>
         state.stack match {
           case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>
-            val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
-            val secondNumber = ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding)
-            val newState = state.copy(
-              currentScript = state.currentScript,
-              stack = convert(firstNumber, secondNumber) +: rest,
-              opCount = state.opCount + 1
-            )
+            Try {
+              (
+                ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding),
+                ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding)
+              )
+            } match {
+              case Success((firstNumber, secondNumber)) =>
+                val newState = state.copy(
+                  currentScript = state.currentScript,
+                  stack = convert(firstNumber, secondNumber) +: rest,
+                  opCount = state.opCount + 1
+                )
 
-            setState(newState).flatMap(continue)
+                setState(newState).flatMap(continue)
+
+              case Failure(e) =>
+                abort(GeneralError(opCode, state))
+            }
+
           case _ :: _ :: _ =>
             abort(NotAllOperantsAreConstant(opCode, state))
+
           case _ =>
             abort(InvalidStackOperation(opCode, state))
         }

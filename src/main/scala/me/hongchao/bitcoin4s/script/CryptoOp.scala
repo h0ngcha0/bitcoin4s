@@ -41,6 +41,8 @@ object CryptoOp {
     case object NotEnoughElements extends MultiSigCheckError
     case object WrongNumberOfPubKeys extends MultiSigCheckError
     case object WrongNumberOfSignatures extends MultiSigCheckError
+    case object PubKeysNumberWrongEncoding extends MultiSigCheckError
+    case object SignatureNumberWrongEncoding extends MultiSigCheckError
   }
 
   implicit val interpreter = new Interpretable[CryptoOp] {
@@ -156,20 +158,34 @@ object CryptoOp {
               v1                   <- state.stack.splitAtEither(1, NotEnoughElements)
               (ms, rest0)          = v1
               numberOfPubKeys      <- ms.headEither(NotEnoughElements).flatMap { m =>
-                val numOfPubKeys = ScriptNum.toLong(m.bytes).toInt
-                (numOfPubKeys >= 0 && numOfPubKeys <= 20)
-                  .option(Right(numOfPubKeys))
-                  .getOrElse(Left(WrongNumberOfPubKeys))
+                Try {
+                  ScriptNum(m.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                } match {
+                  case Success(numOfPubKeys) =>
+                    (numOfPubKeys >= 0 && numOfPubKeys <= 20)
+                      .option(Right(numOfPubKeys))
+                      .getOrElse(Left(WrongNumberOfPubKeys))
+
+                  case Failure(_) =>
+                    Left(PubKeysNumberWrongEncoding)
+                }
               }
               v2                   <- rest0.splitAtEither(numberOfPubKeys, NotEnoughElements)
               (pubKeys, rest1)     = v2
               v3                   <- rest1.splitAtEither(1, NotEnoughElements)
               (ns, rest2)          = v3
               numberOfSignatures   <- ns.headEither(NotEnoughElements).flatMap { n =>
-                val numOfSignatures = ScriptNum.toLong(n.bytes).toInt
-                (numOfSignatures >= 0 && numOfSignatures <= numberOfPubKeys)
-                  .option(Right(numOfSignatures))
-                  .getOrElse(Left(WrongNumberOfSignatures))
+                Try {
+                  ScriptNum(n.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                } match {
+                  case Success(numOfSignatures) =>
+                    (numOfSignatures >= 0 && numOfSignatures <= numberOfPubKeys)
+                      .option(Right(numOfSignatures))
+                      .getOrElse(Left(WrongNumberOfSignatures))
+
+                  case Failure(_) =>
+                    Left(SignatureNumberWrongEncoding)
+                }
               }
               v4                   <- rest2.splitAtEither(numberOfSignatures, NotEnoughElements)
               (signatures, rest)   = v4
@@ -227,6 +243,12 @@ object CryptoOp {
 
               case Left(WrongNumberOfSignatures) =>
                 abort(WrongSignaturesCount(opCode, state))
+
+              case Left(PubKeysNumberWrongEncoding) =>
+                abort(GeneralError(opCode, state))
+
+              case Left(SignatureNumberWrongEncoding) =>
+                abort(GeneralError(opCode, state))
 
               case Left(_) =>
                 abort(InvalidStackOperation(opCode, state))

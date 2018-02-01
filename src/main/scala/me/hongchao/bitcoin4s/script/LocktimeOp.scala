@@ -6,6 +6,8 @@ import cats.implicits._
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import me.hongchao.bitcoin4s.script.RichTransaction._
 
+import scala.util.{Failure, Success, Try}
+
 sealed trait LocktimeOp extends ScriptOpCode
 
 object LocktimeOp {
@@ -46,24 +48,31 @@ object LocktimeOp {
             if (state.ScriptFlags.csvEnabled) {
               state.stack match {
                 case head :: _ =>
-                  val sequence = ScriptNum(head.bytes, false, 5).value
-                  val txIn = state.transaction.tx_in(state.inputIndex)
+                  Try {
+                    ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
+                  } match {
+                    case Success(sequence) =>
+                      val txIn = state.transaction.tx_in(state.inputIndex)
 
-                  // NOTE, Mimic the logic here:
-                  // https://github.com/bitcoin/bitcoin/blob/5961b23898ee7c0af2626c46d5d70e80136578d3/src/script/interpreter.cpp#L413
-                  // To provide for future soft-fork extensibility, if the
-                  // operand has the disabled lock-time flag set,
-                  // CHECKSEQUENCEVERIFY behaves as a NOP.
-                  val csvDisabled = (sequence & txIn.SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0
+                      // NOTE, Mimic the logic here:
+                      // https://github.com/bitcoin/bitcoin/blob/5961b23898ee7c0af2626c46d5d70e80136578d3/src/script/interpreter.cpp#L413
+                      // To provide for future soft-fork extensibility, if the
+                      // operand has the disabled lock-time flag set,
+                      // CHECKSEQUENCEVERIFY behaves as a NOP.
+                      val csvDisabled = (sequence & txIn.SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0
 
-                  if (sequence < 0) {
-                    abort(CSVFailed(opCode, state))
-                  } else if (csvDisabled) {
-                    setState(state.copy(opCount = state.opCount + 1)).flatMap(continue)
-                  } else if (!checkSequence(sequence, state.transaction, state.inputIndex)) {
-                    abort(CSVFailed(opCode, state))
-                  } else {
-                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
+                      if (sequence < 0) {
+                        abort(CSVFailed(opCode, state))
+                      } else if (csvDisabled) {
+                        setState(state.copy(opCount = state.opCount + 1)).flatMap(continue)
+                      } else if (!checkSequence(sequence, state.transaction, state.inputIndex)) {
+                        abort(CSVFailed(opCode, state))
+                      } else {
+                        setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
+                      }
+
+                    case Failure(_) =>
+                      abort(GeneralError(opCode, state))
                   }
 
                 case Nil =>

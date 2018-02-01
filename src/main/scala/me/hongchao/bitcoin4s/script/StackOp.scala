@@ -5,6 +5,8 @@ import me.hongchao.bitcoin4s.script.InterpreterError._
 import me.hongchao.bitcoin4s.Utils._
 import cats.implicits._
 
+import scala.util.{Failure, Success, Try}
+
 sealed trait StackOp extends ScriptOpCode
 
 object StackOp {
@@ -157,19 +159,25 @@ object StackOp {
 
         case OP_PICK =>
           getState.flatMap { state =>
-            val stack = state.stack
-
-            stack match {
+            state.stack match {
               case (constant: ScriptConstant) :: rest =>
-                val nth = ScriptNum.toLong(constant.bytes).toInt
-                if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
-                  val newState = rest(nth) :: rest
-                  setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
-                } else {
-                  abort(InvalidStackOperation(OP_PICK, state))
+                Try {
+                  ScriptNum(constant.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                } match {
+                  case Success(nth) =>
+                    if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
+                      val newState = rest(nth) :: rest
+                      setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                    } else {
+                      abort(InvalidStackOperation(OP_PICK, state))
+                    }
+                  case Failure(_) =>
+                    abort(GeneralError(OP_PICK, state))
                 }
+
               case _ :: rest =>
                 abort(OperantMustBeScriptNum(OP_PICK, state))
+
               case _ =>
                 abort(InvalidStackOperation(OP_PICK, state))
             }
@@ -181,13 +189,21 @@ object StackOp {
 
             stack match {
               case (constant: ScriptConstant) :: rest =>
-                val nth = ScriptNum.toLong(constant.bytes).toInt
-                if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
-                  val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
-                  setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
-                } else {
-                  abort(InvalidStackOperation(OP_ROLL, state))
+                Try {
+                  ScriptNum(constant.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                } match {
+                  case Success(nth) =>
+                    if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
+                      val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
+                      setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                    } else {
+                      abort(InvalidStackOperation(OP_ROLL, state))
+                    }
+
+                  case Failure(_) =>
+                    abort(GeneralError(OP_ROLL, state))
                 }
+
               case _ :: rest =>
                 abort(OperantMustBeScriptNum(OP_ROLL, state))
               case _ =>

@@ -137,9 +137,9 @@ object ScriptNum {
     bytes.reverse match {
       case Nil =>
         false
-      case first :: Nil =>
+      case first +: Nil =>
         equalToZero(first)
-      case first :: second :: _ =>
+      case first +: second +: _ =>
         equalToZero(first) && significantBitNotSet(second)
     }
   }

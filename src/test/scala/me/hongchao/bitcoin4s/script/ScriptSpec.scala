@@ -79,57 +79,7 @@ class ScriptSpec extends Spec with ScriptTestRunner {
         }
     }
 
-    val checkedExpectedResults = Seq(
-      ExpectedResult.OK,
-      ExpectedResult.EVAL_FALSE,
-      ExpectedResult.BAD_OPCODE,
-      ExpectedResult.CLEANSTACK,
-      ExpectedResult.DISABLED_OPCODE,
-      ExpectedResult.DISCOURAGE_UPGRADABLE_NOPS,
-      ExpectedResult.EQUALVERIFY,
-      ExpectedResult.INVALID_ALTSTACK_OPERATION,
-      ExpectedResult.INVALID_STACK_OPERATION,
-      ExpectedResult.MINIMALDATA,
-      ExpectedResult.UNBALANCED_CONDITIONAL,
-      ExpectedResult.NEGATIVE_LOCKTIME,
-      ExpectedResult.OP_COUNT,
-      ExpectedResult.OP_RETURN,
-      ExpectedResult.VERIFY,
-      ExpectedResult.PUSH_SIZE,
-      ExpectedResult.STACK_SIZE,
-      ExpectedResult.SCRIPT_SIZE,
-      ExpectedResult.PUBKEY_COUNT,
-      ExpectedResult.SIG_COUNT,
-      ExpectedResult.SIG_PUSHONLY,
-      ExpectedResult.PUBKEYTYPE,
-      ExpectedResult.SIG_DER,
-      ExpectedResult.NULLFAIL,
-      ExpectedResult.SIG_NULLDUMMY,
-      ExpectedResult.WITNESS_PROGRAM_MISMATCH,
-      ExpectedResult.WITNESS_PROGRAM_WRONG_LENGTH,
-      ExpectedResult.WITNESS_PROGRAM_WITNESS_EMPTY,
-      ExpectedResult.SIG_HIGH_S,
-      ExpectedResult.SIG_HASHTYPE,
-      ExpectedResult.DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,
-      ExpectedResult.MINIMALIF,
-      ExpectedResult.UNSATISFIED_LOCKTIME,
-      ExpectedResult.WITNESS_PUBKEYTYPE,
-      ExpectedResult.WITNESS_UNEXPECTED,
-      ExpectedResult.WITNESS_MALLEATED,
-      ExpectedResult.WITNESS_MALLEATED_P2SH
-    )
-
-    val notCheckedExpectedResults = Seq(
-      ExpectedResult.UNKNOWN_ERROR
-    )
-
-    (checkedExpectedResults ++ notCheckedExpectedResults) should contain theSameElementsAs ExpectedResult.all
-
-    val filteredScriptTests = scriptTests.filter { test =>
-      checkedExpectedResults.contains(test.expectedResult)
-    }
-
-    filteredScriptTests.zipWithIndex.foreach(Function.tupled(run))
+    scriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
 
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {

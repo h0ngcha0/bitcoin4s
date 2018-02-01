@@ -231,6 +231,9 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
         case ExpectedResult.WITNESS_MALLEATED_P2SH =>
           checkError[WitnessMalleatedP2SH](result)
 
+        case ExpectedResult.UNKNOWN_ERROR =>
+          checkError[GeneralError](result)
+
         case _ =>
           throw new NotImplementedError()
       }

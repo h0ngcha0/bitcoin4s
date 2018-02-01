@@ -182,7 +182,6 @@ object InterpreterError {
     val description: String = "Not implemented"
   }
 
-  // FIXME: Error should all be specific
   case class GeneralError(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
     val description: String = "General error"
   }
