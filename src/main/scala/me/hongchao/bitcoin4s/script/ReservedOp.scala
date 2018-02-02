@@ -27,7 +27,7 @@ object ReservedOp {
     OP_NOP1, OP_NOP4, OP_NOP5, OP_NOP6, OP_NOP7, OP_NOP8, OP_NOP9, OP_NOP10
   )
 
-  implicit val interpreter = new Interpretable[ReservedOp] {
+  implicit val interpreter = new InterpretableOp[ReservedOp] {
     def interpret(opCode: ReservedOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         opCode match {

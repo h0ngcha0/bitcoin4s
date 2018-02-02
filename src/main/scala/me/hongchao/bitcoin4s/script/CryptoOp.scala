@@ -45,7 +45,7 @@ object CryptoOp {
     case object SignatureNumberWrongEncoding extends MultiSigCheckError
   }
 
-  implicit val interpreter = new Interpretable[CryptoOp] {
+  implicit val interpreter = new InterpretableOp[CryptoOp] {
     def interpret(opCode: CryptoOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_RIPEMD160 =>

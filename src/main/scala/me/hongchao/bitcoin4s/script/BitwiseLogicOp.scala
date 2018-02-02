@@ -1,6 +1,5 @@
 package me.hongchao.bitcoin4s.script
 
-import cats.data.State
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.Interpreter._
@@ -20,7 +19,7 @@ object BitwiseLogicOp {
   val all = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR, OP_EQUAL, OP_EQUALVERIFY)
   val disabled = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR)
 
-  implicit val interpreter = new Interpretable[BitwiseLogicOp] {
+  implicit val interpreter = new InterpretableOp[BitwiseLogicOp] {
     override def interpret(opCode: BitwiseLogicOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case opc if disabled.contains(opc) =>

@@ -2,7 +2,6 @@ package me.hongchao.bitcoin4s.script
 
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
-import me.hongchao.bitcoin4s.Utils._
 import cats.implicits._
 
 import scala.util.{Failure, Success, Try}
@@ -36,7 +35,7 @@ object StackOp {
     OP_PICK, OP_ROLL, OP_ROT, OP_SWAP, OP_TUCK
   )
 
-  implicit val interpreter = new Interpretable[StackOp] {
+  implicit val interpreter = new InterpretableOp[StackOp] {
     def interpret(opCode: StackOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_DUP =>

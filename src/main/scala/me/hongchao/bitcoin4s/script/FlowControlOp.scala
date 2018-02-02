@@ -22,7 +22,7 @@ object FlowControlOp {
 
   val all = Seq(OP_NOP, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, OP_VERIFY, OP_RETURN)
 
-  implicit val interpreter = new Interpretable[FlowControlOp] {
+  implicit val interpreter = new InterpretableOp[FlowControlOp] {
     def interpret(opCode: FlowControlOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         opCode match {

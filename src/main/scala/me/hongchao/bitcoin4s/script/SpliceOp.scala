@@ -16,7 +16,7 @@ object SpliceOp {
   val all = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT, OP_SIZE)
   val disabled = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT)
 
-  implicit val interpreter = new Interpretable[SpliceOp] {
+  implicit val interpreter = new InterpretableOp[SpliceOp] {
     def interpret(opCode: SpliceOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         opCode match {

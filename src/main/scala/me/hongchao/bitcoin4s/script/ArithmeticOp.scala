@@ -1,6 +1,5 @@
 package me.hongchao.bitcoin4s.script
 
-import me.hongchao.bitcoin4s.script.ScriptFlag.SCRIPT_VERIFY_MINIMALDATA
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError._
@@ -49,7 +48,7 @@ object ArithmeticOp {
 
   val disabled = Seq(OP_MUL, OP_2MUL, OP_DIV, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
 
-  implicit val interpreter = new Interpretable[ArithmeticOp] {
+  implicit val interpreter = new InterpretableOp[ArithmeticOp] {
     def interpret(opCode: ArithmeticOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case opc if disabled.contains(opc) =>

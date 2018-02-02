@@ -18,7 +18,7 @@ object LocktimeOp {
 
   val all = Seq(OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY, OP_NOP2, OP_NOP3)
 
-  implicit val interpreter = new Interpretable[LocktimeOp] {
+  implicit val interpreter = new InterpretableOp[LocktimeOp] {
     def interpret(opCode: LocktimeOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_CHECKLOCKTIMEVERIFY | OP_NOP2 =>

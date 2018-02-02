@@ -13,7 +13,7 @@ object PseudoOp {
 
   val all = Seq(OP_PUBKEYHASH, OP_PUBKEY, OP_INVALIDOPCODE)
 
-  implicit val interpreter = new Interpretable[PseudoOp] {
+  implicit val interpreter = new InterpretableOp[PseudoOp] {
     def interpret(opCode: PseudoOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         abort(BadOpCode(opCode, state, "Invalid opCode when executed"))

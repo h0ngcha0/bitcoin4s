@@ -105,7 +105,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
     )
 
     withClue(test.comments) {
-      val result = Interpreter.interpret(verbose = false).run(initialState)
+      val result = Interpreter.create(verbose = false).run(initialState)
       implicit val expectedResult = test.expectedResult
 
       expectedResult match {

@@ -1,21 +1,17 @@
 package me.hongchao.bitcoin4s.script
 
-import com.typesafe.scalalogging.StrictLogging
 import io.github.yzernik.bitcoinscodec.messages.Tx
 import io.github.yzernik.bitcoinscodec.structures.TxIn
 import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.CryptoOp.{OP_CHECKSIG, OP_HASH160}
 import me.hongchao.bitcoin4s.script.InterpreterError._
-import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.Utils._
 import ScriptExecutionStage._
 import me.hongchao.bitcoin4s.crypto.Hash
 import me.hongchao.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
 import me.hongchao.bitcoin4s.script.StackOp.OP_DUP
-import scala.language.implicitConversions
 
-import simulacrum._
 import cats.FlatMap
 import cats.data._
 import cats.implicits._
@@ -101,32 +97,6 @@ case class InterpreterState(
   }
 }
 
-@typeclass trait Interpretable[A <: ScriptOpCode] extends StrictLogging {
-  def interpret(opCode: A): InterpreterContext[Option[Boolean]]
-
-  def interpret(opCode: A, verbose: Boolean): InterpreterContext[Option[Boolean]] = {
-    if (verbose) {
-      for {
-        oldState <- StateT.get[InterpreterErrorHandler, InterpreterState]
-        newContext <- interpret(opCode)
-      } yield {
-        logger.info(
-          s"""
-             |
-             |Script: ${opCode +: oldState.currentScript}
-             |stack: ${oldState.stack}
-             |altstack: ${oldState.altStack}
-             |executingStage: ${oldState.scriptExecutionStage}
-             |
-           """.stripMargin)
-        newContext
-      }
-    } else {
-      interpret(opCode)
-    }
-  }
-}
-
 object Interpreter {
   type InterpreterErrorHandler[T] = Either[InterpreterError, T]
   type InterpreterContext[T] = StateT[InterpreterErrorHandler, InterpreterState, T]
@@ -138,19 +108,7 @@ object Interpreter {
 
   def tailRecM[A, B] = FlatMap[InterpreterContext].tailRecM[A, B] _
 
-  import me.hongchao.bitcoin4s.script.Interpretable.ops._
-
-  def interpret(verbose: Boolean = false): InterpreterContext[Option[Boolean]] = {
-    for {
-      _ <- checkInvalidOpCode()
-      _ <- checkDisabledOpCode()
-      _ <- checkMaxPushSize()
-      _ <- checkMaxScriptSize()
-      _ <- checkIsPushOnly()
-
-      result <- interpretScript(verbose)
-    } yield result
-  }
+  import me.hongchao.bitcoin4s.script.InterpretableOp.ops._
 
   def continue: InterpreterContext[Option[Boolean]] = StateT.pure(None)
 
@@ -174,115 +132,24 @@ object Interpreter {
     Left(error).asInstanceOf[InterpreterErrorHandler[Option[Boolean]]]
   }
 
-  private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      (state.opCount > MAX_OPCODES)
-        .option(abort(ExceedMaxOpsCount(OP_UNKNOWN, state)))
-        .getOrElse(continue)
-    }
+  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.liftF {
+    Left(error).asInstanceOf[InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]]]
   }
 
-  // NOTE: Rule 6) in https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki
-  private def checkWitnessSuperfluousScriptSigOperation(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      val superfluousScriptSigOperation = state.ScriptFlags.witness() && state.stack.length > 2
-
-      if (superfluousScriptSigOperation) {
-        abort(WitnessMalleatedP2SH(OP_UNKNOWN, state))
-      } else {
-        continue
-      }
-    }
+  def tailRecMEvaluated(value: Boolean): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
+    StateT.pure(Right(Some(value)))
   }
 
-  private def checkWitnessP2WPKHScriptSigEmpty(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      val p2wpkh = (state.scriptExecutionStage == ExecutingScriptPubKey) && state.ScriptFlags.witness()
-      val malleated = p2wpkh && !state.scriptSig.isEmpty
+  def create(verbose: Boolean = false): InterpreterContext[Option[Boolean]] = {
+    for {
+      _ <- checkInvalidOpCode()
+      _ <- checkDisabledOpCode()
+      _ <- checkMaxPushSize()
+      _ <- checkMaxScriptSize()
+      _ <- checkIsPushOnly()
 
-      if (malleated) {
-        abort(WitnessMalleated(OP_UNKNOWN, state))
-      } else {
-        continue
-      }
-    }
-  }
-
-  private def checkInvalidOpCode(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      state.currentScript.find(OpCodes.invalid.contains) match {
-        case Some(opCode: ScriptOpCode) =>
-          abort(BadOpCode(opCode, state, "Opcode not allowed"))
-
-        case _ =>
-          continue
-      }
-    }
-  }
-
-  private def checkDisabledOpCode(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      state.currentScript.find(OpCodes.disabled.contains) match {
-        case Some(opCode: ScriptOpCode) =>
-          abort(OpcodeDisabled(opCode, state))
-        case _ =>
-          continue
-      }
-    }
-  }
-
-  private def checkMaxPushSize(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      state.currentScript.filter(_.isInstanceOf[ScriptConstant]).filter(_.bytes.length > MAX_PUSH_SIZE) match {
-        case Nil =>
-          continue
-
-        case _ =>
-          abort(ExceedMaxPushSize(OP_UNKNOWN, state))
-      }
-    }
-  }
-
-  private def checkMaxStackSize(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      val totalStackSize = (state.stack ++ state.altStack).length
-      if (totalStackSize > MAX_STACK_SIZE) {
-        abort(ExceedMaxStackSize(OP_UNKNOWN, state))
-      } else {
-        continue
-      }
-    }
-  }
-
-  private def checkMaxScriptSize(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      val numberOfPushData1 = state.currentScript.filter(_ == OP_PUSHDATA1).length
-      val numberOfPushData2 = state.currentScript.filter(_ == OP_PUSHDATA2).length
-      val numberOfPushData4 = state.currentScript.filter(_ == OP_PUSHDATA4).length
-      val skippedDataLengthBytes = numberOfPushData1 + numberOfPushData2 * 2 + numberOfPushData4 * 4
-
-      val totalBytes = state.currentScript.map(_.bytes.length).sum + skippedDataLengthBytes
-
-      if (totalBytes > MAX_SCRIPT_SIZE) {
-        abort(ExceedMaxScriptSize(OP_UNKNOWN, state))
-      } else {
-        continue
-      }
-    }
-  }
-
-  private def checkIsPushOnly(): InterpreterContext[Option[Boolean]] = {
-    getState.flatMap { state =>
-      val pushOnlyEnabled = state.flags.contains(ScriptFlag.SCRIPT_VERIFY_SIGPUSHONLY)
-      val shouldExecuteP2sh = isP2SHScript(state.scriptPubKey) && state.ScriptFlags.p2sh()
-      val shouldCheckPushOnly = pushOnlyEnabled || shouldExecuteP2sh
-
-      if (shouldCheckPushOnly && !isPushOnly(state.scriptSig)) {
-        abort(ScriptSigPushOnly(OP_UNKNOWN, state))
-      } else {
-        continue
-      }
-    }
+      result <- interpretScript(verbose)
+    } yield result
   }
 
   private def interpretScript(verbose: Boolean): InterpreterContext[Option[Boolean]] = {
@@ -410,17 +277,18 @@ object Interpreter {
           case ExecutingScriptP2SH =>
             state.stack match {
               case Nil =>
-                StateT.pure(Right(Some(false)))
+                tailRecMEvaluated(false)
 
               case head :: tail =>
                 maybeExecuteWitnessProgram(state.scriptP2sh, state) match {
                   case Some(nextState) =>
                     nextState.map(_ => Left(None))
+
                   case None =>
                     if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
                       tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
                     } else {
-                      StateT.pure(Right(Some(head.bytes.toBoolean())))
+                      tailRecMEvaluated(head.bytes.toBoolean())
                     }
                 }
             }
@@ -428,16 +296,127 @@ object Interpreter {
           case ExecutingScriptP2SH | ExecutingScriptWitness =>
             state.stack match {
               case Nil =>
-                StateT.pure(Right(Some(false)))
+                tailRecMEvaluated(false)
 
               case head :: tail =>
                 if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
                   tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
                 } else {
-                  StateT.pure(Right(Some(head.bytes.toBoolean())))
+                  tailRecMEvaluated(head.bytes.toBoolean())
                 }
             }
         }
+    }
+  }
+
+  private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      (state.opCount > MAX_OPCODES)
+        .option(abort(ExceedMaxOpsCount(OP_UNKNOWN, state)))
+        .getOrElse(continue)
+    }
+  }
+
+  // NOTE: Rule 6) in https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki
+  private def checkWitnessSuperfluousScriptSigOperation(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val superfluousScriptSigOperation = state.ScriptFlags.witness() && state.stack.length > 2
+
+      if (superfluousScriptSigOperation) {
+        abort(WitnessMalleatedP2SH(OP_UNKNOWN, state))
+      } else {
+        continue
+      }
+    }
+  }
+
+  private def checkWitnessP2WPKHScriptSigEmpty(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val p2wpkh = (state.scriptExecutionStage == ExecutingScriptPubKey) && state.ScriptFlags.witness()
+      val malleated = p2wpkh && !state.scriptSig.isEmpty
+
+      if (malleated) {
+        abort(WitnessMalleated(OP_UNKNOWN, state))
+      } else {
+        continue
+      }
+    }
+  }
+
+  private def checkInvalidOpCode(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      state.currentScript.find(OpCodes.invalid.contains) match {
+        case Some(opCode: ScriptOpCode) =>
+          abort(BadOpCode(opCode, state, "Opcode not allowed"))
+
+        case _ =>
+          continue
+      }
+    }
+  }
+
+  private def checkDisabledOpCode(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      state.currentScript.find(OpCodes.disabled.contains) match {
+        case Some(opCode: ScriptOpCode) =>
+          abort(OpcodeDisabled(opCode, state))
+        case _ =>
+          continue
+      }
+    }
+  }
+
+  private def checkMaxPushSize(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      state.currentScript.filter(_.isInstanceOf[ScriptConstant]).filter(_.bytes.length > MAX_PUSH_SIZE) match {
+        case Nil =>
+          continue
+
+        case _ =>
+          abort(ExceedMaxPushSize(OP_UNKNOWN, state))
+      }
+    }
+  }
+
+  private def checkMaxStackSize(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val totalStackSize = (state.stack ++ state.altStack).length
+      if (totalStackSize > MAX_STACK_SIZE) {
+        abort(ExceedMaxStackSize(OP_UNKNOWN, state))
+      } else {
+        continue
+      }
+    }
+  }
+
+  private def checkMaxScriptSize(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val numberOfPushData1 = state.currentScript.filter(_ == OP_PUSHDATA1).length
+      val numberOfPushData2 = state.currentScript.filter(_ == OP_PUSHDATA2).length
+      val numberOfPushData4 = state.currentScript.filter(_ == OP_PUSHDATA4).length
+      val skippedDataLengthBytes = numberOfPushData1 + numberOfPushData2 * 2 + numberOfPushData4 * 4
+
+      val totalBytes = state.currentScript.map(_.bytes.length).sum + skippedDataLengthBytes
+
+      if (totalBytes > MAX_SCRIPT_SIZE) {
+        abort(ExceedMaxScriptSize(OP_UNKNOWN, state))
+      } else {
+        continue
+      }
+    }
+  }
+
+  private def checkIsPushOnly(): InterpreterContext[Option[Boolean]] = {
+    getState.flatMap { state =>
+      val pushOnlyEnabled = state.flags.contains(ScriptFlag.SCRIPT_VERIFY_SIGPUSHONLY)
+      val shouldExecuteP2sh = isP2SHScript(state.scriptPubKey) && state.ScriptFlags.p2sh()
+      val shouldCheckPushOnly = pushOnlyEnabled || shouldExecuteP2sh
+
+      if (shouldCheckPushOnly && !isPushOnly(state.scriptSig)) {
+        abort(ScriptSigPushOnly(OP_UNKNOWN, state))
+      } else {
+        continue
+      }
     }
   }
 
@@ -599,13 +578,5 @@ object Interpreter {
         element == OP_PUSHDATA2 ||
         element == OP_PUSHDATA4
     }
-  }
-
-  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.liftF {
-    Left(error).asInstanceOf[InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]]]
-  }
-
-  def tailRecMEvaluated(value: Boolean): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
-    StateT.pure(Right(Some(value)))
   }
 }

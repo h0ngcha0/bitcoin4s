@@ -17,8 +17,8 @@ scalacOptions := Seq(
   "-Ywarn-extra-implicit",
   "-Ywarn-unused:locals",
   "-Ywarn-unused:patvars",
-  "-Ywarn-unused:privates"
-
+  "-Ywarn-unused:privates",
+  "-Ywarn-unused:imports"
 )
 
 libraryDependencies ++= Seq(
