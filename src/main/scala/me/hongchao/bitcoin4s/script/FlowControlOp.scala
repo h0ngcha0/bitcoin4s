@@ -27,7 +27,7 @@ object FlowControlOp {
       getState.flatMap { state =>
         opCode match {
           case OP_NOP =>
-            setState(state.copy(opCount = state.opCount + 1)).flatMap(continue)
+            setStateAndContinue(state.copy(opCount = state.opCount + 1))
 
           case OP_IF | OP_NOTIF =>
             Try {
@@ -70,7 +70,8 @@ object FlowControlOp {
                         stack = tail,
                         opCount = state.opCount + otherBranchOpCount.length + numberOfBranches + 1
                       )
-                      setState(updatedState).flatMap(continue)
+
+                      setStateAndContinue(updatedState)
                     }
 
                   case _ =>
@@ -80,7 +81,7 @@ object FlowControlOp {
               case Failure(error: InterpreterError) =>
                 abort(error)
 
-              case Failure(error) =>
+              case Failure(e@_) =>
                 abort(UnbalancedConditional(opCode, state))
             }
 
@@ -98,7 +99,7 @@ object FlowControlOp {
                     stack = tail,
                     opCount = state.opCount + 1
                   )
-                  setState(newState).flatMap(continue)
+                  setStateAndContinue(newState)
                 }
               case _ =>
                 abort(InvalidStackOperation(OP_VERIFY, state))
@@ -122,7 +123,7 @@ object FlowControlOp {
   @tailrec
   private def splitScriptOnConditional(
     script: Seq[ScriptElement],
-    nestedDepth: Int = 0,
+    nestedDepth: Int,
     acc: ConditionalBranchSplitResult
   ): ConditionalBranchSplitResult = {
     script match {

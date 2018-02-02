@@ -13,7 +13,12 @@ scalacOptions := Seq(
   "-Ywarn-dead-code",
   "-Ywarn-extra-implicit",
   "-Ywarn-inaccessible",
-  "-Xfatal-warnings"
+  "-Xfatal-warnings",
+  "-Ywarn-extra-implicit",
+  "-Ywarn-unused:locals",
+  "-Ywarn-unused:patvars",
+  "-Ywarn-unused:privates"
+
 )
 
 libraryDependencies ++= Seq(

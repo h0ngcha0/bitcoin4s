@@ -32,7 +32,7 @@ object SpliceOp {
                   opCount = state.opCount + 1
                 )
 
-                setState(newState).flatMap(continue)
+                setStateAndContinue(newState)
               case Nil =>
                 abort(InvalidStackOperation(OP_SIZE, state))
             }

@@ -25,12 +25,17 @@ object LocktimeOp {
           getState.flatMap { state =>
             if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
               state.stack match {
-                case head :: _ =>
-                  val lockTime = ScriptNum(head.bytes, false, 5).value
+                case head :: tail =>
+                  val lockTime = ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding, 5).value
                   if (lockTime < 0 || lockTime <= state.transaction.lock_time) {
                     abort(CLTVFailed(opCode, state))
                   } else {
-                    setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
+                    setStateAndContinue(
+                      state.copy(
+                        stack = ScriptNum(1) +: tail,
+                        opCount = state.opCount + 1
+                      )
+                    )
                   }
 
                 case Nil =>
@@ -39,7 +44,7 @@ object LocktimeOp {
             } else if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)) {
               abort(DiscourageUpgradableNops(opCode, state))
             } else {
-              continue(opCode)
+              continue
             }
           }
 
@@ -47,7 +52,7 @@ object LocktimeOp {
           getState.flatMap { state =>
             if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
               state.stack match {
-                case head :: _ =>
+                case head :: tail =>
                   Try {
                     ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
                   } match {
@@ -64,11 +69,16 @@ object LocktimeOp {
                       if (sequence < 0) {
                         abort(CSVFailed(opCode, state))
                       } else if (csvDisabled) {
-                        setState(state.copy(opCount = state.opCount + 1)).flatMap(continue)
+                        setStateAndContinue(state.copy(opCount = state.opCount + 1))
                       } else if (!checkSequence(sequence, state.transaction, state.inputIndex)) {
                         abort(CSVFailed(opCode, state))
                       } else {
-                        setState(state.replaceStackTopElement(ScriptNum(1))).flatMap(continue)
+                        setStateAndContinue(
+                          state.copy(
+                            stack = ScriptNum(1) +: tail,
+                            opCount = state.opCount + 1
+                          )
+                        )
                       }
 
                     case Failure(_) =>
@@ -81,7 +91,7 @@ object LocktimeOp {
             } else if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)) {
               abort(DiscourageUpgradableNops(opCode, state))
             } else {
-              continue(opCode)
+              continue
             }
           }
       }

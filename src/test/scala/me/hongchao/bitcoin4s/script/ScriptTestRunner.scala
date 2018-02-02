@@ -244,7 +244,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
     result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
   )(implicit expectedResult: ExpectedResult) = {
     result match {
-      case Right((finalState, result)) =>
+      case Right((finalState@_, result)) =>
         fail(s"Expect ${expectedResult.name} but receive $result")
       case Left(error) =>
         error shouldBe a [T]
@@ -252,7 +252,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
   }
 
   def creditingTransaction(scriptPubKey: Seq[Byte], maybeAmount: Option[Long]) = {
-    val emptyTxId = Array.fill[Byte](32)(0)
+    // val emptyTxId = Array.fill[Byte](32)(0)
     val emptyOutpoint = OutPoint(Hash.NULL, -1)
     val maxSequence = 0xffffffff
     val txIn = TxIn(
@@ -296,7 +296,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
     val amount = creditingTransaction.tx_out(0).value
 
     maybeWitnessScript match {
-      case Some(witnessScript) =>
+      case Some(witnessScript@_) =>
         val txOut = TxOutWitness(value = amount, pk_script = ByteVector.empty)
         TxWitness(
           version = 1,

@@ -164,7 +164,7 @@ object ArithmeticOp {
                       opCount = state.opCount + 1
                     )
 
-                    setState(newState).flatMap(continue)
+                    setStateAndContinue(newState)
 
                   case Failure(_) =>
                     abort(GeneralError(opCode, state))
@@ -194,7 +194,7 @@ object ArithmeticOp {
                   opCount = state.opCount + 1
                 )
 
-                setState(newState).flatMap(continue)
+                setStateAndContinue(newState)
 
               case Failure(_) =>
                 abort(GeneralError(opCode, state))
@@ -226,9 +226,9 @@ object ArithmeticOp {
                   opCount = state.opCount + 1
                 )
 
-                setState(newState).flatMap(continue)
+                setStateAndContinue(newState)
 
-              case Failure(e) =>
+              case Failure(e@_) =>
                 abort(GeneralError(opCode, state))
             }
 

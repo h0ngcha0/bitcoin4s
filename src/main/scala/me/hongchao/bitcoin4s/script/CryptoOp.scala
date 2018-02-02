@@ -64,7 +64,7 @@ object CryptoOp {
           onOpHash(opCode, Hash256.apply _)
 
         case OP_CODESEPARATOR =>
-          continue(OP_CODESEPARATOR)
+          continue
 
         case OP_CHECKSIG =>
           getState.flatMap { state =>
@@ -74,12 +74,12 @@ object CryptoOp {
                   if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL) && !result & encodedSignature.bytes.nonEmpty) {
                     abort(SignatureVerificationNullFail(opCode, state))
                   } else {
-                    setState(
+                    setStateAndContinue(
                       state.copy(
                         stack = result.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
                         opCount = state.opCount + 1
                       )
-                    ).flatMap(continue)
+                    )
                   }
                 }
 
@@ -141,14 +141,13 @@ object CryptoOp {
         case OP_CHECKSIGVERIFY =>
           getState
             .flatMap { state =>
-              setState(
+              setStateAndContinue(
                 state.copy(
                   currentScript = OP_CHECKSIG +: OP_VERIFY +: state.currentScript,
                   opCount = state.opCount - 1
                 )
               )
             }
-            .flatMap(continue)
 
         case OP_CHECKMULTISIG =>
           getState.flatMap { state =>
@@ -210,12 +209,12 @@ object CryptoOp {
                             // Reference: https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
                             abort(MultiSigNullDummy(opCode, state))
                           } else {
-                            setState(
+                            setStateAndContinue(
                               state.copy(
                                 stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
                                 opCount = state.opCount + 1 + nonEmptyEncodedPubKeys.length
                               )
-                            ).flatMap(continue)
+                            )
                           }
                         case Nil =>
                           abort(InvalidStackOperation(opCode, state))
@@ -258,22 +257,26 @@ object CryptoOp {
         case OP_CHECKMULTISIGVERIFY =>
           getState
             .flatMap { state =>
-              setState(
+              setStateAndContinue(
                 state.copy(
                   currentScript = OP_CHECKMULTISIG +: OP_VERIFY +: state.currentScript,
                   opCount = state.opCount - 1
                 )
               )
             }
-            .flatMap(continue)
       }
     }
 
     private def onOpHash(opCode: ScriptOpCode, hash: (Array[Byte]) => Array[Byte]): InterpreterContext[Option[Boolean]] = {
       def hashTopElement(state: InterpreterState): InterpreterContext[Option[Boolean]] = state.stack match {
-        case head :: _ =>
+        case head :: tail =>
           val hashed = hash(head.bytes.toArray)
-          setState(state.replaceStackTopElement(ScriptConstant(hashed))).flatMap(continue)
+          setStateAndContinue(
+            state.copy(
+              stack = ScriptConstant(hashed) +: tail,
+              opCount = state.opCount + 1
+            )
+          )
         case _ =>
           abort(InvalidStackOperation(opCode, state))
       }

@@ -10,14 +10,15 @@ import me.hongchao.bitcoin4s.script.InterpreterError._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.Utils._
 import ScriptExecutionStage._
-import simulacrum._
-import cats.FlatMap
-import cats.data._
-import cats.implicits._
 import me.hongchao.bitcoin4s.crypto.Hash
 import me.hongchao.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
 import me.hongchao.bitcoin4s.script.StackOp.OP_DUP
 import scala.language.implicitConversions
+
+import simulacrum._
+import cats.FlatMap
+import cats.data._
+import cats.implicits._
 
 sealed trait ScriptExecutionStage
 object ScriptExecutionStage {
@@ -69,24 +70,9 @@ case class InterpreterState(
   scriptExecutionStage: ScriptExecutionStage = ScriptExecutionStage.ExecutingScriptSig
 ) {
 
-  // Execute one OpCode, which takes the stack top element and and produce a new
-  // value. The new value it put on top of the stack
-  def replaceStackTopElement(scriptElement: ScriptElement): InterpreterState = {
-    copy(
-      stack = scriptElement +: stack.tail,
-      opCount = opCount + 1
-    )
-  }
-
-  def dropTopElement(): InterpreterState = {
-    copy(
-      stack = stack.tail,
-      opCount = opCount + 1
-    )
-  }
-
   def transactionInput: TxIn = {
-    require(inputIndex >= 0 && inputIndex < transaction.tx_in.length, "Transaction input index must be within range.")
+    val txInLength = transaction.tx_in.length
+    require(inputIndex >= 0 && inputIndex < txInLength, s"Transaction input ${inputIndex} index must be within range [0 - ${txInLength}].")
     transaction.tx_in(inputIndex)
   }
 
@@ -166,6 +152,12 @@ object Interpreter {
     } yield result
   }
 
+  def continue: InterpreterContext[Option[Boolean]] = StateT.pure(None)
+
+  def evaluated(result: Boolean): InterpreterContext[Option[Boolean]] = {
+    StateT.pure(Some(result))
+  }
+
   def getState: InterpreterContext[InterpreterState] = {
     StateT.get[InterpreterErrorHandler, InterpreterState]
   }
@@ -174,31 +166,19 @@ object Interpreter {
     StateT.set[InterpreterErrorHandler, InterpreterState](newState)
   }
 
-  def updateState(updateStateFun: InterpreterState => InterpreterState): InterpreterContext[Unit] = {
-    getState.flatMap { oldState =>
-      val newState = updateStateFun(oldState)
-      setState(newState)
-    }
-  }
-
-  def evaluated(result: Boolean): InterpreterContext[Option[Boolean]] = {
-    StateT.pure(Some(result))
-  }
-
-  def continue: Any => InterpreterContext[Option[Boolean]] = {
-    _ => StateT.pure(None)
+  def setStateAndContinue(newState: InterpreterState): InterpreterContext[Option[Boolean]] = {
+    StateT.set[InterpreterErrorHandler, InterpreterState](newState).flatMap(_ => continue)
   }
 
   def abort(error: InterpreterError): InterpreterContext[Option[Boolean]] = StateT.liftF {
-    val errorWithExplicitType: InterpreterErrorHandler[Option[Boolean]] = Left(error)
-    errorWithExplicitType
+    Left(error).asInstanceOf[InterpreterErrorHandler[Option[Boolean]]]
   }
 
   private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
       (state.opCount > MAX_OPCODES)
         .option(abort(ExceedMaxOpsCount(OP_UNKNOWN, state)))
-        .getOrElse(StateT.pure(None))
+        .getOrElse(continue)
     }
   }
 
@@ -210,7 +190,7 @@ object Interpreter {
       if (superfluousScriptSigOperation) {
         abort(WitnessMalleatedP2SH(OP_UNKNOWN, state))
       } else {
-        StateT.pure(None)
+        continue
       }
     }
   }
@@ -223,7 +203,7 @@ object Interpreter {
       if (malleated) {
         abort(WitnessMalleated(OP_UNKNOWN, state))
       } else {
-        StateT.pure(None)
+        continue
       }
     }
   }
@@ -233,8 +213,9 @@ object Interpreter {
       state.currentScript.find(OpCodes.invalid.contains) match {
         case Some(opCode: ScriptOpCode) =>
           abort(BadOpCode(opCode, state, "Opcode not allowed"))
+
         case _ =>
-          StateT.pure(None)
+          continue
       }
     }
   }
@@ -245,7 +226,7 @@ object Interpreter {
         case Some(opCode: ScriptOpCode) =>
           abort(OpcodeDisabled(opCode, state))
         case _ =>
-          StateT.pure(None)
+          continue
       }
     }
   }
@@ -253,10 +234,11 @@ object Interpreter {
   private def checkMaxPushSize(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
       state.currentScript.filter(_.isInstanceOf[ScriptConstant]).filter(_.bytes.length > MAX_PUSH_SIZE) match {
-        case head :: tail =>
-          abort(ExceedMaxPushSize(OP_UNKNOWN, state))
         case Nil =>
-          StateT.pure(None)
+          continue
+
+        case _ =>
+          abort(ExceedMaxPushSize(OP_UNKNOWN, state))
       }
     }
   }
@@ -267,7 +249,7 @@ object Interpreter {
       if (totalStackSize > MAX_STACK_SIZE) {
         abort(ExceedMaxStackSize(OP_UNKNOWN, state))
       } else {
-        StateT.pure(None)
+        continue
       }
     }
   }
@@ -284,7 +266,7 @@ object Interpreter {
       if (totalBytes > MAX_SCRIPT_SIZE) {
         abort(ExceedMaxScriptSize(OP_UNKNOWN, state))
       } else {
-        StateT.pure(None)
+        continue
       }
     }
   }
@@ -298,7 +280,7 @@ object Interpreter {
       if (shouldCheckPushOnly && !isPushOnly(state.scriptSig)) {
         abort(ScriptSigPushOnly(OP_UNKNOWN, state))
       } else {
-        StateT.pure(None)
+        continue
       }
     }
   }
@@ -306,7 +288,8 @@ object Interpreter {
   private def interpretScript(verbose: Boolean): InterpreterContext[Option[Boolean]] = {
     tailRecM(None: Option[Boolean]) {
       case Some(value) =>
-        StateT.pure(Right(Some(value)))
+        tailRecMEvaluated(value)
+
       case None =>
         for {
           state <- getState
@@ -619,8 +602,7 @@ object Interpreter {
   }
 
   def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.liftF {
-    val errorWithExplicitType: InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]] = Left(error)
-    errorWithExplicitType
+    Left(error).asInstanceOf[InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]]]
   }
 
   def tailRecMEvaluated(value: Boolean): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {

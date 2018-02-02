@@ -51,7 +51,7 @@ object Signature {
     // -3 because of type (1), length (1) and sighash type (1)
     def isSignatureLengthCorrect = signatureSize == (sig.length - 3)
     def lenR = sig(3)
-    def isLenSWithinBoundary = 5 + lenR < sig.length
+    // def isLenSWithinBoundary = 5 + lenR < sig.length
     def lenS = sig(5 + lenR)
     def lenRAndLenSAddup = (lenR + lenS + 7) == sig.length
     def isRInt = sig(2) == 0x02

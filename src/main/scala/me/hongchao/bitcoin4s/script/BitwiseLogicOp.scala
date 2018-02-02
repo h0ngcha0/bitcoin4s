@@ -51,7 +51,7 @@ object BitwiseLogicOp {
               opCount = state.opCount + 1
             )
 
-            setState(newState).flatMap(continue)
+            setStateAndContinue(newState)
           case _ =>
             abort(InvalidStackOperation(OP_EQUAL, state))
         }

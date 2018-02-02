@@ -56,7 +56,7 @@ object StackOp {
                   altStack = head +: state.altStack,
                   opCount = state.opCount + 1
                 )
-                setState(newState).flatMap(continue)
+                setStateAndContinue(newState)
               case _ =>
                 abort(InvalidStackOperation(OP_TOALTSTACK, state))
             }
@@ -71,7 +71,7 @@ object StackOp {
                   altStack = state.altStack.tail
                 )
 
-                setState(newState).flatMap(continue)
+                setStateAndContinue(newState)
               case _ =>
                 abort(InvalidAltStackOperation(OP_FROMALTSTACK, state))
             }
@@ -148,12 +148,12 @@ object StackOp {
         case OP_DEPTH =>
           getState.flatMap { state =>
             val newStack = ScriptNum(state.stack.length) +: state.stack
-            setState(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
+            setStateAndContinue(state.copy(stack = newStack, opCount = state.opCount + 1))
           }
 
         case OP_NIP =>
           onStackOp(OP_NIP) {
-            case first :: second :: rest =>
+            case first :: (second@_) :: rest =>
               first :: rest
           }
 
@@ -167,7 +167,7 @@ object StackOp {
                   case Success(nth) =>
                     if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
                       val newState = rest(nth) :: rest
-                      setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                      setStateAndContinue(state.copy(stack = newState, opCount = state.opCount + 1))
                     } else {
                       abort(InvalidStackOperation(OP_PICK, state))
                     }
@@ -175,7 +175,7 @@ object StackOp {
                     abort(GeneralError(OP_PICK, state))
                 }
 
-              case _ :: rest =>
+              case _ :: _ =>
                 abort(OperantMustBeScriptNum(OP_PICK, state))
 
               case _ =>
@@ -195,7 +195,7 @@ object StackOp {
                   case Success(nth) =>
                     if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
                       val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
-                      setState(state.copy(stack = newState, opCount = state.opCount + 1)).flatMap(continue)
+                      setStateAndContinue(state.copy(stack = newState, opCount = state.opCount + 1))
                     } else {
                       abort(InvalidStackOperation(OP_ROLL, state))
                     }
@@ -204,8 +204,9 @@ object StackOp {
                     abort(GeneralError(OP_ROLL, state))
                 }
 
-              case _ :: rest =>
+              case _ :: _ =>
                 abort(OperantMustBeScriptNum(OP_ROLL, state))
+
               case _ =>
                 abort(InvalidStackOperation(OP_ROLL, state))
             }
@@ -223,7 +224,7 @@ object StackOp {
       getState.flatMap { state =>
         if (stackConvertFunction.isDefinedAt(state.stack)) {
           val newStack = stackConvertFunction(state.stack)
-          setState(state.copy(stack = newStack, opCount = state.opCount + 1)).flatMap(continue)
+          setStateAndContinue(state.copy(stack = newStack, opCount = state.opCount + 1))
         } else {
           abort(InvalidStackOperation(opCode, state))
         }
