@@ -1,17 +1,16 @@
 package me.hongchao.bitcoin4s.script
 
-import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
-
 sealed trait InterpreterError extends RuntimeException with Product {
   def opCode: ScriptOpCode
   val state: InterpreterState
-  val description: String
+  def description: String = getClass.getSimpleName
 
   super.initCause(new Throwable(s"$description\nopCode: $opCode\nstate: $state"))
 }
 
 object InterpreterError {
-  case class BadOpCode(opCode: ScriptOpCode, state: InterpreterState, description: String) extends InterpreterError {
+  case class BadOpCode(opCode: ScriptOpCode, state: InterpreterState, descriptionIn: String) extends InterpreterError {
+    override def description = descriptionIn
   }
 
   object NotEnoughElementsInStack {
@@ -26,163 +25,107 @@ object InterpreterError {
     }
   }
 
-  case class InvalidStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Invalid stack operation"
-  }
+  case class InvalidStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class InvalidAltStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Invalid alt stack operation"
-  }
+  case class InvalidAltStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class RequireCleanStack(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Stack is not clean when SCRIPT_VERIFY_CLEANSTACK flag is set"
+    override def description = "Stack is not clean when SCRIPT_VERIFY_CLEANSTACK flag is set"
   }
 
   case class NotMinimalEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "MINIMALENCODING flags is set but it's not minimal encoded"
+    override def description = "MINIMALENCODING flags is set but it's not minimal encoded"
   }
 
-  case class ExceedMaxOpCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "More than max op count"
-  }
+  case class ExceedMaxOpsCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class FoundOpReturn(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Found OP_RETURN"
-  }
+  case class FoundOpReturn(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class ExceedMaxPushSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Exceed the maximum push size"
-  }
+  case class ExceedMaxPushSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class ExceedMaxStackSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Exceed the maximum stack size"
-  }
+  case class ExceedMaxStackSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class ExceedMaxScriptSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Exceed the maximum script size"
-  }
+  case class ExceedMaxScriptSize(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WrongPubKeyCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Wrong pubkey count"
-  }
+  case class WrongPubKeyCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WrongSignaturesCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Wrong signatures count"
-  }
+  case class WrongSignaturesCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class ScriptSigPushOnly(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Script sig should only contain pusheOnly ops"
+    override def description = "Script sig should only contain pusheOnly ops"
   }
 
-  case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Not all operants are constant"
-  }
+  case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class OperantMustBeScriptNum(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Operant must be ScriptNum"
-  }
+  case class OperantMustBeScriptNum(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class OperantMustBeScriptConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Operant must be ScriptConstant"
-  }
+  case class OperantMustBeScriptConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class OpcodeDisabled(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Opcode is disabled"
-  }
+  case class OpcodeDisabled(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class DiscourageUpgradableNops(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Found not executable reserved opcode"
+    override def description = "Found not executable reserved opcode"
   }
 
   case class DiscourageUpgradableWitnessProgram(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Witness program version is too high"
+    override def description = "Witness program version is too high"
   }
 
   case class InValidReservedOpcode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Found executable reserved opcode that invalidates the transaction"
+    override def description = "Found executable reserved opcode that invalidates the transaction"
   }
 
-  case class PublicKeyWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Public key encoding wrong"
-  }
+  case class PublicKeyWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class SignatureWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Signature encoding wrong"
-  }
+  case class SignatureWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class InvalidSigHashType(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "SigHash type invalid"
-  }
+  case class InvalidSigHashType(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class MultiSigNullDummy(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Multisig dummy element is not null"
+    override def description = "Multisig dummy element is not null"
   }
 
   case class VerificationFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "Verification on top of the stack failed"
+    override def description = "Verification on top of the stack failed"
   }
 
   case class SignatureVerificationNullFail(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "If NULLFAIL flag is on and signature verification fails, signature has to be empty for script to continue"
+    override def description = "If NULLFAIL flag is on and signature verification fails, signature has to be empty for script to continue"
   }
 
   case class CLTVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "CheckLockTimeVerify failed"
+    override def description = "CheckLockTimeVerify failed"
   }
 
   case class CSVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description = "CheckSequenceVerify failed"
+    override def description = "CheckSequenceVerify failed"
   }
 
-  case class UnbalancedConditional(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Unbalanced conditional"
-  }
+  case class UnbalancedConditional(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class NoSerializedScriptFound(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "No serialized script found for p2sh"
-  }
+  case class NoSerializedP2SHScriptFound(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WitnessProgramMismatch(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Witness program mismatch"
-  }
+  case class WitnessProgramMismatch(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WitnessProgramUnexpected(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Unexpected witness program"
-  }
+  case class WitnessProgramUnexpected(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WitnessProgramWrongLength(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Witness program wrong length"
-  }
+  case class WitnessProgramWrongLength(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WitnessProgramWitnessEmpty(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Witness program witness empty"
-  }
+  case class WitnessProgramWitnessEmpty(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class SignatureHighS(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Secp256k1 signature has higher S value than half curve"
+    override def description = "Secp256k1 signature has higher S value than half curve"
   }
 
   case class MinimalIf(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Argument of OP_IF/OP_NOTIF is not empty bytes or 0x01"
+    override def description = "Argument of OP_IF/OP_NOTIF is not empty bytes or 0x01"
   }
 
-  case class WitnessPubkeyUncompressed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Pubkey not compressed for witness program"
-  }
+  case class WitnessPubkeyUncompressed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WitnessMalleated(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Witness program with malleated components"
-  }
+  case class WitnessMalleated(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class WitnessMalleatedP2SH(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Witness program with malleated components p2sh"
-  }
+  case class WitnessMalleatedP2SH(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
-  case class NotImplemented(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "Not implemented"
-  }
-
-  case class GeneralError(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    val description: String = "General error"
-  }
+  case class GeneralError(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 }

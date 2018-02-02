@@ -32,7 +32,7 @@ object ReservedOp {
       getState.flatMap { state =>
         opCode match {
           case OP_NOP1 | OP_NOP4 | OP_NOP5 | OP_NOP6 | OP_NOP7 | OP_NOP8 | OP_NOP9 | OP_NOP10 =>
-            if (state.ScriptFlags.disCourageUpgradableNop) {
+            if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)) {
               abort(DiscourageUpgradableNops(opCode, state))
             } else {
               val newState = state.copy(opCount = state.opCount)

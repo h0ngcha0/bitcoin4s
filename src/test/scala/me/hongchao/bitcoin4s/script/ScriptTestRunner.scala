@@ -157,7 +157,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
           checkError[CSVFailed](result)
 
         case ExpectedResult.OP_COUNT =>
-          checkError[ExceedMaxOpCount](result)
+          checkError[ExceedMaxOpsCount](result)
 
         case ExpectedResult.OP_RETURN =>
           checkError[FoundOpReturn](result)

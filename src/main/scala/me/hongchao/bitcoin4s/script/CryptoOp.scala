@@ -71,7 +71,7 @@ object CryptoOp {
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
                 def handleResult(result: Boolean) = {
-                  if (state.ScriptFlags.nullfail() && !result & encodedSignature.bytes.nonEmpty) {
+                  if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL) && !result & encodedSignature.bytes.nonEmpty) {
                     abort(SignatureVerificationNullFail(opCode, state))
                   } else {
                     setState(
@@ -87,7 +87,7 @@ object CryptoOp {
                 Signature.decode(encodedSignature.bytes) match {
                   case Some((signature, sigHashFlagBytes)) =>
                     signature match {
-                      case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.ScriptFlags.lowS() =>
+                      case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
                         abort(SignatureHighS(opCode, state))
 
                       case _ =>
@@ -97,7 +97,7 @@ object CryptoOp {
                               val notCompressed = !decodedPublicKey.compressed
                               val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
 
-                              if (executingP2WSH && notCompressed && state.ScriptFlags.witnessPubkeyType()) {
+                              if (executingP2WSH && notCompressed && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)) {
                                 abort(WitnessPubkeyUncompressed(opCode, state))
                               } else {
                                 Try {
@@ -126,7 +126,7 @@ object CryptoOp {
                     }
 
                   case None =>
-                    if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
+                    if (state.ScriptFlags.strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     } else {
                       handleResult(false)
@@ -200,13 +200,13 @@ object CryptoOp {
                 } match {
                   case Success(checkResult) =>
 
-                    if (state.ScriptFlags.nullfail() && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
+                    if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL) && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
                       abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {
                       // NOTE: Popping extra element due to the bug in the reference client
                       rest match {
                         case head :: tail =>
-                          if (state.ScriptFlags.nulldummy() && head.bytes.nonEmpty) {
+                          if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLDUMMY) && head.bytes.nonEmpty) {
                             // Reference: https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
                             abort(MultiSigNullDummy(opCode, state))
                           } else {
@@ -293,7 +293,7 @@ object CryptoOp {
             Signature.decode(encodedSignature.bytes) match {
               case Some((signature, sigHashFlagBytes)) =>
                 signature match {
-                  case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.ScriptFlags.lowS() =>
+                  case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
                     throw SignatureHighS(OP_CHECKMULTISIG, state)
 
                   case _ =>
@@ -303,7 +303,7 @@ object CryptoOp {
                           val notCompressed = !decodedPublicKey.compressed
                           val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
 
-                          if (executingP2WSH && notCompressed && state.ScriptFlags.witnessPubkeyType()) {
+                          if (executingP2WSH && notCompressed && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)) {
                             throw WitnessPubkeyUncompressed(OP_CHECKMULTISIG, state)
                           } else {
                             checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
@@ -312,9 +312,9 @@ object CryptoOp {
                         case _ =>
                           if (state.ScriptFlags.strictEncoding()) {
                             throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
-                          } else {
-                            false
                           }
+
+                          false
                       }
                     } else {
                       throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
@@ -322,11 +322,11 @@ object CryptoOp {
                 }
 
               case None =>
-                if (state.ScriptFlags.strictEncoding() || state.ScriptFlags.derSig()) {
+                if (state.ScriptFlags.strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)) {
                   throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-                } else {
-                  false
                 }
+
+                false
             }
           }
 

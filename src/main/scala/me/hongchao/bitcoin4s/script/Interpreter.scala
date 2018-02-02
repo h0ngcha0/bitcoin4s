@@ -86,29 +86,13 @@ case class InterpreterState(
   }
 
   def transactionInput: TxIn = {
-    require(inputIndex >= 0 && inputIndex < transaction.tx_in.length, "Transation input index must be within range.")
+    require(inputIndex >= 0 && inputIndex < transaction.tx_in.length, "Transaction input index must be within range.")
     transaction.tx_in(inputIndex)
   }
 
   def scriptSignature: Seq[Byte] = transactionInput.sig_script.toSeq
 
   object ScriptFlags {
-    def cltvEnabled(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
-    }
-
-    def csvEnabled(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
-    }
-
-    def disCourageUpgradableNop(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
-    }
-
-    def disCourageUpgradableWitnessProgram(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)
-    }
-
     def requireMinimalEncoding(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALDATA)
     }
@@ -121,40 +105,12 @@ case class InterpreterState(
       flags.contains(ScriptFlag.SCRIPT_VERIFY_CLEANSTACK)
     }
 
-    def pushOnly(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_SIGPUSHONLY)
-    }
-
     def strictEncoding(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_STRICTENC)
     }
 
-    def derSig(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)
-    }
-
-    def nullfail(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL)
-    }
-
-    def nulldummy(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLDUMMY)
-    }
-
     def witness(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS)
-    }
-
-    def lowS(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S)
-    }
-
-    def minimalIf(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALIF)
-    }
-
-    def witnessPubkeyType(): Boolean = {
-      flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)
     }
   }
 }
@@ -241,7 +197,7 @@ object Interpreter {
   private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
       (state.opCount > MAX_OPCODES)
-        .option(abort(ExceedMaxOpCount(OP_UNKNOWN, state)))
+        .option(abort(ExceedMaxOpsCount(OP_UNKNOWN, state)))
         .getOrElse(StateT.pure(None))
     }
   }
@@ -335,7 +291,7 @@ object Interpreter {
 
   private def checkIsPushOnly(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
-      val pushOnlyEnabled = state.ScriptFlags.pushOnly()
+      val pushOnlyEnabled = state.flags.contains(ScriptFlag.SCRIPT_VERIFY_SIGPUSHONLY)
       val shouldExecuteP2sh = isP2SHScript(state.scriptPubKey) && state.ScriptFlags.p2sh()
       val shouldCheckPushOnly = pushOnlyEnabled || shouldExecuteP2sh
 
@@ -450,7 +406,7 @@ object Interpreter {
                             Left(None)
                           }
                         case None =>
-                          tailRecMAbort(NoSerializedScriptFound(OP_HASH160, state))
+                          tailRecMAbort(NoSerializedP2SHScriptFound(OP_HASH160, state))
                       }
                     } else if (state.ScriptFlags.p2sh() && state.ScriptFlags.witness()) {
                       if (state.scriptWitnessStack.isEmpty) {
@@ -554,7 +510,7 @@ object Interpreter {
         val isWitnessScript = possibleVersionNumbers.contains(version) && (scriptLength >= 2 && scriptLength <= 40)
 
         if (isWitnessScript) {
-          if (version != OP_0 && state.ScriptFlags.disCourageUpgradableWitnessProgram()) {
+          if (version != OP_0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)) {
             Left(WitnessRebuiltError.WitnessProgramUpgradableVersion)
           } else {
             Right((version, scriptConstant))

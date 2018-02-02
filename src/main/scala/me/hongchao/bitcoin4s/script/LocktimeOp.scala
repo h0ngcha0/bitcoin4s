@@ -23,7 +23,7 @@ object LocktimeOp {
       opCode match {
         case OP_CHECKLOCKTIMEVERIFY | OP_NOP2 =>
           getState.flatMap { state =>
-            if (state.ScriptFlags.cltvEnabled) {
+            if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
               state.stack match {
                 case head :: _ =>
                   val lockTime = ScriptNum(head.bytes, false, 5).value
@@ -36,7 +36,7 @@ object LocktimeOp {
                 case Nil =>
                   abort(NotEnoughElementsInStack(opCode, state))
               }
-            } else if (state.ScriptFlags.disCourageUpgradableNop) {
+            } else if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)) {
               abort(DiscourageUpgradableNops(opCode, state))
             } else {
               continue(opCode)
@@ -45,7 +45,7 @@ object LocktimeOp {
 
         case OP_CHECKSEQUENCEVERIFY | OP_NOP3 =>
           getState.flatMap { state =>
-            if (state.ScriptFlags.csvEnabled) {
+            if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
               state.stack match {
                 case head :: _ =>
                   Try {
@@ -78,7 +78,7 @@ object LocktimeOp {
                 case Nil =>
                   abort(InvalidStackOperation(opCode, state))
               }
-            } else if (state.ScriptFlags.disCourageUpgradableNop) {
+            } else if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)) {
               abort(DiscourageUpgradableNops(opCode, state))
             } else {
               continue(opCode)

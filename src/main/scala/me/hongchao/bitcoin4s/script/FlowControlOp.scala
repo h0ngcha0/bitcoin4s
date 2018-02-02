@@ -47,7 +47,7 @@ object FlowControlOp {
                     val isP2WSH = state.scriptExecutionStage == ExecutingScriptWitness
                     val stackTopMinimal = first.bytes == Seq.empty || first.bytes == Seq(1.byteValue)
 
-                    if (isP2WSH && state.ScriptFlags.minimalIf() && !stackTopMinimal) {
+                    if (isP2WSH && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALIF) && !stackTopMinimal) {
                       abort(MinimalIf(opCode, state))
                     } else {
                       val pickNegativeBranches = firstNumber == 0 && opCode == OP_IF || firstNumber != 0 && opCode == OP_NOTIF
