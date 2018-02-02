@@ -189,7 +189,7 @@ object Interpreter {
     _ => StateT.pure(None)
   }
 
-  def abort(error: InterpreterError): InterpreterContext[Option[Boolean]] = StateT.lift {
+  def abort(error: InterpreterError): InterpreterContext[Option[Boolean]] = StateT.liftF {
     val errorWithExplicitType: InterpreterErrorHandler[Option[Boolean]] = Left(error)
     errorWithExplicitType
   }
@@ -618,7 +618,7 @@ object Interpreter {
     }
   }
 
-  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.lift {
+  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.liftF {
     val errorWithExplicitType: InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]] = Left(error)
     errorWithExplicitType
   }

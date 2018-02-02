@@ -36,7 +36,7 @@ res1: Seq[me.hongchao.bitcoin4s.script.ScriptElement] = List(OP_PUSHDATA(65), Sc
 
 # Run bitcoin script interpreter
 
-Following is a [test case](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json#L2145) for "Basic P2WSH with compressed key" from bitcoin core.
+Following is a [test case](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json#L2145) for "Basic P2WSH with compressed key" from [bitcoin core](https://github.com/bitcoin/bitcoin).
 
 ```
 [
