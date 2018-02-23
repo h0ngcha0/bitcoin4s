@@ -1,10 +1,12 @@
 package me.hongchao.bitcoin4s.external
 
+import java.time.ZonedDateTime
+
 import akka.http.scaladsl.model.{HttpRequest, Uri}
 import akka.stream.Materializer
 
 import scala.concurrent.{ExecutionContext, Future}
-import BlockchainInfoApi._
+import BlockCypherApi._
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import io.github.yzernik.bitcoinscodec.messages.TxWitness
 import io.github.yzernik.bitcoinscodec.structures.{OutPoint, TxIn, TxOutWitness, Hash => ScodecHash}
@@ -14,8 +16,8 @@ import scodec.bits.ByteVector
 import tech.minna.playjson.macros.json
 import me.hongchao.bitcoin4s.crypto.Hash
 
-// NOTE: https://blockchain.info/api/blockchain_api
-class BlockchainInfoApi(httpSender: HttpSender)(
+// https://www.blockcypher.com/dev/bitcoin/#transaction-api
+class BlockCypherApi(httpSender: HttpSender)(
   implicit
   ec: ExecutionContext,
   materializer: Materializer
@@ -30,79 +32,72 @@ class BlockchainInfoApi(httpSender: HttpSender)(
 // TODO: Get rid of the deps for bitcoinscodec
 // 1) do we actually need both tx and tx witness
 // 2) if not, remove one of them and rewrite the transaction part in terms of scodec
-object BlockchainInfoApi {
-  @json case class PreviousOutput(
-    spent: Boolean,
-    tx_index: Long,
-    `type`: Int,
-    addr: String,
-    value: Long,
-    n: Int,
-    script: String
-  ) {
-    def toOutPoint = OutPoint(
-      hash = ScodecHash(ByteVector(Hash.fromHex(addr))),
-      index = tx_index
-    )
-  }
+object BlockCypherApi {
 
   @json case class TransactionInput(
+    prev_hash: String,
+    output_index: Int,
+    script: String,
+    output_value: Long,
     sequence: Long,
-    witness: String,
-    prev_out: Option[PreviousOutput],
-    script: String
+    addresses: List[String],
+    script_type: String,
+    age: Long,
+    witness: List[String]
   ) {
+    val prevTxHash = ScodecHash(ByteVector(Hash.fromHex(prev_hash)))
     def toTxIn = TxIn(
-      previous_output = prev_out.get.toOutPoint, // FIXME: remove .get
+      previous_output = OutPoint(prevTxHash, output_index),
       sig_script = ByteVector(Hash.fromHex(script)),
       sequence = sequence
     )
-
-    def toWitnessScript = ??? // FIXME: how is witness structured
   }
 
   @json case class TransactionOutput(
-    spent: Boolean,
-    tx_index: Long,
-    `type`: Int,
-    addr: Option[String],
     value: Long,
-    n: Int,
-    script: String
+    script: String,
+    spent_by: String,
+    addresses: List[String],
+    script_type: String
   ) {
     def toTxOut = TxOutWitness(
       value = value,
-      pk_script = ByteVector(Parser.parse(script).flatMap(_.bytes))
+      pk_script = ByteVector(Parser.parse(Hash.fromHex(script)).flatMap(_.bytes))
     )
   }
 
   @json case class Transaction(
-    ver: Int,
-    inputs: Seq[TransactionInput],
-    weight: Long,
+    block_hash: String,
     block_height: Long,
-    relayed_by: String,
-    out: Seq[TransactionOutput],
-    lock_time: Long,
+    block_index: Int,
+    hash: String,
+    addresses: Seq[String],
+    total: Long,
+    fees: Long,
     size: Long,
+    confirmed: ZonedDateTime,
+    received: ZonedDateTime,
+    ver: Int,
+    lock_time: Long,
     double_spend: Boolean,
-    time: Long,
-    tx_index: Long,
     vin_sz: Int,
-    witn: String,
-    vout_sz: Int
+    vout_sz: Int,
+    confirmations: Long,
+    confidence: Int,
+    inputs: Seq[TransactionInput],
+    outputs: Seq[TransactionOutput]
   ) {
     def toTxWitness = TxWitness(
       version = ver,
       tx_in = inputs.map(_.toTxIn).toList,
-      tx_out = out.map(_.toTxOut).toList,
+      tx_out = outputs.map(_.toTxOut).toList,
       lock_time = lock_time
     )
   }
 
-  protected def rawTxUrl(txId: String) = Uri(s"https://blockchain.info/rawtx/$txId")
+  protected def rawTxUrl(txId: String) = Uri(s"https://chain.so/api/v2/tx/BTC/$txId")
 
-  protected implicit val transactionUnmarshaller = Unmarshaller.stringUnmarshaller.map { raw =>
+  def parseTransaction(raw: String): Transaction = {
     Json.fromJson[Transaction](Json.parse(raw)) match {
       case JsSuccess(value, _) =>
         value
@@ -110,4 +105,6 @@ object BlockchainInfoApi {
         throw new RuntimeException(s"Failed to parse transaction $e")
     }
   }
+
+  protected implicit val transactionUnmarshaller = Unmarshaller.stringUnmarshaller.map(parseTransaction)
 }
