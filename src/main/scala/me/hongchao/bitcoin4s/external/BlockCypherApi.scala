@@ -43,7 +43,7 @@ object BlockCypherApi {
     addresses: List[String],
     script_type: String,
     age: Long,
-    witness: List[String]
+    witness: Option[List[String]] = None
   ) {
     val prevTxHash = ScodecHash(ByteVector(Hash.fromHex(prev_hash)))
     def toTxIn = TxIn(
@@ -56,7 +56,7 @@ object BlockCypherApi {
   @json case class TransactionOutput(
     value: Long,
     script: String,
-    spent_by: String,
+    spent_by: Option[String],
     addresses: List[String],
     script_type: String
   ) {
@@ -78,7 +78,7 @@ object BlockCypherApi {
     confirmed: ZonedDateTime,
     received: ZonedDateTime,
     ver: Int,
-    lock_time: Long,
+    lock_time: Long = 0,
     double_spend: Boolean,
     vin_sz: Int,
     vout_sz: Int,
@@ -95,7 +95,7 @@ object BlockCypherApi {
     )
   }
 
-  protected def rawTxUrl(txId: String) = Uri(s"https://chain.so/api/v2/tx/BTC/$txId")
+  protected def rawTxUrl(txId: String) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/$txId")
 
   def parseTransaction(raw: String): Transaction = {
     Json.fromJson[Transaction](Json.parse(raw)) match {
