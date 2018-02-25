@@ -3,7 +3,7 @@ package me.hongchao.bitcoin4s
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer}
 import com.typesafe.scalalogging.StrictLogging
-import me.hongchao.bitcoin4s.external.{BlockchainInfoApi, HttpSender}
+import me.hongchao.bitcoin4s.external.{BlockCypherApi, HttpSender}
 
 trait Boot extends StrictLogging {
   implicit val system: ActorSystem = ActorSystem("bitcoin4s")
@@ -17,6 +17,6 @@ trait Boot extends StrictLogging {
   }
 
   val httpSender = new HttpSender()
-  val blockchainInfoApi = new BlockchainInfoApi(httpSender)
+  val blockchainInfoApi = new BlockCypherApi(httpSender)
 
 }
