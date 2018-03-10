@@ -10,10 +10,10 @@ import me.hongchao.bitcoin4s.script.Interpreter._
 
 import scala.annotation.tailrec
 import cats.implicits._
-import me.hongchao.bitcoin4s.transaction.{RegularTx, TxWitness}
 import me.hongchao.bitcoin4s.crypto.PublicKey.DecodeResult
 import me.hongchao.bitcoin4s.crypto.Signature.{ECDSASignature, EmptySignature}
 import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
+import me.hongchao.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 
 import scala.util.{Failure, Success, Try}
 
@@ -358,16 +358,15 @@ object CryptoOp {
           throw InvalidSigHashType(OP_UNKNOWN, state)
         }
 
-        val hashedTransaction = state.transaction match {
-          case regularTx: RegularTx =>
-            regularTx.signingHash(
+        val hashedTransaction = state.sigVersion match {
+          case SIGVERSION_BASE =>
+            state.transaction.signingHashPreSegwit(
               currentScript,
               inputIndex = state.inputIndex,
               sigHashType = sigHashType
             )
-
-          case segwitTx: TxWitness =>
-            segwitTx.signingHash(
+          case SIGVERSION_WITNESS_V0 =>
+            state.transaction.signingHashSegwit(
               currentScript,
               inputIndex = state.inputIndex,
               amount = state.amount,

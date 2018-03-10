@@ -32,7 +32,8 @@ object InterpreterState {
     flags: Seq[ScriptFlag],
     transaction: Tx,
     inputIndex: Int,
-    amount: Long
+    amount: Long,
+    sigVersion: SigVersion
   ): InterpreterState = {
     InterpreterState(
       scriptPubKey = scriptPubKey,

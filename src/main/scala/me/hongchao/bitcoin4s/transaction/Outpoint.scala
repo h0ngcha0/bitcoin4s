@@ -7,7 +7,8 @@ import scodec.codecs._
 
 case class OutPoint(
   hash: Hash,
-  index: Long)
+  index: Long
+)
 
 object OutPoint {
   val uInt32WithNegValue: Codec[Long] = new LongCodecWithNegValue(32, false, ByteOrdering.BigEndian)

@@ -3,6 +3,7 @@ package me.hongchao.bitcoin4s.transaction
 import scodec.{Attempt, Codec, DecodeResult, Err, SizeBound}
 import scodec.bits.{BitVector, ByteOrdering}
 
+// NOTE: Allow -1 so that we can run Bitcoin core tests.
 final class LongCodecWithNegValue(bits: Int, signed: Boolean, ordering: ByteOrdering) extends Codec[Long] {
 
   require(bits > 0 && bits <= (if (signed) 64 else 63), "bits must be in range [1, 64] for signed and [1, 63] for unsigned")

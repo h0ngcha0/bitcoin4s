@@ -8,7 +8,8 @@ import scodec.codecs._
 case class TxIn(
   previous_output: OutPoint,
   sig_script: ByteVector,
-  sequence: Long)
+  sequence: Long
+)
 
 object TxIn {
   val uInt32WithNegValue: Codec[Long] = new LongCodecWithNegValue(32, false, ByteOrdering.BigEndian)

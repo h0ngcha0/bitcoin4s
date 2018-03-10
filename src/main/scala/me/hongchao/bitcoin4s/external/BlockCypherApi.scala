@@ -8,8 +8,8 @@ import akka.stream.Materializer
 import scala.concurrent.{ExecutionContext, Future}
 import BlockCypherApi._
 import akka.http.scaladsl.unmarshalling.Unmarshaller
-import me.hongchao.bitcoin4s.transaction.TxWitness
-import me.hongchao.bitcoin4s.transaction.{OutPoint, TxIn, TxOutWitness, Hash => ScodecHash}
+import me.hongchao.bitcoin4s.transaction.Tx
+import me.hongchao.bitcoin4s.transaction.{OutPoint, TxIn, TxOut, Hash => ScodecHash}
 import me.hongchao.bitcoin4s.script.Parser
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
@@ -29,9 +29,6 @@ class BlockCypherApi(httpSender: HttpSender)(
   }
 }
 
-// TODO: Get rid of the deps for bitcoinscodec
-// 1) do we actually need both tx and tx witness
-// 2) if not, remove one of them and rewrite the transaction part in terms of scodec
 object BlockCypherApi {
 
   @json case class TransactionInput(
@@ -60,7 +57,7 @@ object BlockCypherApi {
     addresses: List[String],
     script_type: String
   ) {
-    def toTxOut = TxOutWitness(
+    def toTxOut = TxOut(
       value = value,
       pk_script = ByteVector(Parser.parse(Hash.fromHex(script)).flatMap(_.bytes))
     )
@@ -87,7 +84,7 @@ object BlockCypherApi {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
-    def toTxWitness = TxWitness(
+    def toTxWitness = Tx(
       version = ver,
       tx_in = inputs.map(_.toTxIn).toList,
       tx_out = outputs.map(_.toTxOut).toList,
