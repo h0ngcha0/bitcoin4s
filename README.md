@@ -11,7 +11,7 @@ Scala library for experimenting with Bitcoin
 Add the following to your build.sbt
 
 ```scala
-libraryDependencies += "me.hongchao" %% "bitcoin4s" % "0.0.2"
+libraryDependencies += "me.hongchao" %% "bitcoin4s" % "0.0.3"
 ```
 
 with the following resolver
@@ -59,8 +59,7 @@ which is parsed into the following scala code
 scala> :paste
 // Entering paste mode (ctrl-D to finish)
 
-import io.github.yzernik.bitcoinscodec.messages.TxWitness
-import io.github.yzernik.bitcoinscodec.structures.{Hash, OutPoint, TxIn, TxOutWitness}
+import me.hongchao.bitcoin4s.transaction._
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.ScriptFlag._
 import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
@@ -69,7 +68,7 @@ import me.hongchao.bitcoin4s.script._
 import scodec.bits._
 import cats.implicits._
 
-val transaction = TxWitness(
+val transaction = Tx(
   version = 1,
   tx_in = List(
     TxIn(
@@ -79,7 +78,7 @@ val transaction = TxWitness(
     )
   )
   ,tx_out = List(
-    TxOutWitness(
+    TxOut(
       value = 1,
       pk_script = ByteVector.empty
     )
@@ -116,8 +115,7 @@ val initialState = InterpreterState(
 
 // Exiting paste mode, now interpreting.
 
-import io.github.yzernik.bitcoinscodec.messages.TxWitness
-import io.github.yzernik.bitcoinscodec.structures.{Hash, OutPoint, TxIn, TxOutWitness}
+import me.hongchao.bitcoin4s.transaction._
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.ScriptFlag._
 import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
@@ -125,7 +123,7 @@ import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptSig
 import me.hongchao.bitcoin4s.script._
 import scodec.bits._
 import cats.implicits._
-transaction: io.github.yzernik.bitcoinscodec.messages.TxWitness = TxWitness(1,List(TxIn(OutPoint(7ca98806a4b4ab8d2952d3d65ccb450b411def420b3f8f0140bf11d8991ac5ab,0),ByteVector(empty),-1)),List(TxOutWitness(1,ByteVector(empty))),0)
+transaction: me.hongchao.bitcoin4s.transaction.Tx = Tx(1,List(TxIn(OutPoint(7ca98806a4b4ab8d2952d3d65ccb450b411def420b3f8f0140bf11d8991ac5ab,0),ByteVector(empty),-1)),List(TxOut(1,ByteVector(empty))),0)
 initialState: me.hongchao.bitcoin4s.script.Interprete...
 
 ```

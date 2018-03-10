@@ -8,6 +8,7 @@ import org.spongycastle.util.encoders.Hex
 
 import scala.util.control.Exception.allCatch
 import cats.implicits._
+import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
 
 class BlockCypherApiSpec extends Spec with StrictLogging {
 
@@ -166,7 +167,8 @@ class BlockCypherApiSpec extends Spec with StrictLogging {
       flags = flags,
       transaction = spendingTx,
       inputIndex = 0,
-      amount = amount
+      amount = amount,
+      sigVersion = SIGVERSION_WITNESS_V0
     )
 
     val interpreterOutcome = Interpreter.create(verbose = false).run(initialState)

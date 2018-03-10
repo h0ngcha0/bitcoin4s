@@ -1,7 +1,6 @@
 package me.hongchao.bitcoin4s.script
 
-import io.github.yzernik.bitcoinscodec.messages.{RegularTx, Tx, TxWitness}
-import io.github.yzernik.bitcoinscodec.structures._
+import me.hongchao.bitcoin4s.transaction._
 import me.hongchao.bitcoin4s.crypto.Hash.Hash256
 import me.hongchao.bitcoin4s.script.ConstantOp.OP_0
 import scodec.bits.ByteVector
@@ -11,6 +10,7 @@ import cats.implicits._
 import com.typesafe.scalalogging.StrictLogging
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
+import me.hongchao.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 
 import scala.reflect.ClassTag
 
@@ -93,6 +93,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
     val amount = test.witness.map(_._2)
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), amount)
     val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes), test.witness.map(_._1))
+    val sigVersion = if (test.witness.isDefined) SIGVERSION_BASE else SIGVERSION_WITNESS_V0
 
     val initialState = InterpreterState(
       scriptPubKey = test.scriptPubKey,
@@ -101,7 +102,8 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
       flags = test.scriptFlags,
       transaction = spendingTx,
       inputIndex = 0,
-      amount = amount.getOrElse(0)
+      amount = amount.getOrElse(0),
+      sigVersion = sigVersion
     )
 
     withClue(test.comments) {
@@ -263,16 +265,16 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
 
     maybeAmount match {
       case Some(amount) =>
-        val txOut = TxOutWitness(value = amount, pk_script = ByteVector(scriptPubKey))
-        TxWitness(
+        val txOut = TxOut(value = amount, pk_script = ByteVector(scriptPubKey))
+        Tx(
           version = 1,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
           lock_time = 0
         )
       case None =>
-        val txOut = RegularTxOut(value = 0, pk_script = ByteVector(scriptPubKey))
-        RegularTx(
+        val txOut = TxOut(value = 0, pk_script = ByteVector(scriptPubKey))
+        Tx(
           version = 1,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
@@ -286,7 +288,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
 
     import scodec.bits._
 
-    val prevId = Hash(ByteVector(Hash256(creditingTransaction.serialized().toArray)).reverse)
+    val prevId = Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray)).reverse)
     val txIn = TxIn(
       previous_output = OutPoint(prevId, 0),
       sig_script = ByteVector(scriptSig),
@@ -297,16 +299,16 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
 
     maybeWitnessScript match {
       case Some(witnessScript@_) =>
-        val txOut = TxOutWitness(value = amount, pk_script = ByteVector.empty)
-        TxWitness(
+        val txOut = TxOut(value = amount, pk_script = ByteVector.empty)
+        Tx(
           version = 1,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
           lock_time = 0
         )
       case None =>
-        val txOut = RegularTxOut(value = amount, pk_script = ByteVector.empty)
-        RegularTx(
+        val txOut = TxOut(value = amount, pk_script = ByteVector.empty)
+        Tx(
           version = 1,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
