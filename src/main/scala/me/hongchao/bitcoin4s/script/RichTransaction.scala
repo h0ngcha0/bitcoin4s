@@ -5,13 +5,13 @@ import me.hongchao.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.crypto.Hash
+import me.hongchao.bitcoin4s.transaction.structure.OutPoint
 
 object RichTransaction {
   val transactionVersion = 1
 
   implicit class RichTx(tx: Tx) {
-    def transactionId(): ByteVector = {
-      // For witness stuff, whats the transaction id?
+    def serialize(): ByteVector = {
       Tx.codec(transactionVersion).encode(tx).toEither match {
         case Left(error) =>
           throw new RuntimeException(error.messageWithContext)

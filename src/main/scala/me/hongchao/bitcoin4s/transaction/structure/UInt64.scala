@@ -1,11 +1,9 @@
-package me.hongchao.bitcoin4s.transaction
-
-import scala.BigInt
-import scala.math.BigInt.int2bigInt
-import scala.math.BigInt.long2bigInt
+package me.hongchao.bitcoin4s.transaction.structure
 
 import scodec.Codec
 import scodec.codecs.int64L
+
+import scala.math.BigInt.{int2bigInt, long2bigInt}
 
 case class UInt64(value: Long) {
 

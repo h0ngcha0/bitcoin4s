@@ -11,6 +11,7 @@ import com.typesafe.scalalogging.StrictLogging
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import me.hongchao.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
+import me.hongchao.bitcoin4s.transaction.structure.{Hash, OutPoint}
 
 import scala.reflect.ClassTag
 
@@ -288,7 +289,7 @@ trait ScriptTestRunner extends StrictLogging { self: Spec =>
 
     import scodec.bits._
 
-    val prevId = Hash(ByteVector(Hash256(creditingTransaction.transactionId().toArray)).reverse)
+    val prevId = Hash(ByteVector(Hash256(creditingTransaction.serialize().toArray)).reverse)
     val txIn = TxIn(
       previous_output = OutPoint(prevId, 0),
       sig_script = ByteVector(scriptSig),

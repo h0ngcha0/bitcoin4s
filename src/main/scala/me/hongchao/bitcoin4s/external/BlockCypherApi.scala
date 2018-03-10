@@ -9,7 +9,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import BlockCypherApi._
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import me.hongchao.bitcoin4s.transaction.Tx
-import me.hongchao.bitcoin4s.transaction.{OutPoint, TxIn, TxOut, Hash => ScodecHash}
+import me.hongchao.bitcoin4s.transaction.{TxIn, TxOut}
+import me.hongchao.bitcoin4s.transaction.structure.{OutPoint, Hash => ScodecHash}
 import me.hongchao.bitcoin4s.script.Parser
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
@@ -84,7 +85,7 @@ object BlockCypherApi {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
-    def toTxWitness = Tx(
+    def toTx = Tx(
       version = ver,
       tx_in = inputs.map(_.toTxIn).toList,
       tx_out = outputs.map(_.toTxOut).toList,

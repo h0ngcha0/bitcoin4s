@@ -1,7 +1,10 @@
 package me.hongchao.bitcoin4s.transaction
 
+import me.hongchao.bitcoin4s.transaction.structure.VarList
 import scodec.Codec
 import scodec.codecs._
+
+// Credit: https://github.com/yzernik/bitcoin-scodec
 
 case class Tx(
   version: Long,
@@ -17,5 +20,4 @@ object Tx {
       ("tx_out" | VarList.varList(Codec[TxOut])) ::
       ("lock_time" | uint32L)
   }.as[Tx]
-  def command = "tx"
 }

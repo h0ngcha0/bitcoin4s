@@ -147,7 +147,7 @@ class BlockCypherApiSpec extends Spec with StrictLogging {
 
     // Only look at the first input
     //val firstScriptPutKey = spendingTx.tx_in(0).sig_script
-    val spendingTx = spendingTransaction.toTxWitness
+    val spendingTx = spendingTransaction.toTx
     val txIn = spendingTransaction.inputs(0)
     val txOut = creditingTransaction.outputs(0)
     val scriptSig = parseHexString(txIn.script)
@@ -178,7 +178,7 @@ class BlockCypherApiSpec extends Spec with StrictLogging {
         logger.info(s"interpretedResult: $interpretedResult")
 
       case Left(e) =>
-        throw e
+        fail("Interpreter failed", e)
     }
   }
 

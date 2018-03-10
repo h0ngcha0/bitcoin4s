@@ -1,14 +1,9 @@
-package me.hongchao.bitcoin4s.transaction
-
-import scala.BigInt
+package me.hongchao.bitcoin4s.transaction.structure
 
 import UInt64.bigIntCodec
-import scodec.Attempt.{ Failure, Successful }
+import scodec.Attempt.{Failure, Successful}
 import scodec.Codec
 import scodec.bits.BitVector
-import scodec.codecs.uint16L
-import scodec.codecs.uint32L
-import scodec.codecs.uint8L
 
 case class VarInt(value: Long)
 

@@ -1,7 +1,8 @@
-package me.hongchao.bitcoin4s.transaction
+package me.hongchao.bitcoin4s.transaction.structure
 
 import scodec.Codec
 import scodec.codecs.listOfN
+
 import scala.language.implicitConversions
 
 object VarList {

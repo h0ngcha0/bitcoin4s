@@ -1,5 +1,6 @@
 package me.hongchao.bitcoin4s.transaction
 
+import me.hongchao.bitcoin4s.transaction.structure.VarInt
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs._

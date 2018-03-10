@@ -1,4 +1,4 @@
-package me.hongchao.bitcoin4s.transaction
+package me.hongchao.bitcoin4s.transaction.structure
 
 import scodec.Codec
 import scodec.bits.ByteOrdering
