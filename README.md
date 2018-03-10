@@ -11,7 +11,7 @@ Scala library for experimenting with Bitcoin
 Add the following to your build.sbt
 
 ```scala
-libraryDependencies += "me.hongchao" %% "bitcoin4s" % "0.0.2"
+libraryDependencies += "me.hongchao" %% "bitcoin4s" % "0.0.3"
 ```
 
 with the following resolver
