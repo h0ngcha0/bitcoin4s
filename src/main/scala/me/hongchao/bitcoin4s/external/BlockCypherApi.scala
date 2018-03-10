@@ -8,8 +8,8 @@ import akka.stream.Materializer
 import scala.concurrent.{ExecutionContext, Future}
 import BlockCypherApi._
 import akka.http.scaladsl.unmarshalling.Unmarshaller
-import io.github.yzernik.bitcoinscodec.messages.TxWitness
-import io.github.yzernik.bitcoinscodec.structures.{OutPoint, TxIn, TxOutWitness, Hash => ScodecHash}
+import me.hongchao.bitcoin4s.transaction.TxWitness
+import me.hongchao.bitcoin4s.transaction.{OutPoint, TxIn, TxOutWitness, Hash => ScodecHash}
 import me.hongchao.bitcoin4s.script.Parser
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import scodec.bits.ByteVector

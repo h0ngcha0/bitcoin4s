@@ -3,7 +3,7 @@ package me.hongchao.bitcoin4s.script
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import cats.implicits._
-import io.github.yzernik.bitcoinscodec.messages.Tx
+import me.hongchao.bitcoin4s.transaction.Tx
 import me.hongchao.bitcoin4s.script.RichTransaction._
 
 import scala.util.{Failure, Success, Try}

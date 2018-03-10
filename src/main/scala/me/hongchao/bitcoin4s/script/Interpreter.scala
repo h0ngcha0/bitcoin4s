@@ -1,7 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
-import io.github.yzernik.bitcoinscodec.messages.Tx
-import io.github.yzernik.bitcoinscodec.structures.TxIn
+import me.hongchao.bitcoin4s.transaction.Tx
+import me.hongchao.bitcoin4s.transaction.TxIn
 import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
 import me.hongchao.bitcoin4s.script.ConstantOp._
 import me.hongchao.bitcoin4s.script.CryptoOp.{OP_CHECKSIG, OP_HASH160}

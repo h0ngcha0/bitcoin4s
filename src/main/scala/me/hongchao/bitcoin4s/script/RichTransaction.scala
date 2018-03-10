@@ -1,7 +1,7 @@
 package me.hongchao.bitcoin4s.script
 
-import io.github.yzernik.bitcoinscodec.messages.{RegularTx, Tx, TxWitness}
-import io.github.yzernik.bitcoinscodec.structures.{OutPoint, TxIn, TxOutWitness}
+import me.hongchao.bitcoin4s.transaction.{RegularTx, Tx, TxWitness}
+import me.hongchao.bitcoin4s.transaction.{OutPoint, TxIn, TxOutWitness}
 import me.hongchao.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
 import me.hongchao.bitcoin4s.Utils._

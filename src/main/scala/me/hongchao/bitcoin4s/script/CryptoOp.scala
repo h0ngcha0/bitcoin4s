@@ -10,7 +10,7 @@ import me.hongchao.bitcoin4s.script.Interpreter._
 
 import scala.annotation.tailrec
 import cats.implicits._
-import io.github.yzernik.bitcoinscodec.messages.{RegularTx, TxWitness}
+import me.hongchao.bitcoin4s.transaction.{RegularTx, TxWitness}
 import me.hongchao.bitcoin4s.crypto.PublicKey.DecodeResult
 import me.hongchao.bitcoin4s.crypto.Signature.{ECDSASignature, EmptySignature}
 import me.hongchao.bitcoin4s.script.OpCodes.OP_UNKNOWN
