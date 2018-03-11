@@ -6,6 +6,8 @@ import scodec.codecs._
 
 // Credit: https://github.com/yzernik/bitcoin-scodec
 
+case class TxId(value: String)
+
 case class Tx(
   version: Long,
   tx_in: List[TxIn],

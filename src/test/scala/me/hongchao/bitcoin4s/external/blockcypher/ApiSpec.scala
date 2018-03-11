@@ -1,16 +1,16 @@
-package me.hongchao.bitcoin4s.external
+package me.hongchao.bitcoin4s.external.blockcypher
 
+import cats.implicits._
 import com.typesafe.scalalogging.StrictLogging
 import me.hongchao.bitcoin4s.Spec
 import me.hongchao.bitcoin4s.crypto.Hash
+import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
 import me.hongchao.bitcoin4s.script._
 import org.spongycastle.util.encoders.Hex
 
 import scala.util.control.Exception.allCatch
-import cats.implicits._
-import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
 
-class BlockCypherApiSpec extends Spec with StrictLogging {
+class ApiSpec extends Spec with StrictLogging {
 
   val blockCypherCreditingRawTransaction =
     s"""
@@ -142,8 +142,8 @@ class BlockCypherApiSpec extends Spec with StrictLogging {
 
   "Interpreter" should "be able to interpret raw transaction fetched from BlockCypher API" in {
 
-    val creditingTransaction = BlockCypherApi.parseTransaction(blockCypherCreditingRawTransaction)
-    val spendingTransaction = BlockCypherApi.parseTransaction(blockCypherSpendingRawTransaction)
+    val creditingTransaction = Api.parseTransaction(blockCypherCreditingRawTransaction)
+    val spendingTransaction = Api.parseTransaction(blockCypherSpendingRawTransaction)
 
     // Only look at the first input
     //val firstScriptPutKey = spendingTx.tx_in(0).sig_script
@@ -157,7 +157,7 @@ class BlockCypherApiSpec extends Spec with StrictLogging {
         allCatch.opt(Hex.decode(rawWitness).toSeq).map(ScriptConstant.apply)
       }
     }
-    val amount = 2441174
+    val amount = txOut.value
     val flags = toScriptFlags("P2SH,WITNESS")
 
     val initialState = InterpreterState(

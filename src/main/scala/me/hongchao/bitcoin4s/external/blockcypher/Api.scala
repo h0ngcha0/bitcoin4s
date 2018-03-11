@@ -1,36 +1,49 @@
-package me.hongchao.bitcoin4s.external
+package me.hongchao.bitcoin4s.external.blockcypher
 
 import java.time.ZonedDateTime
 
 import akka.http.scaladsl.model.{HttpRequest, Uri}
-import akka.stream.Materializer
-
-import scala.concurrent.{ExecutionContext, Future}
-import BlockCypherApi._
 import akka.http.scaladsl.unmarshalling.Unmarshaller
-import me.hongchao.bitcoin4s.transaction.Tx
-import me.hongchao.bitcoin4s.transaction.{TxIn, TxOut}
-import me.hongchao.bitcoin4s.transaction.structure.{OutPoint, Hash => ScodecHash}
+import akka.stream.Materializer
+import me.hongchao.bitcoin4s.crypto.Hash
+import me.hongchao.bitcoin4s.external.HttpSender
+import me.hongchao.bitcoin4s.external.blockcypher.Api._
 import me.hongchao.bitcoin4s.script.Parser
+import me.hongchao.bitcoin4s.transaction.structure.{OutPoint, Hash => ScodecHash}
+import me.hongchao.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
 import tech.minna.playjson.macros.json
-import me.hongchao.bitcoin4s.crypto.Hash
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.Exception.allCatch
 
 // https://www.blockcypher.com/dev/bitcoin/#transaction-api
-class BlockCypherApi(httpSender: HttpSender)(
+class Api(httpSender: HttpSender)(
   implicit
   ec: ExecutionContext,
   materializer: Materializer
 ) {
-  def getTransaction(txId: String): Future[Transaction] = {
+  def getTransaction(txId: TxId): Future[Transaction] = {
     httpSender(HttpRequest(uri = rawTxUrl(txId))).flatMap { response =>
       transactionUnmarshaller(response.entity)
     }
   }
+
+  def getTransactionInput(txId: TxId, inputIndex: Int): Future[Option[TransactionInput]] = {
+    getTransaction(txId).map { transaction =>
+      allCatch.opt(transaction.inputs(inputIndex))
+    }
+  }
+
+  def getTransactionOutput(txId: TxId, outputIndex: Int): Future[Option[TransactionOutput]] = {
+    getTransaction(txId).map { transaction =>
+      allCatch.opt(transaction.outputs(outputIndex))
+    }
+  }
 }
 
-object BlockCypherApi {
+object Api {
 
   @json case class TransactionInput(
     prev_hash: String,
@@ -93,7 +106,7 @@ object BlockCypherApi {
     )
   }
 
-  protected def rawTxUrl(txId: String) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/$txId")
+  protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}")
 
   def parseTransaction(raw: String): Transaction = {
     Json.fromJson[Transaction](Json.parse(raw)) match {
