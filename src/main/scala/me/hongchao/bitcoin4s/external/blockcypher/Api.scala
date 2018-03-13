@@ -16,7 +16,6 @@ import scodec.bits.ByteVector
 import tech.minna.playjson.macros.json
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.Exception.allCatch
 
 // https://www.blockcypher.com/dev/bitcoin/#transaction-api
 class Api(httpSender: HttpSender)(
@@ -27,18 +26,6 @@ class Api(httpSender: HttpSender)(
   def getTransaction(txId: TxId): Future[Transaction] = {
     httpSender(HttpRequest(uri = rawTxUrl(txId))).flatMap { response =>
       transactionUnmarshaller(response.entity)
-    }
-  }
-
-  def getTransactionInput(txId: TxId, inputIndex: Int): Future[Option[TransactionInput]] = {
-    getTransaction(txId).map { transaction =>
-      allCatch.opt(transaction.inputs(inputIndex))
-    }
-  }
-
-  def getTransactionOutput(txId: TxId, outputIndex: Int): Future[Option[TransactionOutput]] = {
-    getTransaction(txId).map { transaction =>
-      allCatch.opt(transaction.outputs(outputIndex))
     }
   }
 }
