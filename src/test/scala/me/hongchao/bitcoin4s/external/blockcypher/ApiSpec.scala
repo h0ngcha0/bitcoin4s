@@ -150,7 +150,7 @@ class ApiSpec extends Spec with StrictLogging {
     val spendingTx = spendingTransaction.toTx
     val txIn = spendingTransaction.inputs(0)
     val txOut = creditingTransaction.outputs(0)
-    val scriptSig = parseHexString(txIn.script)
+    val scriptSig = txIn.script.map(parseHexString _).getOrElse(Seq.empty[ScriptElement])
     val scriptPubKey = parseHexString(txOut.script)
     val witnessesStack = txIn.witness.map { rawWitnesses =>
       rawWitnesses.reverse.flatMap { rawWitness =>
