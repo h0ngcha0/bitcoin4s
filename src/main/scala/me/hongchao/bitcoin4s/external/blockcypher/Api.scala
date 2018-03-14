@@ -35,10 +35,9 @@ object Api {
   @json case class TransactionInput(
     prev_hash: String,
     output_index: Int,
-    script: String,
+    script: Option[String],
     output_value: Long,
     sequence: Long,
-    addresses: List[String],
     script_type: String,
     age: Long,
     witness: Option[List[String]] = None
@@ -46,7 +45,9 @@ object Api {
     val prevTxHash = ScodecHash(ByteVector(Hash.fromHex(prev_hash)))
     def toTxIn = TxIn(
       previous_output = OutPoint(prevTxHash, output_index),
-      sig_script = ByteVector(Hash.fromHex(script)),
+      sig_script = script.map { s =>
+        ByteVector(Hash.fromHex(s))
+      }.getOrElse(ByteVector.empty),
       sequence = sequence
     )
   }
@@ -55,7 +56,6 @@ object Api {
     value: Long,
     script: String,
     spent_by: Option[String],
-    addresses: List[String],
     script_type: String
   ) {
     def toTxOut = TxOut(

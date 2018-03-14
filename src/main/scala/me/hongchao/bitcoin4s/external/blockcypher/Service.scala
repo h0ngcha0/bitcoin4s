@@ -49,7 +49,10 @@ class Service(api: Api)(
 
           getTransactionOutput(prevId, outputIndex).map { maybeTxOutput =>
             maybeTxOutput.map { txOutout =>
-              val scriptSig = Parser.parse(Hash.fromHex(txInput.script))
+              val scriptSig = txInput.script.map { s =>
+                Parser.parse(Hash.fromHex(s))
+              }.getOrElse(Seq.empty)
+
               val scriptPubKey = Parser.parse(Hash.fromHex(txOutout.script))
 
               val witnessesStack = txInput.witness.map { rawWitnesses =>
