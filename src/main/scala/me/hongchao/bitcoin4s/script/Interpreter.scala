@@ -137,11 +137,16 @@ object Interpreter {
     Left(error).asInstanceOf[InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]]]
   }
 
+  def tailRecMEvaluated(maybeValue: Option[Boolean]): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
+    StateT.pure(Right(maybeValue))
+  }
+
   def tailRecMEvaluated(value: Boolean): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
     StateT.pure(Right(Some(value)))
   }
 
-  def create(verbose: Boolean = false): InterpreterContext[Option[Boolean]] = {
+  // Steps: How many steps should the interpreter execute
+  def create(verbose: Boolean = false, maybeSteps: Option[Int] = None): InterpreterContext[Option[Boolean]] = {
     for {
       _ <- checkInvalidOpCode()
       _ <- checkDisabledOpCode()
@@ -149,27 +154,36 @@ object Interpreter {
       _ <- checkMaxScriptSize()
       _ <- checkIsPushOnly()
 
-      result <- interpretScript(verbose)
+      result <- interpretScript(verbose, maybeSteps)
     } yield result
   }
 
-  private def interpretScript(verbose: Boolean): InterpreterContext[Option[Boolean]] = {
-    tailRecM(None: Option[Boolean]) {
-      case Some(value) =>
-        tailRecMEvaluated(value)
+  private def interpretScript(verbose: Boolean, maybeSteps: Option[Int]): InterpreterContext[Option[Boolean]] = {
+    tailRecM((None: Option[Boolean], maybeSteps)) {
+      case (Some(value), maybeNewSteps@_) =>
+        tailRecMEvaluated(Some(value)).map(_.leftMap{(_, maybeNewSteps)})
 
-      case None =>
+      case (None, Some(newSteps)) if newSteps <= 0 =>
+        tailRecMEvaluated(None).map(_.leftMap{(_, Some(newSteps))})
+
+      case (None, maybeNewSteps) =>
         for {
-          state <- getState
-          _ <- checkOpCodeCount()
-          _ <- checkMaxStackSize()
-          result <- interpretOneOp(state, verbose)
-        } yield result
+          state  <- getState
+          _      <- checkOpCodeCount()
+          _      <- checkMaxStackSize()
+          result <- interpretOneOp(state, verbose, maybeNewSteps)
+        } yield {
+          result match {
+            case (value, maybeUpdatedSteps) =>
+              value.leftMap((_, maybeUpdatedSteps))
+          }
+        }
     }
   }
 
-  private def interpretOneOp(state: InterpreterState, verbose: Boolean): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
-    state.currentScript match {
+  import scala.language.existentials
+  private def interpretOneOp(state: InterpreterState, verbose: Boolean, steps: Option[Int]) = {
+    val result = state.currentScript match {
       case opCode :: tail =>
         val updatedContext = opCode match {
           case op: ArithmeticOp =>
@@ -308,6 +322,9 @@ object Interpreter {
             }
         }
     }
+
+    // Update the steps
+    result.map(v => (v, steps.map(_ - 1)))
   }
 
   private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {

@@ -10,7 +10,8 @@ import org.spongycastle.util.encoders.Hex
 import scala.io.Source
 import scala.util.control.Exception.allCatch
 
-class ScriptSpec extends Spec with ScriptTestRunner {
+// Run bitcoin core script_test.json test cases
+class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
 
   implicit class RichConfigValue(configValue: ConfigValue) {
     def toList(): List[ConfigValue] = {

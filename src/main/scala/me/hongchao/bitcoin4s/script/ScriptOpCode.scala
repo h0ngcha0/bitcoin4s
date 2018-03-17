@@ -13,6 +13,14 @@ trait ScriptElement {
 
 trait ScriptConstant extends ScriptElement {
   override def toString: String = s"ScriptConstant: $bytes"
+
+  override def equals(obj: scala.Any): Boolean = {
+    if (obj.isInstanceOf[ScriptConstant]) {
+      obj.asInstanceOf[ScriptConstant].bytes == bytes
+    } else {
+      false
+    }
+  }
 }
 
 object ScriptConstant {
@@ -38,6 +46,14 @@ trait ScriptNum extends ScriptConstant {
   def -  (that: Long) = ScriptNum(value - that)
 
   override def toString: String = s"ScriptNum($value)"
+
+  override def equals(obj: scala.Any): Boolean = {
+    if (obj.isInstanceOf[ScriptNum]) {
+      obj.asInstanceOf[ScriptNum].value == value
+    } else {
+      false
+    }
+  }
 }
 
 object ScriptNum {

@@ -15,7 +15,7 @@ import me.hongchao.bitcoin4s.transaction.structure.{Hash, OutPoint}
 
 import scala.reflect.ClassTag
 
-trait ScriptTestRunner extends StrictLogging { self: Spec =>
+trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
   sealed trait ExpectedResult extends Product {
     val name = productPrefix
     override def toString: String = name
