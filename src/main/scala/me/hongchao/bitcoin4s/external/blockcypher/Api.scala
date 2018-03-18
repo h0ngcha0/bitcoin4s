@@ -2,6 +2,7 @@ package me.hongchao.bitcoin4s.external.blockcypher
 
 import java.time.ZonedDateTime
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpRequest, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.Materializer
@@ -18,17 +19,44 @@ import tech.minna.playjson.macros.json
 import scala.concurrent.{ExecutionContext, Future}
 
 // https://www.blockcypher.com/dev/bitcoin/#transaction-api
+trait ApiInterface {
+  def getTransaction(txId: TxId): Future[Transaction]
+}
+
 class Api(httpSender: HttpSender)(
   implicit
   ec: ExecutionContext,
   materializer: Materializer
-) {
-  def getTransaction(txId: TxId): Future[Transaction] = {
+) extends ApiInterface {
+  override def getTransaction(txId: TxId): Future[Transaction] = {
     httpSender(HttpRequest(uri = rawTxUrl(txId))).flatMap { response =>
       transactionUnmarshaller(response.entity)
     }
   }
 }
+
+class CachedApi(api: Api)(
+  implicit
+  system: ActorSystem,
+  ec: ExecutionContext,
+) extends ApiInterface {
+  implicit val transactionCacheActor = system.actorOf(TransactionCacheActor.props())
+
+  override def getTransaction(txId: TxId): Future[Transaction] = {
+    TransactionCacheActor.getTransaction(txId).flatMap { cachedTx =>
+      cachedTx match {
+        case None =>
+          api.getTransaction(txId).map { freshTx =>
+            TransactionCacheActor.setTransaction(txId, freshTx)
+            freshTx
+          }
+        case Some(tx) =>
+          Future.successful(tx)
+      }
+    }
+  }
+}
+
 
 object Api {
 

@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer}
 import com.typesafe.scalalogging.StrictLogging
 import me.hongchao.bitcoin4s.external.HttpSender
-import me.hongchao.bitcoin4s.external.blockcypher.{Api, Service}
+import me.hongchao.bitcoin4s.external.blockcypher.{Api, CachedApi, Service}
 
 trait Boot extends StrictLogging {
   implicit val system: ActorSystem = ActorSystem("bitcoin4s")
@@ -19,7 +19,8 @@ trait Boot extends StrictLogging {
 
   val httpSender = new HttpSender()
   val blockcypherApi = new Api(httpSender)
-  val blockcypherService = new Service(blockcypherApi)
+  val cachedBlockcypherApi = new CachedApi(blockcypherApi)
+  val blockcypherService = new Service(cachedBlockcypherApi)
 
   val routes = new Routes(blockcypherService)
 }

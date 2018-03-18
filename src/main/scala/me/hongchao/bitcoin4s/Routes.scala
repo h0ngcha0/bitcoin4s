@@ -19,11 +19,16 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
                 complete(blockcypherService.getTransactionInput(txId, inputIndex))
               }
             } ~
-            pathPrefix("interpret") {
-              rejectEmptyResponse {
-                complete(blockcypherService.interpret(txId, inputIndex))
+              pathPrefix("interpret") {
+                rejectEmptyResponse {
+                  complete(blockcypherService.interpret(txId, inputIndex))
+                }
               }
-            }
+/*              pathPrefix("interpret-with-steps") {
+                rejectEmptyResponse {
+                  complete(blockcypherService.interpret(txId, inputIndex))
+                }
+              }*/
           }
         } ~
         pathPrefix("output") {

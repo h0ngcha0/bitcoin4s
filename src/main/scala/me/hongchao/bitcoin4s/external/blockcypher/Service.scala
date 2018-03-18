@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
 
 
-class Service(api: Api)(
+class Service(api: ApiInterface)(
   implicit
   ec: ExecutionContext,
   materializer: Materializer
@@ -37,7 +37,11 @@ class Service(api: Api)(
     }
   }
 
-  def interpret(txId: TxId, inputIndex: Int): Future[Option[Option[Boolean]]] = {
+  def interpret(
+    txId: TxId,
+    inputIndex: Int,
+    flags: Seq[ScriptFlag] = Seq(ScriptFlag.SCRIPT_VERIFY_P2SH, ScriptFlag.SCRIPT_VERIFY_WITNESS)
+  ): Future[Option[Option[Boolean]]] = {
     getTransaction(txId).flatMap { spendingTx =>
 
       val maybeTxInput = allCatch.opt(spendingTx.inputs(inputIndex))
@@ -62,9 +66,6 @@ class Service(api: Api)(
               }
 
               val amount = txOutout.value
-
-              // FIXME: make flags configurable
-              val flags = Seq(ScriptFlag.SCRIPT_VERIFY_P2SH, ScriptFlag.SCRIPT_VERIFY_WITNESS)
               val sigVersion = if (witnessesStack.isEmpty) SIGVERSION_BASE else SIGVERSION_WITNESS_V0
 
               val initialState = InterpreterState(

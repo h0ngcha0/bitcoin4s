@@ -77,6 +77,9 @@ class StepExecutionSpec extends Spec {
     fifthStep.altStack shouldBe empty
     fifthStep.executionStage shouldBe ExecutingScriptPubKey
     fifthStep.result shouldBe Some(true)
+
+    val withoutStepping = execScript(scriptPubKey, scriptSig, maybeSteps = None)
+    fifthStep shouldEqual withoutStepping
   }
 
   private def execScript(scriptPubKey: Seq[ScriptElement], scriptSig: Seq[ScriptElement], maybeSteps: Option[Int]): InterpreterErrorHandler[(InterpreterState, Option[Boolean])] = {
