@@ -20,31 +20,38 @@ class Service(api: ApiInterface)(
   materializer: Materializer
 ) extends StrictLogging {
 
-  def getTransaction(txId: TxId): Future[Transaction] = {
+  def getTransaction(txId: TxId): Future[Option[Transaction]] = {
     logger.info(s"Fetching transaction $txId")
     api.getTransaction(txId)
   }
 
   def getTransactionInput(txId: TxId, inputIndex: Int): Future[Option[TransactionInput]] = {
-    getTransaction(txId).map { transaction =>
-      allCatch.opt(transaction.inputs(inputIndex))
+    getTransaction(txId).map { maybeTransaction =>
+      maybeTransaction.flatMap { transaction =>
+        allCatch.opt(transaction.inputs(inputIndex))
+      }
     }
   }
 
   def getTransactionOutput(txId: TxId, outputIndex: Int): Future[Option[TransactionOutput]] = {
-    getTransaction(txId).map { transaction =>
-      allCatch.opt(transaction.outputs(outputIndex))
+    getTransaction(txId).map { maybeTransaction =>
+      maybeTransaction.flatMap { transaction =>
+        allCatch.opt(transaction.outputs(outputIndex))
+      }
     }
   }
 
   def interpret(
     txId: TxId,
     inputIndex: Int,
+    maybeSteps: Option[Int] = None,
     flags: Seq[ScriptFlag] = Seq(ScriptFlag.SCRIPT_VERIFY_P2SH, ScriptFlag.SCRIPT_VERIFY_WITNESS)
   ): Future[Option[InterpreterOutcome]] = {
-    getTransaction(txId).flatMap { spendingTx =>
+    getTransaction(txId).flatMap { maybeSpendingTx =>
 
-      val maybeTxInput = allCatch.opt(spendingTx.inputs(inputIndex))
+      val maybeTxInput = maybeSpendingTx.flatMap { spendingTx =>
+        allCatch.opt(spendingTx.inputs(inputIndex))
+      }
 
       maybeTxInput match {
         case Some(txInput) =>
@@ -73,13 +80,13 @@ class Service(api: ApiInterface)(
                 scriptSig = scriptSig,
                 scriptWitnessStack = witnessesStack,
                 flags = flags,
-                transaction = spendingTx.toTx,
+                transaction = maybeSpendingTx.get.toTx, // Has to exist
                 inputIndex = inputIndex,
                 amount = amount,
                 sigVersion = sigVersion
               )
 
-              val outcome = Interpreter.create(verbose = true).run(initialState)
+              val outcome = Interpreter.create(verbose = false, maybeSteps).run(initialState)
 
               logger.info(s"Interpreter finished with $outcome")
 

@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 // https://www.blockcypher.com/dev/bitcoin/#transaction-api
 trait ApiInterface {
-  def getTransaction(txId: TxId): Future[Transaction]
+  def getTransaction(txId: TxId): Future[Option[Transaction]]
 }
 
 class Api(httpSender: HttpSender)(
@@ -28,9 +28,13 @@ class Api(httpSender: HttpSender)(
   ec: ExecutionContext,
   materializer: Materializer
 ) extends ApiInterface {
-  override def getTransaction(txId: TxId): Future[Transaction] = {
+  override def getTransaction(txId: TxId): Future[Option[Transaction]] = {
     httpSender(HttpRequest(uri = rawTxUrl(txId))).flatMap { response =>
-      transactionUnmarshaller(response.entity)
+      if (response.status.isSuccess()) {
+        transactionUnmarshaller(response.entity).map(Option.apply _)
+      } else {
+        Future.successful(None)
+      }
     }
   }
 }
@@ -42,16 +46,21 @@ class CachedApi(api: Api)(
 ) extends ApiInterface {
   implicit val transactionCacheActor = system.actorOf(TransactionCacheActor.props())
 
-  override def getTransaction(txId: TxId): Future[Transaction] = {
+  override def getTransaction(txId: TxId): Future[Option[Transaction]] = {
     TransactionCacheActor.getTransaction(txId).flatMap { cachedTx =>
       cachedTx match {
         case None =>
-          api.getTransaction(txId).map { freshTx =>
-            TransactionCacheActor.setTransaction(txId, freshTx)
-            freshTx
+          api.getTransaction(txId).map { maybeFreshTx =>
+            maybeFreshTx match {
+              case Some(freshTx) =>
+                TransactionCacheActor.setTransaction(txId, freshTx)
+                Some(freshTx)
+              case None =>
+                None
+            }
           }
         case Some(tx) =>
-          Future.successful(tx)
+          Future.successful(Some(tx))
       }
     }
   }

@@ -9,35 +9,33 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
 
   val transactionRoute = pathPrefix("transaction") {
     pathPrefix(Segment.map(TxId.apply)) { txId =>
-      pathEndOrSingleSlash {
-        complete(blockcypherService.getTransaction(txId))
-      } ~
-        pathPrefix("input") {
-          pathPrefix(IntNumber) { inputIndex =>
-            pathEndOrSingleSlash {
-              rejectEmptyResponse {
-                complete(blockcypherService.getTransactionInput(txId, inputIndex))
-              }
-            } ~
-              pathPrefix("interpret") {
-                rejectEmptyResponse {
-                  complete(blockcypherService.interpret(txId, inputIndex))
-                }
-              }
-/*              pathPrefix("interpret-with-steps") {
-                rejectEmptyResponse {
-                  complete(blockcypherService.interpret(txId, inputIndex))
-                }
-              }*/
-          }
+      rejectEmptyResponse {
+        pathEndOrSingleSlash {
+          complete(blockcypherService.getTransaction(txId))
         } ~
-        pathPrefix("output") {
-          pathPrefix(IntNumber) { inputIndex =>
-            rejectEmptyResponse {
+          pathPrefix("input") {
+            pathPrefix(IntNumber) { inputIndex =>
+              pathEndOrSingleSlash {
+                complete(blockcypherService.getTransactionInput(txId, inputIndex))
+              } ~
+                pathPrefix("interpret") {
+                  pathEndOrSingleSlash {
+                    complete(blockcypherService.interpret(txId, inputIndex))
+                  }
+                } ~
+                pathPrefix("interpret-with-steps" / IntNumber) { number =>
+                  pathEndOrSingleSlash {
+                    complete(blockcypherService.interpret(txId, inputIndex, Some(number)))
+                  }
+                }
+            }
+          } ~
+          pathPrefix("output") {
+            pathPrefix(IntNumber) { inputIndex =>
               complete(blockcypherService.getTransactionOutput(txId, inputIndex))
             }
           }
-        }
+      }
     }
   }
 
