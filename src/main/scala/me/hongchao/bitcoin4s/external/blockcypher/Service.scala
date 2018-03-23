@@ -12,7 +12,7 @@ import org.spongycastle.util.encoders.Hex
 import scala.util.control.Exception.allCatch
 import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
-
+import me.hongchao.bitcoin4s.ApiModels.{InterpreterOutcome, InterpreterResultOut, InterpreterStateOut}
 
 class Service(api: ApiInterface)(
   implicit
@@ -41,7 +41,7 @@ class Service(api: ApiInterface)(
     txId: TxId,
     inputIndex: Int,
     flags: Seq[ScriptFlag] = Seq(ScriptFlag.SCRIPT_VERIFY_P2SH, ScriptFlag.SCRIPT_VERIFY_WITNESS)
-  ): Future[Option[Option[Boolean]]] = {
+  ): Future[Option[InterpreterOutcome]] = {
     getTransaction(txId).flatMap { spendingTx =>
 
       val maybeTxInput = allCatch.opt(spendingTx.inputs(inputIndex))
@@ -85,7 +85,10 @@ class Service(api: ApiInterface)(
 
               outcome.map {
                 case (finalState@_, interpretedResult) =>
-                  interpretedResult
+                  InterpreterOutcome(
+                    result = InterpreterResultOut.fromInterpreterResult(interpretedResult),
+                    state = InterpreterStateOut.fromInterpreterState(finalState)
+                  )
               } match {
                 case Left(e) =>
                   throw e

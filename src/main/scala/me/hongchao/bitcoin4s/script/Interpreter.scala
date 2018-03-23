@@ -206,6 +206,8 @@ object Interpreter {
             op.interpret(verbose)
           case op: StackOp =>
             op.interpret(verbose)
+          case _ =>
+            abort(GeneralError(OP_UNKNOWN, state))
         }
 
         for {

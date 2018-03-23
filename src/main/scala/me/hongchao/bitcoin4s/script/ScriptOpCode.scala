@@ -7,7 +7,7 @@ import scala.collection.mutable.ArrayBuffer
 
 // Reference: https://en.bitcoin.it/wiki/Script
 
-trait ScriptElement {
+sealed trait ScriptElement {
   def bytes: Seq[Byte]
 }
 
