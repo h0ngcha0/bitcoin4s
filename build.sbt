@@ -2,7 +2,7 @@ enablePlugins(JavaAppPackaging)
 
 name := "bitcoin4s"
 organization := "me.hongchao"
-version := "0.0.3"
+version := "0.0.4"
 
 scalaVersion in ThisBuild := "2.12.4"
 
