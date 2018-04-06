@@ -50,6 +50,8 @@ object ApiModels {
     state: InterpreterStateOut
   )
 
+  case object TransactionInputNotFound extends RuntimeException("Transaction input not found")
+
   implicit val interpretResultOutWriter: OWrites[InterpreterResultOut] = {
     owrites[InterpreterResultOut]((JsPath \ "type").format[String])
   }

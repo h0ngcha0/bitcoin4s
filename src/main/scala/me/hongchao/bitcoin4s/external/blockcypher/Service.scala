@@ -1,6 +1,8 @@
 package me.hongchao.bitcoin4s.external.blockcypher
 
+import akka.actor.Cancellable
 import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import com.typesafe.scalalogging.StrictLogging
 import me.hongchao.bitcoin4s.crypto.Hash
 import me.hongchao.bitcoin4s.external.blockcypher.Api.{Transaction, TransactionInput, TransactionOutput}
@@ -11,8 +13,10 @@ import org.spongycastle.util.encoders.Hex
 
 import scala.util.control.Exception.allCatch
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import cats.implicits._
-import me.hongchao.bitcoin4s.ApiModels.{InterpreterOutcome, InterpreterResultOut, InterpreterStateOut}
+import me.hongchao.bitcoin4s.ApiModels.InterpreterResultOut.NoResult
+import me.hongchao.bitcoin4s.ApiModels.{InterpreterOutcome, InterpreterResultOut, InterpreterStateOut, TransactionInputNotFound}
 
 class Service(api: ApiInterface)(
   implicit
@@ -111,4 +115,21 @@ class Service(api: ApiInterface)(
     }
   }
 
+  def interpretStream(txId: TxId, inputIndex: Int): Source[InterpreterOutcome, Cancellable] = {
+    case object Tick
+
+    Source
+      .tick(1.second, 2.seconds, Tick)
+      .zipWithIndex
+      .mapAsync(1) {
+        case (_, step) =>
+          interpret(txId, inputIndex, Some(step.toInt))
+      }
+      .map { maybeInterpreterOutcome =>
+        maybeInterpreterOutcome.getOrElse {
+          throw TransactionInputNotFound
+        }
+      }
+      .takeWhile(_.result == NoResult, inclusive = true)
+  }
 }

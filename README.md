@@ -197,7 +197,7 @@ bitcoin4s git:(master) ✗ curl localhost:8888/transaction/85db1042f083a8fd6f96f
 ```
 
 ##### Example 2:
-Same example as above, but only execute one step and return the intermediate interpreter state.
+Same example as example 1, but only execute one step and return the intermediate interpreter state.
 
 ```bash
 bitcoin4s git:(master) ✗ curl localhost:8888/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/interpret-with-steps/1
@@ -255,6 +255,21 @@ bitcoin4s git:(master) ✗ curl localhost:8888/transaction/85db1042f083a8fd6f96f
     }
   }
 }
+```
+
+##### Example 3
+Same example as example 1, but stream each of the execution step back using websocket.
+
+```bash
+(⎈ |internal:default)➜  blockchain wscat -c ws://localhost:8888/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/stream-interpret
+connected (press CTRL+C to quit)
+< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"stack":[],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
+< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"stack":[{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]}],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
+< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[],"stack":[{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]}],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
+...
+...
+< {"result":{"type":"Result","value":true},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[],"stack":[{"type":"ScriptNum","value":1}],"altStack":[],"stage":{"type":"ExecutingScriptPubKey"}}}
+disconnected
 ```
 
 How to use
