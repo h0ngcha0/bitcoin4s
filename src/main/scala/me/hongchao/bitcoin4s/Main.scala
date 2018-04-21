@@ -15,7 +15,7 @@ object Main extends App with Boot {
 
   serverFuture.onComplete {
     case Success(Http.ServerBinding(address)) =>
-      logger.info(s"Http server bound to $address")
+      logger.info(s"Bitcoin4s http server bound to $address")
 
     case Failure(ex) =>
       logger.error(s"Failed to bind for webhooks server", ex)
