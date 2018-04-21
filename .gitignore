@@ -7,3 +7,5 @@ project/target/
 logs/
 .ensime_cache
 ensime.sbt
+yarn-error.log
+.yarn

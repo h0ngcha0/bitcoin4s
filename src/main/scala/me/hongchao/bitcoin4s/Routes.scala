@@ -10,6 +10,14 @@ import me.hongchao.bitcoin4s.transaction.TxId
 import play.api.libs.json.{Json, Writes}
 
 class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
+  val clientRoute = {
+    pathSingleSlash {
+      getFromResource("client/index.html")
+    } ~
+      pathPrefix("static") {
+        getFromResourceDirectory("client/static")
+      }
+  }
 
   val transactionRoute = pathPrefix("transaction") {
     pathPrefix(Segment.map(TxId.apply)) { txId =>
@@ -62,6 +70,10 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
             }
           }
       }
+  }
+
+  def apply() = {
+    clientRoute ~ transactionRoute
   }
 
   private def toJsonTextMessage[T: Writes](message: T): TextMessage.Strict = {

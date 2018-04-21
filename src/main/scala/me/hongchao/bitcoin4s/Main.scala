@@ -8,7 +8,7 @@ object Main extends App with Boot {
   import system.dispatcher
 
   val serverFuture = Http().bindAndHandle(
-    handler = routes.transactionRoute,
+    handler = routes(),
     interface = "0.0.0.0",
     port = 8888
   )

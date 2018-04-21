@@ -1,0 +1,35 @@
+{
+  "name": "bitcoin4s-client",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "react-scripts": "^1.0.14"
+  },
+  "dependencies": {
+    "axios": "^0.17.0",
+    "bytes": "^3.0.0",
+    "classnames": "^2.2.5",
+    "flexboxgrid": "^6.3.1",
+    "lodash": "^4.17.4",
+    "material-ui": "^0.19.4",
+    "material-ui-icons": "^1.0.0-beta.17",
+    "material-ui-next": "npm:material-ui@next",
+    "moment": "^2.19.1",
+    "prop-types": "^15.6.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "react-error-overlay": "^3.0.0",
+    "react-helmet": "^5.2.0",
+    "react-router": "^4.2.0",
+    "react-router-dom": "^4.2.2",
+    "react-tap-event-plugin": "^3.0.2",
+    "recompose": "^0.26.0"
+  },
+  "scripts": {
+    "start": "./node_modules/.bin/react-scripts start",
+    "build": "./node_modules/.bin/react-scripts build",
+    "test": "./node_modules/.bin/react-scripts test --env=jsdom",
+    "eject": "./node_modules/.bin/react-scripts eject"
+  },
+  "proxy": "http://localhost:9050"
+}

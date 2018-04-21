@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 enablePlugins(JavaAppPackaging)
 
 name := "bitcoin4s"
@@ -48,6 +50,69 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("minna-technologies", "maven"),
   Resolver.bintrayRepo("minna-technologies", "others-maven")
 )
+
+enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+
+dockerfile in docker := {
+  val appSource = stage.value
+  val appTarget = "/app"
+  val logsDir = appTarget + "/logs"
+
+  new Dockerfile {
+    from("openjdk:8-jre")
+    expose(8888)
+    workDir(appTarget)
+    runRaw(s"mkdir -p $logsDir && chown daemon:daemon $logsDir")
+    user("daemon")
+    volume(logsDir)
+    entryPoint(s"$appTarget/bin/${executableScriptName.value}")
+    copy(appSource, appTarget)
+  }
+}
+
+val baseImageName = "liuhongchao/bitcoin4s"
+imageNames in docker := {
+  val branchNameOption = sys.env.get("CI_COMMIT_REF_NAME").orElse(Option(git.gitCurrentBranch.value))
+  Seq(
+    branchNameOption.filter(_ == "master").map { _ =>
+      ImageName(baseImageName + ":latest")
+    },
+    branchNameOption.map { branch =>
+      ImageName(baseImageName + ":" + branch)
+    },
+    git.gitHeadCommit.value.map { commitId =>
+      ImageName(baseImageName + ":" + commitId)
+    }
+  ).flatten
+}
+
+val buildFrontend = taskKey[Unit]("Build frontend")
+buildFrontend := {
+  val exitCode = scala.sys.process.Process(Seq("yarn", "run", "build"), file("client")).run().exitValue()
+  if (exitCode != 0) {
+    sys.error(s"Client build failed with exit code $exitCode")
+  }
+}
+
+stage := {
+  stage.dependsOn(buildFrontend).value
+}
+
+resourceGenerators in Compile += Def.task {
+  val resourceBase = (resourceManaged in Compile).value / "client"
+  val sourceBase = file("client") / "build"
+  IO.delete(resourceBase)
+
+  sourceBase.allPaths.get.filter(_.isFile).map { file =>
+    val relative = file.relativeTo(sourceBase).get
+    val resourceFile = resourceBase / relative.toString
+
+    Files.createDirectories(resourceFile.toPath.getParent)
+    Files.copy(file.toPath, resourceFile.toPath)
+
+    resourceFile
+  }
+}.taskValue
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
 
