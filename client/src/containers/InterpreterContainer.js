@@ -1,6 +1,5 @@
-import _ from 'lodash';
 import React from 'react';
-import {TextField, RaisedButton, Paper} from 'material-ui';
+import {TextField, RaisedButton, Paper, Subheader} from 'material-ui';
 import InterpreterComponent from "../components/InterpreterComponent";
 
 import {interpretTransactionInput} from '../api';
@@ -9,8 +8,7 @@ export default class InterpreterContainer extends React.Component {
   static propTypes = {};
 
   state = {
-    pubKeyScript: ['OP_ADD'],
-    sigScript: ['OP_MINUS'],
+    interpretResult: undefined,
     inputIndex: 0,
     transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac"
   };
@@ -31,16 +29,14 @@ export default class InterpreterContainer extends React.Component {
 
   interpreterScript = () => {
     interpretTransactionInput(this.state.transactionId, this.state.inputIndex)
-      .then((stuff) => {
-
-        console.log(_.map(stuff.state.scriptPubKey, (op) => op.type));
+      .then((interpretResponse) => {
         this.setState({
           ...this.state,
-          pubKeyScript: _.map(stuff.state.scriptPubKey, (op) => op.type),
-          sigScript: _.map(stuff.state.scriptSig, (op) => op.type)
+          interpretResult: interpretResponse
         });
       })
       .catch((error) => {
+        // TODO: handle error
         console.log(error);
       });
   };
@@ -50,6 +46,7 @@ export default class InterpreterContainer extends React.Component {
     return (
       <div className="container">
         <Paper zDepth={1} className={'application-definition'}>
+          <Subheader style={{paddingLeft: 0}}>Bitcoin Script Interpreter</Subheader>
           <form
             className="container"
             onSubmit={ (event) => {
@@ -79,7 +76,6 @@ export default class InterpreterContainer extends React.Component {
                 value={this.state.inputIndex}
                 onChange={ (event) => {this.handleSetTransactionInputIndex(event.target.value)} }
                 type="number"
-                //className={classes.textField}
                 InputLabelProps={{
                   shrink: true,
                 }}
@@ -90,7 +86,7 @@ export default class InterpreterContainer extends React.Component {
               <RaisedButton primary type="submit" label="Interpret" />
             </div>
           </form>
-          <InterpreterComponent pubKeyScript={this.state.pubKeyScript}  sigScript={this.state.sigScript} />
+          {this.state.interpretResult ? <InterpreterComponent interpretResult={this.state.interpretResult} /> : null}
         </Paper>
       </div>
     );
