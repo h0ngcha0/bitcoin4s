@@ -52,7 +52,7 @@ export default class InterpreterContainer extends React.Component {
 
   interpretScriptWebsocket = () => {
     const uri = new URI({
-      protocol: window.location.protocol === 'https' ? 'wss' : 'ws',
+      protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
       hostname: window.location.host,
       path: `/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/stream-interpret`
     })
@@ -64,7 +64,6 @@ export default class InterpreterContainer extends React.Component {
     this.webSocket.onmessage = event => {
       const interpretResult = JSON.parse(event.data);
 
-      console.log('result', interpretResult);
       this.setState({
         ...this.state,
         interpretResult: interpretResult
