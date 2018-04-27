@@ -1,7 +1,7 @@
 import React from 'react';
 import {TextField, RaisedButton, Paper, Subheader} from 'material-ui';
 import InterpreterComponent from "../components/InterpreterComponent";
-
+import URI from 'urijs';
 import {interpretTransactionInput} from '../api';
 
 export default class InterpreterContainer extends React.Component {
@@ -27,7 +27,7 @@ export default class InterpreterContainer extends React.Component {
     });
   };
 
-  interpreterScript = () => {
+  interpretScript = () => {
     interpretTransactionInput(this.state.transactionId, this.state.inputIndex)
       .then((interpretResponse) => {
         this.setState({
@@ -41,6 +41,39 @@ export default class InterpreterContainer extends React.Component {
       });
   };
 
+  webSocket;
+
+  closeConnection = () => {
+    if (this.webSocket) {
+      this.webSocket.close();
+      this.webSocket = null;
+    }
+  };
+
+  interpretScriptWebsocket = () => {
+    const uri = new URI({
+      protocol: window.location.protocol === 'https' ? 'wss' : 'ws',
+      hostname: window.location.host,
+      path: `/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/stream-interpret`
+    })
+
+    this.closeConnection();
+
+    this.webSocket = new WebSocket(uri.toString());
+
+    this.webSocket.onmessage = event => {
+      const interpretResult = JSON.parse(event.data);
+
+      console.log('result', interpretResult);
+      this.setState({
+        ...this.state,
+        interpretResult: interpretResult
+      });
+    };
+
+    this.webSocket.onclose = this.closeConnection;
+  };
+
   render() {
 
     return (
@@ -52,7 +85,7 @@ export default class InterpreterContainer extends React.Component {
             onSubmit={ (event) => {
               event.preventDefault();
               event.stopPropagation();
-              this.interpreterScript();
+              this.interpretScriptWebsocket();
             }}
             noValidate
             autoComplete="off"
