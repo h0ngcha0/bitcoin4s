@@ -13,7 +13,8 @@ class InterpreterContainer extends React.Component {
     interpretResult: undefined,
     inputIndex: 0,
     transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac",
-    loading: false
+    loading: false,
+    executingScript: false
   };
 
   handleSetTransactionId = (txId) => {
@@ -57,6 +58,11 @@ class InterpreterContainer extends React.Component {
     if (this.webSocket) {
       this.webSocket.close();
       this.webSocket = null;
+
+      this.setState({
+        ...this.state,
+        executingScript: false
+      });
     }
   };
 
@@ -69,6 +75,13 @@ class InterpreterContainer extends React.Component {
 
     this.closeConnection();
 
+    this.setState({
+      ...this.state,
+      interpretResult: undefined,
+      loading: true,
+      executingScript: true
+    });
+
     this.webSocket = new WebSocket(uri.toString());
 
     this.webSocket.onmessage = event => {
@@ -76,7 +89,8 @@ class InterpreterContainer extends React.Component {
 
       this.setState({
         ...this.state,
-        interpretResult: interpretResult
+        interpretResult: interpretResult,
+        loading: false
       });
     };
 
@@ -126,19 +140,18 @@ class InterpreterContainer extends React.Component {
             </div>
             <div style={ {'margin-top': '16px'} }>
               {
-                true ?
+                this.state.loading ?
                   <GridLoader
                     color={ this.props.muiTheme.palette.primary1Color }
-                    loading={ true }
+                    loading={ this.state.loading }
                   /> :
-                  <RaisedButton primary type="submit" label="Interpret" />
+                  <RaisedButton primary type="submit" label="Interpret" disabled={ this.state.executingScript }/>
               }
             </div>
           </form>
           {
             this.state.interpretResult ?
               <InterpreterComponent interpretResult={this.state.interpretResult} /> : null
-
           }
         </Paper>
       </div>
