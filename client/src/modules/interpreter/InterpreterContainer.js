@@ -1,16 +1,19 @@
 import React from 'react';
 import {TextField, RaisedButton, Paper, Subheader} from 'material-ui';
-import InterpreterComponent from "../components/InterpreterComponent";
+import InterpreterComponent from "./InterpreterComponent";
 import URI from 'urijs';
-import {interpretTransactionInput} from '../api';
+import {interpretTransactionInput} from '../../api';
+import { GridLoader } from 'react-spinners';
+import muiThemeable from 'material-ui/styles/muiThemeable';
 
-export default class InterpreterContainer extends React.Component {
+class InterpreterContainer extends React.Component {
   static propTypes = {};
 
   state = {
     interpretResult: undefined,
     inputIndex: 0,
-    transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac"
+    transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac",
+    loading: false
   };
 
   handleSetTransactionId = (txId) => {
@@ -28,10 +31,17 @@ export default class InterpreterContainer extends React.Component {
   };
 
   interpretScript = () => {
+    this.setState({
+      ...this.state,
+      interpretResult: undefined,
+      loading: true
+    });
+
     interpretTransactionInput(this.state.transactionId, this.state.inputIndex)
       .then((interpretResponse) => {
         this.setState({
           ...this.state,
+          loading: false,
           interpretResult: interpretResponse
         });
       })
@@ -55,7 +65,7 @@ export default class InterpreterContainer extends React.Component {
       protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
       hostname: window.location.host,
       path: `/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/stream-interpret`
-    })
+    });
 
     this.closeConnection();
 
@@ -114,11 +124,22 @@ export default class InterpreterContainer extends React.Component {
                 margin="normal"
               />
             </div>
-            <div>
-              <RaisedButton primary type="submit" label="Interpret" />
+            <div style={ {'margin-top': '16px'} }>
+              {
+                true ?
+                  <GridLoader
+                    color={ this.props.muiTheme.palette.primary1Color }
+                    loading={ true }
+                  /> :
+                  <RaisedButton primary type="submit" label="Interpret" />
+              }
             </div>
           </form>
-          {this.state.interpretResult ? <InterpreterComponent interpretResult={this.state.interpretResult} /> : null}
+          {
+            this.state.interpretResult ?
+              <InterpreterComponent interpretResult={this.state.interpretResult} /> : null
+
+          }
         </Paper>
       </div>
     );
@@ -127,3 +148,5 @@ export default class InterpreterContainer extends React.Component {
   componentDidMount() {
   }
 }
+
+export default muiThemeable()(InterpreterContainer);

@@ -1,6 +1,6 @@
 import {HashRouter, Redirect, Route, Switch} from 'react-router-dom';
 import React from 'react';
-import InterpreterContainer from './InterpreterContainer';
+import InterpreterContainer from '../modules/interpreter/InterpreterContainer';
 
 const AppRouter = () => {
   return (

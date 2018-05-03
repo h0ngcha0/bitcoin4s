@@ -22,6 +22,7 @@
     "react-helmet": "^5.2.0",
     "react-router": "^4.2.0",
     "react-router-dom": "^4.2.2",
+    "react-spinners": "^0.3.2",
     "react-tap-event-plugin": "^3.0.2",
     "recompose": "^0.26.0",
     "urijs": "^1.18.12",
