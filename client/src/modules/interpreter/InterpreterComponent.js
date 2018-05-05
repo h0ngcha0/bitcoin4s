@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
+import VirtualList from 'react-tiny-virtual-list';
 
 const InterpreterContainer = ({interpretResult}) => {
   const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
@@ -14,6 +15,8 @@ const InterpreterContainer = ({interpretResult}) => {
   const result = interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult';
   const executionDescription = result === 'NoResult' ? `Executing ${stage.type}` : `Execution finished with result: ${result}`;
 
+  const data = ['A', 'B', 'C', 'D', 'E', 'F'];
+
   return (
     <div>
       <p><i>{executionDescription}</i></p>
@@ -27,6 +30,19 @@ const InterpreterContainer = ({interpretResult}) => {
       <p>{formattedPubKeyScript}</p>
       <p><b>ScriptSig:</b></p>
       <p>{formattedSigScript}</p>
+
+
+      <VirtualList
+        width='100%'
+        height={600}
+        itemCount={data.length}
+        itemSize={50} // Also supports variable heights (array or function getter)
+        renderItem={({index, style}) =>
+          <div key={index} style={style}> // The style property contains the item's absolute position
+            Letter: {data[index]}, Row: #{index}
+          </div>
+        }
+      />
     </div>
   )
 };
