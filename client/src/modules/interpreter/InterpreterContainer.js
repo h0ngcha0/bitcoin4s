@@ -10,7 +10,7 @@ class InterpreterContainer extends React.Component {
   static propTypes = {};
 
   state = {
-    interpretResult: undefined,
+    interpretResult: {state: {scriptPubKey: [], scriptSig: [], currentScript: [], stack: [], altStack: [], stage: 'Stage'}, result: {}},
     inputIndex: 0,
     transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac",
     loading: false,
@@ -98,7 +98,6 @@ class InterpreterContainer extends React.Component {
   };
 
   render() {
-
     return (
       <div className="container">
         <Paper zDepth={1} className={'application-definition'}>

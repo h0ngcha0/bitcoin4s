@@ -63,3 +63,35 @@ a {
 .bold {
   font-weight: bold;
 }
+
+.interpret-button {
+  margin-top: 16px;
+}
+
+.box {
+  width: 100px;
+  height: 100px;
+  background: red;
+  transform-origin: 50% 50%;
+}
+
+.ScriptOpCodeList {
+  margin: 0;
+  background: #FFF;
+  border-radius: 2px;
+  box-shadow:
+    0 2px 2px 0 rgba(0,0,0,.14),
+    0 3px 1px -2px rgba(0,0,0,.2),
+    0 1px 5px 0 rgba(0,0,0,.12);
+}
+
+.OpCode {
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 1px solid #EEE;
+  line-height: 100px;
+}
+
+.OpCodeCrypto {
+  background: #0b97c4;
+}

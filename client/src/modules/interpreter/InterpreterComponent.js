@@ -2,49 +2,68 @@ import _ from 'lodash';
 import React from 'react';
 import VirtualList from 'react-tiny-virtual-list';
 
-const InterpreterContainer = ({interpretResult}) => {
-  const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
-  const getType = (op) => op.type;
-  const formatScript = (array) => '[ ' + _.join(_.map(array, getType), ', ') + ' ]';
+class InterpreterComponent extends React.Component {
 
-  const formattedPubKeyScript = formatScript(scriptPubKey);
-  const formattedSigScript = formatScript(scriptSig);
-  const formattedCurrentScript = formatScript(currentScript);
-  const formattedStack = formatScript(stack);
-  const formattedAltStack = formatScript(altStack);
-  const result = interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult';
-  const executionDescription = result === 'NoResult' ? `Executing ${stage.type}` : `Execution finished with result: ${result}`;
+  state = {
+    isVisible: true
+  };
 
-  const data = ['A', 'B', 'C', 'D', 'E', 'F'];
+  render() {
 
+    const {interpretResult} = this.props;
+
+    const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
+    const getType = (op) => op.type;
+    const formatScript = (array) => '[ ' + _.join(_.map(array, getType), ', ') + ' ]';
+
+    //const scriptPubKeyOps = _.map(scriptPubKey, getType);
+    const scriptPubKeyOps = ['OP_DUP', 'OP_CHECKSIG', 'OP_VERIFY', 'OP_1', 'OP_1', 'OP_1', 'OP_0', 'OP_2', 'OP_3', 'OP_4', 'OP_5', 'OP_'];
+    const scriptSigOps = _.map(scriptSig, getType);
+    const currentScriptOps = _.map(currentScript, getType);
+    const stackOps = _.map(stack, getType);
+    const altStackOps = _.map(altStack, getType);
+    const result = interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult';
+    const executionDescription = result === 'NoResult' ? `Executing ${stage.type}` : `Execution finished with result: ${result}`;
+
+    return (
+      <div>
+        <p><i>{executionDescription}</i></p>
+        <p><b>Current Script:</b></p>
+        <ScriptOpCodeList opCodes={currentScriptOps} />
+        <p><b>Current Stack:</b></p>
+        <ScriptOpCodeList opCodes={stackOps} />
+        <p><b>Current Alt Stack:</b></p>
+        <ScriptOpCodeList opCodes={altStackOps} />
+        <p><b>ScriptPubKey:</b></p>
+        <ScriptOpCodeList opCodes={scriptPubKeyOps} />
+        <p><b>ScriptSig:</b></p>
+        <ScriptOpCodeList opCodes={scriptSigOps} />
+
+      </div>
+    )
+  }
+};
+
+const ScriptOpCodeList = ({opCodes}) => {
   return (
-    <div>
-      <p><i>{executionDescription}</i></p>
-      <p><b>Current Script:</b></p>
-      <p>{formattedCurrentScript}</p>
-      <p><b>Current Stack:</b></p>
-      <p>{formattedStack}</p>
-      <p><b>Current Alt Stack:</b></p>
-      <p>{formattedAltStack}</p>
-      <p><b>ScriptPubKey:</b></p>
-      <p>{formattedPubKeyScript}</p>
-      <p><b>ScriptSig:</b></p>
-      <p>{formattedSigScript}</p>
-
-
-      <VirtualList
-        width='100%'
-        height={600}
-        itemCount={data.length}
-        itemSize={50} // Also supports variable heights (array or function getter)
-        renderItem={({index, style}) =>
-          <div key={index} style={style}> // The style property contains the item's absolute position
-            Letter: {data[index]}, Row: #{index}
-          </div>
+    <VirtualList
+      className='ScriptOpCodeList'
+      width='auto'
+      height={100}
+      scrollDirection='horizontal'
+      overscanCount={10}
+      itemCount={opCodes.length}
+      itemSize={150} // Also supports variable heights (array or function getter)
+      renderItem={({index, style}) => {
+          return (
+            <div className='OpCode OpCodeCrypto' key={index} style={style}>
+              {opCodes[index]}
+            </div>
+          )
         }
-      />
-    </div>
+      }
+    />
   )
 };
 
-export default InterpreterContainer;
+export default InterpreterComponent;
