@@ -60,7 +60,7 @@ object ApiModels {
     case scriptNum: ScriptNum =>
       Json.obj("type" -> "ScriptNum", "value" -> scriptNum.value)
     case scriptConstant: ScriptConstant =>
-      Json.obj("type" -> "ScriptContant", "value" -> scriptConstant.bytes)
+      Json.obj("type" -> "ScriptConstant", "value" -> scriptConstant.bytes)
     case scriptOpcode: ScriptOpCode =>
       Json.obj("type" -> scriptOpcode.name, "value" -> scriptOpcode.value)
   }

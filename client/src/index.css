@@ -92,6 +92,50 @@ a {
   line-height: 100px;
 }
 
-.OpCodeCrypto {
+.CryptoOps {
   background: #0b97c4;
+}
+
+.StackOps {
+  background: #23c426;
+}
+
+.ConstantOps {
+  background: #c4c211;
+}
+
+.FlowControlOps {
+  background: #c42db3;
+}
+
+.BitwiseLogicOps {
+  background: #4ac4b2;
+}
+
+.ArithmeticOps {
+  background: #c45f1e;
+}
+
+.LocktimeOps {
+  background: #c40a46;
+}
+
+.ReservedOps {
+  background: #bbbbc4;
+}
+
+.ConstantOps {
+  background: #77c427;
+}
+
+.Values {
+  background: #18c47d;
+}
+
+.PseudoOps {
+  background: #77c427;
+}
+
+.SpliceOps {
+  background: #18c47d;
 }
