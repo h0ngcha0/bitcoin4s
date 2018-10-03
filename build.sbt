@@ -6,7 +6,7 @@ name := "bitcoin4s"
 organization := "me.hongchao"
 version := "0.0.4"
 
-scalaVersion in ThisBuild := "2.12.4"
+scalaVersion in ThisBuild := "2.12.7"
 
 scalacOptions := Seq(
   "-unchecked",
@@ -23,7 +23,7 @@ scalacOptions := Seq(
   "-Ywarn-unused:imports"
 )
 
-val akkaHttpVersion = "10.0.11"
+val akkaHttpVersion = "10.1.5"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
@@ -33,16 +33,16 @@ libraryDependencies ++= Seq(
   "com.madgag.spongycastle" % "core" % "1.58.0.0",
   "org.scodec" %% "scodec-core" % "1.10.3",
   "com.iheart" %% "ficus" % "1.4.3",
-  "org.typelevel" %% "cats-core" % "1.0.1",
-  "com.github.mpilquist" %% "simulacrum" % "0.12.0",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
+  "org.typelevel" %% "cats-core" % "1.4.0",
+  "com.github.mpilquist" %% "simulacrum" % "0.13.0",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-  "com.typesafe.play" %% "play-json" % "2.6.9",
-  "com.typesafe.play" %% "play-functional" % "2.6.9",
-  "de.heikoseeberger" %% "akka-http-play-json" % "1.19.0",
-  "org.julienrf" %% "play-json-derived-codecs" % "4.0.0",
-  "tech.minna" %% "play-json-macros" % "1.0.0"
+  "com.typesafe.play" %% "play-json" % "2.6.10",
+  "com.typesafe.play" %% "play-functional" % "2.6.10",
+  "de.heikoseeberger" %% "akka-http-play-json" % "1.22.0",
+  "org.julienrf" %% "play-json-derived-codecs" % "4.0.1",
+  "tech.minna" %% "play-json-macros" % "1.0.1"
 )
 
 resolvers ++= Seq(
