@@ -3,6 +3,7 @@ package me.hongchao.bitcoin4s.script
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import cats.implicits._
+import tech.minna.utilities.TraitEnumeration
 
 sealed trait SpliceOp extends ScriptOpCode
 
@@ -13,7 +14,7 @@ object SpliceOp {
   case object OP_RIGHT extends SpliceOp { val value = 129 }
   case object OP_SIZE extends SpliceOp { val value = 130 }
 
-  val all = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT, OP_SIZE)
+  val all = TraitEnumeration.values[SpliceOp]
   val disabled = Seq(OP_CAT, OP_SUBSTR, OP_LEFT, OP_RIGHT)
 
   implicit val interpreter = new InterpretableOp[SpliceOp] {

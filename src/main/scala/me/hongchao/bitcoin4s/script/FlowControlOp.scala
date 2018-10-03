@@ -4,8 +4,9 @@ import scala.annotation.tailrec
 import me.hongchao.bitcoin4s.Utils._
 import me.hongchao.bitcoin4s.script.Interpreter._
 import me.hongchao.bitcoin4s.script.InterpreterError._
-import cats.implicits._
+import tech.minna.utilities.TraitEnumeration
 import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptWitness
+import cats.implicits._
 
 import scala.util.{Failure, Success, Try}
 
@@ -20,7 +21,7 @@ object FlowControlOp {
   case object OP_VERIFY extends FlowControlOp { val value = 105 }
   case object OP_RETURN extends FlowControlOp { val value = 106 }
 
-  val all = Seq(OP_NOP, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, OP_VERIFY, OP_RETURN)
+  val all = TraitEnumeration.values[FlowControlOp]
 
   implicit val interpreter = new InterpretableOp[FlowControlOp] {
     def interpret(opCode: FlowControlOp): InterpreterContext[Option[Boolean]] = {

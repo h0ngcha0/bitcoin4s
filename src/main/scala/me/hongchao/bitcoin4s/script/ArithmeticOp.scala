@@ -5,6 +5,7 @@ import me.hongchao.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import me.hongchao.bitcoin4s.script.InterpreterError._
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.Interpreter._
+import tech.minna.utilities.TraitEnumeration
 
 import scala.util.{Failure, Success, Try}
 
@@ -39,12 +40,7 @@ object ArithmeticOp {
   case object OP_MAX extends ArithmeticOp { val value = 164 }
   case object OP_WITHIN extends ArithmeticOp { val value = 165 }
 
-  val all = Seq(
-    OP_1ADD, OP_1SUB, OP_2MUL, OP_2DIV, OP_NEGATE, OP_ABS, OP_NOT, OP_0NOTEQUAL,
-    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT, OP_BOOLAND,
-    OP_BOOLOR, OP_NUMEQUAL, OP_NUMEQUALVERIFY, OP_NUMNOTEQUAL, OP_LESSTHAN,
-    OP_GREATERTHAN, OP_LESSTHANOREQUAL, OP_GREATERTHANOREQUAL, OP_MIN, OP_MAX, OP_WITHIN
-  )
+  val all = TraitEnumeration.values[ArithmeticOp]
 
   val disabled = Seq(OP_MUL, OP_2MUL, OP_DIV, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
 

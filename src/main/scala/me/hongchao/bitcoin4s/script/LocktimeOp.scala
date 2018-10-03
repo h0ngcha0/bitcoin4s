@@ -5,7 +5,7 @@ import me.hongchao.bitcoin4s.script.InterpreterError._
 import cats.implicits._
 import me.hongchao.bitcoin4s.transaction.Tx
 import me.hongchao.bitcoin4s.script.RichTransaction._
-
+import tech.minna.utilities.TraitEnumeration
 import scala.util.{Failure, Success, Try}
 
 sealed trait LocktimeOp extends ScriptOpCode
@@ -16,7 +16,7 @@ object LocktimeOp {
   case object OP_NOP2 extends LocktimeOp { val value = 177 }
   case object OP_NOP3 extends LocktimeOp { val value = 178 }
 
-  val all = Seq(OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY, OP_NOP2, OP_NOP3)
+  val all = TraitEnumeration.values[LocktimeOp]
 
   implicit val interpreter = new InterpretableOp[LocktimeOp] {
     def interpret(opCode: LocktimeOp): InterpreterContext[Option[Boolean]] = {

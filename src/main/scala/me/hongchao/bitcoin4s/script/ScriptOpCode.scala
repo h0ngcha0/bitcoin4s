@@ -192,7 +192,7 @@ object OpCodes {
   }
 
   def isNonReservedOpCode(scriptElement: ScriptElement): Boolean = {
-    val validOpCodes = all.filterNot(ReservedOp.all.contains)
+    val validOpCodes = all.filterNot(ReservedOp.all.map(_.asInstanceOf[ScriptOpCode]).contains)
     validOpCodes.find(_.hex == scriptElement.bytes.toHex).isDefined
   }
 

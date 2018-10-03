@@ -42,7 +42,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-functional" % "2.6.10",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.22.0",
   "org.julienrf" %% "play-json-derived-codecs" % "4.0.1",
-  "tech.minna" %% "play-json-macros" % "1.0.1"
+  "tech.minna" %% "play-json-macros" % "1.0.1",
+  "tech.minna" %% "utilities" % "1.2.0"
 )
 
 resolvers ++= Seq(
