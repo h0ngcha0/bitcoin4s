@@ -5,7 +5,7 @@ import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
 import me.hongchao.bitcoin4s.transaction.Tx
 import cats.implicits._
 import me.hongchao.bitcoin4s.script.BitwiseLogicOp.OP_EQUAL
-import me.hongchao.bitcoin4s.script.ConstantOp.OP_0
+import me.hongchao.bitcoin4s.script.ConstantOp.OP_FALSE
 import me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptPubKey
 import me.hongchao.bitcoin4s.script.StackOp.OP_DEPTH
@@ -44,14 +44,14 @@ class StepExecutionSpec extends Spec {
     val scriptSig = Parser.parse("")
 
     val firstStep = execScript(scriptPubKey, scriptSig, maybeSteps = Some(1))
-    firstStep.currentScript shouldEqual List(OP_DEPTH, OP_0, OP_EQUAL)
+    firstStep.currentScript shouldEqual List(OP_DEPTH, OP_FALSE, OP_EQUAL)
     firstStep.stack shouldBe empty
     firstStep.altStack shouldBe empty
     firstStep.executionStage shouldBe ExecutingScriptPubKey
     firstStep.result shouldBe None
 
     val secondStep = execScript(scriptPubKey, scriptSig, maybeSteps = Some(2))
-    secondStep.currentScript shouldEqual List(OP_0, OP_EQUAL)
+    secondStep.currentScript shouldEqual List(OP_FALSE, OP_EQUAL)
     secondStep.stack shouldBe Seq(ScriptNum(0))
     secondStep.altStack shouldBe empty
     secondStep.executionStage shouldBe ExecutingScriptPubKey
