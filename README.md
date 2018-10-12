@@ -19,14 +19,14 @@ Parse bitcoin script
 --------------------
 
 ```scala
-scala> import me.hongchao.bitcoin4s.script.Parser
-import me.hongchao.bitcoin4s.script.Parser
+scala> import it.softfork.bitcoin4s.script.Parser
+import it.softfork.bitcoin4s.script.Parser
 
 scala> Parser.parse("0 IF 0 ELSE 1 ELSE 0 ENDIF")
-res0: Seq[me.hongchao.bitcoin4s.script.ScriptElement] = List(OP_0, OP_IF, OP_0, OP_ELSE, OP_1, OP_ELSE, OP_0, OP_ENDIF)
+res0: Seq[it.softfork.bitcoin4s.script.ScriptElement] = List(OP_0, OP_IF, OP_0, OP_ELSE, OP_1, OP_ELSE, OP_0, OP_ENDIF)
 
 scala> Parser.parse("0x41 0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 CHECKSIG")
-res1: Seq[me.hongchao.bitcoin4s.script.ScriptElement] = List(OP_PUSHDATA(65), ScriptConstant: List(4, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23, -104, 72, 58, -38, 119, 38, -93, -60, 101, 93, -92, -5, -4, 14, 17, 8, -88, -3, 23, -76, 72, -90, -123, 84, 25, -100, 71, -48, -113, -5, 16, -44, -72), OP_CHECKSIG)
+res1: Seq[it.softfork.bitcoin4s.script.ScriptElement] = List(OP_PUSHDATA(65), ScriptConstant: List(4, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23, -104, 72, 58, -38, 119, 38, -93, -60, 101, 93, -92, -5, -4, 14, 17, 8, -88, -3, 23, -76, 72, -90, -123, 84, 25, -100, 71, -48, -113, -5, 16, -44, -72), OP_CHECKSIG)
 
 ```
 
@@ -56,12 +56,12 @@ which is parsed into the following scala code
 scala> :paste
 // Entering paste mode (ctrl-D to finish)
 
-import me.hongchao.bitcoin4s.transaction._
-import me.hongchao.bitcoin4s.script.ConstantOp._
-import me.hongchao.bitcoin4s.script.ScriptFlag._
-import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
-import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptSig
-import me.hongchao.bitcoin4s.script._
+import it.softfork.bitcoin4s.transaction._
+import it.softfork.bitcoin4s.script.ConstantOp._
+import it.softfork.bitcoin4s.script.ScriptFlag._
+import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_BASE
+import it.softfork.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptSig
+import it.softfork.bitcoin4s.script._
 import scodec.bits._
 import cats.implicits._
 
@@ -112,16 +112,16 @@ val initialState = InterpreterState(
 
 // Exiting paste mode, now interpreting.
 
-import me.hongchao.bitcoin4s.transaction._
-import me.hongchao.bitcoin4s.script.ConstantOp._
-import me.hongchao.bitcoin4s.script.ScriptFlag._
-import me.hongchao.bitcoin4s.script.SigVersion.SIGVERSION_BASE
-import me.hongchao.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptSig
-import me.hongchao.bitcoin4s.script._
+import it.softfork.bitcoin4s.transaction._
+import it.softfork.bitcoin4s.script.ConstantOp._
+import it.softfork.bitcoin4s.script.ScriptFlag._
+import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_BASE
+import it.softfork.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptSig
+import it.softfork.bitcoin4s.script._
 import scodec.bits._
 import cats.implicits._
-transaction: me.hongchao.bitcoin4s.transaction.Tx = Tx(1,List(TxIn(OutPoint(7ca98806a4b4ab8d2952d3d65ccb450b411def420b3f8f0140bf11d8991ac5ab,0),ByteVector(empty),-1)),List(TxOut(1,ByteVector(empty))),0)
-initialState: me.hongchao.bitcoin4s.script.Interprete...
+transaction: it.softfork.bitcoin4s.transaction.Tx = Tx(1,List(TxIn(OutPoint(7ca98806a4b4ab8d2952d3d65ccb450b411def420b3f8f0140bf11d8991ac5ab,0),ByteVector(empty),-1)),List(TxOut(1,ByteVector(empty))),0)
+initialState: it.softfork.bitcoin4s.script.Interprete...
 
 ```
 
@@ -129,10 +129,10 @@ then we can run the following code to execute the script
 
 ```scala
 scala> val interpretedOutcome = Interpreter.create().run(initialState)
-interpreterOutcome: me.hongchao.bitcoin4s.script.Interpreter.InterpreterErrorHandler[(me.hongchao.bitcoin4s.script.InterpreterState, Option[Boolean])] = Right((InterpreterState(List(OP_0, OP_PUSHDATA(32), ScriptConstant: List(24, 99, 20, 60, 20, -59, 22, 104, 4, -67, 25, 32, 51, 86, -38, 19, 108, -104, 86, 120, -51, 77, 39, -95, -72, -58, 50, -106, 4, -112, 50, 98)),List(),List(),None,Some(List(OP_PUSHDATA(33), ScriptConstant: List(2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23, -104), OP_CHECKSIG)),Some(List(ScriptConstant: List(33, 2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23,...
+interpreterOutcome: it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler[(it.softfork.bitcoin4s.script.InterpreterState, Option[Boolean])] = Right((InterpreterState(List(OP_0, OP_PUSHDATA(32), ScriptConstant: List(24, 99, 20, 60, 20, -59, 22, 104, 4, -67, 25, 32, 51, 86, -38, 19, 108, -104, 86, 120, -51, 77, 39, -95, -72, -58, 50, -106, 4, -112, 50, 98)),List(),List(),None,Some(List(OP_PUSHDATA(33), ScriptConstant: List(2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23, -104), OP_CHECKSIG)),Some(List(ScriptConstant: List(33, 2, 121, -66, 102, 126, -7, -36, -69, -84, 85, -96, 98, -107, -50, -121, 11, 7, 2, -101, -4, -37, 45, -50, 40, -39, 89, -14, -127, 91, 22, -8, 23,...
 
 scala> interpretedOutcome.map{ case (finalState@_, interpretedResult) => interpretedResult }
-res4: scala.util.Either[me.hongchao.bitcoin4s.script.InterpreterError,Option[Boolean]] = Right(Some(true))
+res4: scala.util.Either[it.softfork.bitcoin4s.script.InterpreterError,Option[Boolean]] = Right(Some(true))
 ```
 
 REST API
@@ -217,7 +217,7 @@ How to use
 Add the following to your build.sbt
 
 ```scala
-libraryDependencies += "me.hongchao" %% "bitcoin4s" % "0.0.4"
+libraryDependencies += "it.softfork" %% "bitcoin4s" % "0.0.5"
 ```
 
 with the following resolver

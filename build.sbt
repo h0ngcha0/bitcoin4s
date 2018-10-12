@@ -3,8 +3,8 @@ import java.nio.file.Files
 enablePlugins(JavaAppPackaging)
 
 name := "bitcoin4s"
-organization := "me.hongchao"
-version := "0.0.4"
+organization := "it.softfork"
+version := "0.0.5"
 
 scalaVersion in ThisBuild := "2.12.7"
 
