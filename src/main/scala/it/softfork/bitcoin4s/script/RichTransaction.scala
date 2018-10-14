@@ -56,7 +56,8 @@ object RichTransaction {
           v.toByteArray
       }
 
-      Hash.Hash256(serialisedTx ++ uint32ToBytes(sigHashType.value))
+      val preImage = serialisedTx ++ uint32ToBytes(sigHashType.value)
+      Hash.Hash256(preImage)
     }
 
 

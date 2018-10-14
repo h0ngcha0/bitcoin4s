@@ -12,7 +12,7 @@ sealed trait ScriptElement {
 }
 
 trait ScriptConstant extends ScriptElement {
-  override def toString: String = s"ScriptConstant: $bytes"
+  override def toString: String = s"ScriptConstant: 0x${bytes.toHex}"
 
   override def equals(obj: scala.Any): Boolean = {
     if (obj.isInstanceOf[ScriptConstant]) {

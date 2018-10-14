@@ -11,7 +11,9 @@ import it.softfork.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptPubKey
 import it.softfork.bitcoin4s.script.StackOp.OP_DEPTH
 
 class StepExecutionSpec extends Spec {
-  implicit class InterpreterResultExtractor(interpreterResult: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]) {
+  implicit class InterpreterResultExtractor(
+    interpreterResult: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
+  ) {
     def currentScript() = {
       getInterpreterState().currentScript
     }
@@ -82,7 +84,11 @@ class StepExecutionSpec extends Spec {
     fifthStep shouldEqual withoutStepping
   }
 
-  private def execScript(scriptPubKey: Seq[ScriptElement], scriptSig: Seq[ScriptElement], maybeSteps: Option[Int]): InterpreterErrorHandler[(InterpreterState, Option[Boolean])] = {
+  private def execScript(
+    scriptPubKey: Seq[ScriptElement],
+    scriptSig: Seq[ScriptElement],
+    maybeSteps: Option[Int]
+  ): InterpreterErrorHandler[(InterpreterState, Option[Boolean])] = {
     // A fake transaction that is not used since no crypto ops are involved.
     val emptyTx = Tx(
       version = 1,

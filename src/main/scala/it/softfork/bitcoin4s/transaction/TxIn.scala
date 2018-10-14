@@ -13,7 +13,7 @@ case class TxIn(
 )
 
 object TxIn {
-  val uInt32WithNegValue: Codec[Long] = new LongCodecWithNegValue(32, false, ByteOrdering.BigEndian)
+  val uInt32WithNegValue: Codec[Long] = new LongCodecWithNegValue(32, false, ByteOrdering.LittleEndian)
 
   val scriptCodec = {
     val countCodec = VarInt.varIntCodec.xmap(_.toInt, (i: Int) => i.toLong)

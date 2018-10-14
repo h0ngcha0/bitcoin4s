@@ -362,6 +362,7 @@ object CryptoOp {
               inputIndex = state.inputIndex,
               sigHashType = sigHashType
             )
+
           case SIGVERSION_WITNESS_V0 =>
             state.transaction.signingHashSegwit(
               currentScript,
@@ -371,6 +372,7 @@ object CryptoOp {
             )
         }
 
+        println(s"hashedTransaction: ${hashedTransaction.toHex}")
         pubKey.verify(hashedTransaction, ecdsaSignature)
     }
   }
