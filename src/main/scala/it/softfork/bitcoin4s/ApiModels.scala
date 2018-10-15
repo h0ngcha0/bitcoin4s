@@ -3,6 +3,7 @@ package it.softfork.bitcoin4s
 import it.softfork.bitcoin4s.script._
 import play.api.libs.json._
 import julienrf.json.derived.flat.owrites
+import it.softfork.bitcoin4s.Utils._
 
 object ApiModels {
 
@@ -60,7 +61,7 @@ object ApiModels {
     case scriptNum: ScriptNum =>
       Json.obj("type" -> "ScriptNum", "value" -> scriptNum.value)
     case scriptConstant: ScriptConstant =>
-      Json.obj("type" -> "ScriptConstant", "value" -> scriptConstant.bytes)
+      Json.obj("type" -> "ScriptConstant", "value" -> s"0x${scriptConstant.bytes.toHex}")
     case scriptOpcode: ScriptOpCode =>
       Json.obj("type" -> scriptOpcode.name, "value" -> scriptOpcode.value)
   }

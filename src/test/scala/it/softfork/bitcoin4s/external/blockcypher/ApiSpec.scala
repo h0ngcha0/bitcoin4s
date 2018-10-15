@@ -12,12 +12,13 @@ import scala.util.control.Exception.allCatch
 
 class ApiSpec extends Spec with StrictLogging {
 
-  "Interpreter" should "be able to interpret raw transactions in Example 1 from BlockCypher API" in {
-    runExample(BlockCypherExample1)
-  }
-
-  it should "be able to interpret raw transactions in Example 2 from BlockCypher API" in {
-    runExample(BlockCypherExample2)
+  "Interpreter" should "be able to interpret raw transactions from BlockCypher API" in {
+    Seq(BlockCypherExample1, BlockCypherExample2, BlockCypherExample3).foreach { example =>
+      val testDataName = example.getClass.getSimpleName
+      withClue(testDataName) {
+        runExample(example)
+      }
+    }
   }
 
   private def runExample(blockCypherExample: BlockCypherExample) = {
@@ -28,7 +29,7 @@ class ApiSpec extends Spec with StrictLogging {
     //val firstScriptPutKey = spendingTx.tx_in(0).sig_script
     val spendingTx = spendingTransaction.toTx
     val txIn = spendingTransaction.inputs(0)
-    val txOut = creditingTransaction.outputs(0)
+    val txOut = creditingTransaction.outputs(txIn.output_index)
     val scriptSig = txIn.script.map(parseHexString _).getOrElse(Seq.empty[ScriptElement])
     val scriptPubKey = parseHexString(txOut.script)
     val witnessesStack = txIn.witness.map { rawWitnesses =>
@@ -388,6 +389,132 @@ object BlockCypherExample2 extends BlockCypherExample {
        |        "3BQA7VoRzhrQuwS7LtVCLhkSN4n2kErM9h"
        |      ],
        |      "script_type": "pay-to-script-hash"
+       |    }
+       |  ]
+       |}
+     """.stripMargin
+}
+
+object BlockCypherExample3 extends BlockCypherExample {
+  val spendingRawTransaction =
+    s"""
+       |{
+       |  "block_hash": "0000000000000000000f69ef7775417a70d06f729914bef1787b7c330634c6bb",
+       |  "block_height": 545777,
+       |  "block_index": 1,
+       |  "hash": "71c9e4aa40e4f799d15b5d1a15926d2bbb1098e3b7ec21ba7e8029b847e0d4ca",
+       |  "addresses": [
+       |    "17tQ2xVmsou9ZQiLBwMtaqUVpvgbKYJfTV",
+       |    "1B3GUJt7zGZVApqBf5BHJUmfWrpXN8UnBZ",
+       |    "1GTkVY4GTo8ewQZDE1zgVX6WnUQm7VQMGc"
+       |  ],
+       |  "total": 29941032,
+       |  "fees": 2600,
+       |  "size": 226,
+       |  "preference": "medium",
+       |  "relayed_by": "104.199.47.152:8333",
+       |  "confirmed": "2018-10-15T00:03:33Z",
+       |  "received": "2018-10-15T00:00:16.958Z",
+       |  "ver": 2,
+       |  "double_spend": false,
+       |  "vin_sz": 1,
+       |  "vout_sz": 2,
+       |  "confirmations": 126,
+       |  "confidence": 1,
+       |  "inputs": [
+       |    {
+       |      "prev_hash": "e5a46134c6fea347130fb672e371e2e6868950bbaab442951a05fa7d02ed656d",
+       |      "output_index": 1,
+       |      "script": "483045022100fecc6ac7dc70f4e0599d74ec607fdd0e85c2dc67d894ea27d6440df8fa2ecb9802204baffd10526e5e682ed84a06ab79ebeaa094201a7c0de5457b89462c117629690121028778345d37c04ad7aac7061893687992b3e26cd89762699c29ad3ac7e6cac7f9",
+       |      "output_value": 29943632,
+       |      "sequence": 4294967295,
+       |      "addresses": [
+       |        "1GTkVY4GTo8ewQZDE1zgVX6WnUQm7VQMGc"
+       |      ],
+       |      "script_type": "pay-to-pubkey-hash",
+       |      "age": 545774
+       |    }
+       |  ],
+       |  "outputs": [
+       |    {
+       |      "value": 28997824,
+       |      "script": "76a9144b893244063e8dfe80a096f51493fe15f44ac2c088ac",
+       |      "spent_by": "bb027d19eae8560bf6dced993b08792e910ecd2991af06e9a89d9427196d87a0",
+       |      "addresses": [
+       |        "17tQ2xVmsou9ZQiLBwMtaqUVpvgbKYJfTV"
+       |      ],
+       |      "script_type": "pay-to-pubkey-hash"
+       |    },
+       |    {
+       |      "value": 943208,
+       |      "script": "76a9146e1f0110c5b08e4ada57ddf4a1116672d4f0ddc188ac",
+       |      "spent_by": "7cc852a667c2c4604673e0d37ababa9d721c31b64ed5f5dba4d10fd66f952a9f",
+       |      "addresses": [
+       |        "1B3GUJt7zGZVApqBf5BHJUmfWrpXN8UnBZ"
+       |      ],
+       |      "script_type": "pay-to-pubkey-hash"
+       |    }
+       |  ]
+       |}
+     """.stripMargin
+
+  val creditingRawTransaction =
+    s"""
+       |{
+       |  "block_hash": "0000000000000000000419f5e9a0c52734d6014c1e36fad1c95a58aac31ec627",
+       |  "block_height": 545774,
+       |  "block_index": 1526,
+       |  "hash": "e5a46134c6fea347130fb672e371e2e6868950bbaab442951a05fa7d02ed656d",
+       |  "addresses": [
+       |    "1GTkVY4GTo8ewQZDE1zgVX6WnUQm7VQMGc",
+       |    "1Gz72nPhSYKhwuT5o7kCMHmj41Ney7SuNz",
+       |    "1JEisjhJmRv1v3yTCNVtry6WrqvdkULn6M"
+       |  ],
+       |  "total": 42029620,
+       |  "fees": 2600,
+       |  "size": 226,
+       |  "preference": "medium",
+       |  "relayed_by": "213.239.216.162:9001",
+       |  "confirmed": "2018-10-14T23:56:28Z",
+       |  "received": "2018-10-14T23:40:19.01Z",
+       |  "ver": 2,
+       |  "double_spend": false,
+       |  "vin_sz": 1,
+       |  "vout_sz": 2,
+       |  "confirmations": 129,
+       |  "confidence": 1,
+       |  "inputs": [
+       |    {
+       |      "prev_hash": "a26394328d1250314e9092947bccebccd1a10b46ed6ead01c3165da17ffe2fa9",
+       |      "output_index": 1,
+       |      "script": "483045022100a38ee4ebff13ef0a309f0b5d8bf8392060158113ba160c532e99cfd4610ef82302203981e07885cc234c2f2a84cf75a185a21851f249f32d58fb7430f36546a1effb0121025b9b48e5c3a6cb6446583514e21b7b04f4b1534a97e2e4e643c22457e0837e3c",
+       |      "output_value": 42032220,
+       |      "sequence": 4294967295,
+       |      "addresses": [
+       |        "1Gz72nPhSYKhwuT5o7kCMHmj41Ney7SuNz"
+       |      ],
+       |      "script_type": "pay-to-pubkey-hash",
+       |      "age": 545769
+       |    }
+       |  ],
+       |  "outputs": [
+       |    {
+       |      "value": 12085988,
+       |      "script": "76a914bd1280493a388f2c878f02e19d470d659e3a262288ac",
+       |      "spent_by": "f4b2507d7f39b9b6e97b863ecfe9c215dd3435f72596b52f90245ba2c4c707c7",
+       |      "addresses": [
+       |        "1JEisjhJmRv1v3yTCNVtry6WrqvdkULn6M"
+       |      ],
+       |      "script_type": "pay-to-pubkey-hash"
+       |    },
+       |    {
+       |      "value": 29943632,
+       |      "script": "76a914a99901cdefecf382b1ae31ec70a53987b0cb668988ac",
+       |      "spent_by": "71c9e4aa40e4f799d15b5d1a15926d2bbb1098e3b7ec21ba7e8029b847e0d4ca",
+       |      "addresses": [
+       |        "1GTkVY4GTo8ewQZDE1zgVX6WnUQm7VQMGc"
+       |      ],
+       |      "script_type": "pay-to-pubkey-hash"
        |    }
        |  ]
        |}

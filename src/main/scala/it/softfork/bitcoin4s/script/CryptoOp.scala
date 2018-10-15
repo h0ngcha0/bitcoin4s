@@ -372,7 +372,6 @@ object CryptoOp {
             )
         }
 
-        println(s"hashedTransaction: ${hashedTransaction.toHex}")
         pubKey.verify(hashedTransaction, ecdsaSignature)
     }
   }

@@ -4,7 +4,11 @@ bitcoin4s
 [![Coverage Status](https://coveralls.io/repos/github/liuhongchao/bitcoin4s/badge.svg?branch=master)](https://coveralls.io/github/liuhongchao/bitcoin4s?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Scala library for experimenting with Bitcoin
+Scala library for experimenting with Bitcoin scripts.
+
+It provides a step by step debugger, through REST API.
+
+Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json#L2145) from bitcoin core.
 
 Table of Content
 ----------------
@@ -33,7 +37,7 @@ res1: Seq[it.softfork.bitcoin4s.script.ScriptElement] = List(OP_PUSHDATA(65), Sc
 Run bitcoin script interpreter
 ------------------------------
 
-Following is a [test case](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json#L2145) for "Basic P2WSH with compressed key" from [bitcoin core](https://github.com/bitcoin/bitcoin).
+Following is one of the [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json#L2145) "Basic P2WSH with compressed key" from [bitcoin core](https://github.com/bitcoin/bitcoin).
 
 ```
 [
@@ -144,7 +148,7 @@ Running `sbt reStart` under the project root starts up an HTTP server listening 
 Execute the unlocking script of the first input of transaction `85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac` and its corresponding locking script. 
 
 ```bash
-bitcoin4s git:(master) ✗ curl localhost:8888/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/interpret
+(⎈ |internal:swedbank-test)➜  blockchain curl localhost:8888/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/interpret
 {
   "result" : {
     "type" : "Result",
@@ -161,8 +165,8 @@ bitcoin4s git:(master) ✗ curl localhost:8888/transaction/85db1042f083a8fd6f96f
       "type" : "OP_PUSHDATA",
       "value" : 20
     }, {
-      "type" : "ScriptContant",
-      "value" : [ -101, 41, -16, 13, -74, -105, 15, 36, 53, -59, 87, 100, 121, -53, 90, 121, -38, 86, -80, 120 ]
+      "type" : "ScriptConstant",
+      "value" : "0x9b29f00db6970f2435c5576479cb5a79da56b078"
     }, {
       "type" : "OP_EQUALVERIFY",
       "value" : 136
@@ -174,14 +178,14 @@ bitcoin4s git:(master) ✗ curl localhost:8888/transaction/85db1042f083a8fd6f96f
       "type" : "OP_PUSHDATA",
       "value" : 72
     }, {
-      "type" : "ScriptContant",
-      "value" : [ 48, 69, 2, 33, 0, -98, 29, -17, 33, -87, 3, -92, 18, 42, 54, 5, 46, 14, 50, -45, 69, 107, -92, 9, -33, 13, -28, 86, 119, 65, 44, 49, -22, 68, 9, 98, -76, 2, 32, 54, 84, 59, 87, -122, -101, 50, 40, -90, -40, 127, 87, -114, 0, 20, -95, 1, 25, 23, 81, -125, 20, 13, 120, 3, -39, -108, -99, -4, 36, -88, -100, 1 ]
+      "type" : "ScriptConstant",
+      "value" : "0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"
     }, {
       "type" : "OP_PUSHDATA",
       "value" : 33
     }, {
-      "type" : "ScriptContant",
-      "value" : [ 3, 51, -114, -6, 45, 49, -102, 7, -72, 72, 114, 5, -11, 100, 63, 112, -98, -66, -108, -2, -37, 43, 12, -26, 27, -69, -16, 66, 98, 36, 43, -118, -48 ]
+      "type" : "ScriptConstant",
+      "value" : "0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"
     } ],
     "currentScript" : [ ],
     "stack" : [ {
@@ -202,9 +206,9 @@ Same example as example 1, but stream each of the execution step back using webs
 ```bash
 (⎈ |internal:default)➜  blockchain wscat -c ws://localhost:8888/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/stream-interpret
 connected (press CTRL+C to quit)
-< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"stack":[],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
-< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"stack":[{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]}],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
-< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[],"stack":[{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]}],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
+< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptConstant","value":"0x9b29f00db6970f2435c5576479cb5a79da56b078"},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"currentScript":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"stack":[],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
+< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptConstant","value":"0x9b29f00db6970f2435c5576479cb5a79da56b078"},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"currentScript":[{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"stack":[{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"}],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
+< {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptConstant","value":"0x9b29f00db6970f2435c5576479cb5a79da56b078"},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"currentScript":[],"stack":[{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"}],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
 ...
 ...
 < {"result":{"type":"Result","value":true},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptContant","value":[-101,41,-16,13,-74,-105,15,36,53,-59,87,100,121,-53,90,121,-38,86,-80,120]},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptContant","value":[48,69,2,33,0,-98,29,-17,33,-87,3,-92,18,42,54,5,46,14,50,-45,69,107,-92,9,-33,13,-28,86,119,65,44,49,-22,68,9,98,-76,2,32,54,84,59,87,-122,-101,50,40,-90,-40,127,87,-114,0,20,-95,1,25,23,81,-125,20,13,120,3,-39,-108,-99,-4,36,-88,-100,1]},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptContant","value":[3,51,-114,-6,45,49,-102,7,-72,72,114,5,-11,100,63,112,-98,-66,-108,-2,-37,43,12,-26,27,-69,-16,66,98,36,43,-118,-48]}],"currentScript":[],"stack":[{"type":"ScriptNum","value":1}],"altStack":[],"stage":{"type":"ExecutingScriptPubKey"}}}
