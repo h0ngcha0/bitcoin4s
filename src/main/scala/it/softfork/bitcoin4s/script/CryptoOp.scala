@@ -192,20 +192,25 @@ object CryptoOp {
                 val nonEmptyEncodedPubKeys = pubKeys.filter(_ != ConstantOp.OP_0)
 
                 Try {
+                  println(s"i m here")
                   checkSignatures(nonEmptyEncodedPubKeys, signatures, state)
                 } match {
                   case Success(checkResult) =>
-
+                  println(s"i m here 2")
                     if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL) && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
                       abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {
+                      println(s"i m here 3")
                       // NOTE: Popping extra element due to the bug in the reference client
                       rest match {
                         case head :: tail =>
+                          println(s"i m here 4")
                           if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLDUMMY) && head.bytes.nonEmpty) {
                             // Reference: https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
                             abort(MultiSigNullDummy(opCode, state))
                           } else {
+                            println(s"i m here 5")
+                            println(checkResult)
                             setStateAndContinue(
                               state.copy(
                                 stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
@@ -214,6 +219,7 @@ object CryptoOp {
                             )
                           }
                         case Nil =>
+                          println(s"i m here 6")
                           abort(InvalidStackOperation(opCode, state))
                       }
                     }
@@ -282,59 +288,63 @@ object CryptoOp {
     }
   }
 
+  def checkSignature(encodedPublicKey: ScriptElement, encodedSignature: ScriptElement, state: InterpreterState, strictEnc: Boolean): Boolean = {
+    Signature.decode(encodedSignature.bytes) match {
+      case Some((signature, sigHashFlagBytes)) =>
+        signature match {
+          case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
+            throw SignatureHighS(OP_CHECKMULTISIG, state)
+
+          case _ =>
+            if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
+              PublicKey.decode(encodedPublicKey.bytes, strictEnc) match {
+                case DecodeResult.Ok(decodedPublicKey) =>
+                  val notCompressed = !decodedPublicKey.compressed
+                  val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
+
+                  if (executingP2WSH && notCompressed && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)) {
+                    throw WitnessPubkeyUncompressed(OP_CHECKMULTISIG, state)
+                  } else {
+                    checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
+                  }
+
+                case _ =>
+                  if (state.ScriptFlags.strictEncoding()) {
+                    throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
+                  }
+
+                  false
+              }
+            } else {
+              throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
+            }
+        }
+
+      case None =>
+        if (state.ScriptFlags.strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)) {
+          throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
+        }
+
+        false
+    }
+  }
+
   @tailrec
   def checkSignatures(encodedPublicKeys: Seq[ScriptElement], encodedSignatures: Seq[ScriptElement], state: InterpreterState, strictEnc: Boolean = true): Boolean = {
-    if (encodedSignatures.length > encodedPublicKeys.length) {
+    if (encodedSignatures.nonEmpty && encodedPublicKeys.isEmpty) {
       false
     } else {
       encodedSignatures match {
-        case encodedSignature :: tail =>
-          val maybeEncodedPubKeyWithSignature = encodedPublicKeys.headOption.map { encodedPubKey =>
-            Signature.decode(encodedSignature.bytes) match {
-              case Some((signature, sigHashFlagBytes)) =>
-                signature match {
-                  case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
-                    throw SignatureHighS(OP_CHECKMULTISIG, state)
-
-                  case _ =>
-                    if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
-                      PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
-                        case DecodeResult.Ok(decodedPublicKey) =>
-                          val notCompressed = !decodedPublicKey.compressed
-                          val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
-
-                          if (executingP2WSH && notCompressed && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)) {
-                            throw WitnessPubkeyUncompressed(OP_CHECKMULTISIG, state)
-                          } else {
-                            checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
-                          }
-
-                        case _ =>
-                          if (state.ScriptFlags.strictEncoding()) {
-                            throw PublicKeyWrongEncoding(OP_CHECKMULTISIG, state)
-                          }
-
-                          false
-                      }
-                    } else {
-                      throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-                    }
-                }
-
-              case None =>
-                if (state.ScriptFlags.strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)) {
-                  throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
-                }
-
-                false
-            }
+        case encodedSignature :: restOfEncodedSignatures =>
+          val maybeEncodedPublicKeysForSignature = encodedPublicKeys.find { encodedPublicKey =>
+            checkSignature(encodedPublicKey, encodedSignature, state, strictEnc)
           }
 
-          maybeEncodedPubKeyWithSignature match {
-            case Some(true) =>
-              checkSignatures(encodedPublicKeys.tail, tail, state)
-            case _ =>
-              checkSignatures(encodedPublicKeys.tail, encodedSignatures, state)
+          maybeEncodedPublicKeysForSignature match {
+            case Some(encodedPublicKeysForSignature) =>
+              checkSignatures(encodedPublicKeys.filterNot(_ == encodedPublicKeysForSignature), restOfEncodedSignatures, state, strictEnc)
+            case None =>
+              false
           }
 
         case Nil =>
