@@ -195,7 +195,6 @@ object CryptoOp {
                   checkSignatures(nonEmptyEncodedPubKeys, signatures, state)
                 } match {
                   case Success(checkResult) =>
-
                     if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL) && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
                       abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {

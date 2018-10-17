@@ -1,5 +1,6 @@
 package it.softfork.bitcoin4s.script
 
+import com.typesafe.scalalogging.StrictLogging
 import it.softfork.bitcoin4s.transaction._
 import it.softfork.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
@@ -7,7 +8,7 @@ import it.softfork.bitcoin4s.Utils._
 import it.softfork.bitcoin4s.crypto.Hash
 import it.softfork.bitcoin4s.transaction.structure.OutPoint
 
-object RichTransaction {
+object RichTransaction extends StrictLogging {
   val transactionVersion = 1
 
   implicit class RichTx(tx: Tx) {
@@ -56,8 +57,8 @@ object RichTransaction {
           v.toByteArray
       }
 
-      val preImage = serialisedTx ++ uint32ToBytes(sigHashType.value)
-      Hash.Hash256(preImage)
+      val transactionPreImage = serialisedTx ++ uint32ToBytes(sigHashType.value)
+      Hash.Hash256(transactionPreImage)
     }
 
 
@@ -65,9 +66,7 @@ object RichTransaction {
     // https://github.com/bitcoin/bitcoin/blob/f8528134fc188abc5c7175a19680206964a8fade/src/script/interpreter.cpp#L1113
     def signingHashSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, amount: Long, sigHashType: SignatureHashType): Seq[Byte] = {
       val prevOutsHash: Array[Byte] = if(!sigHashType.SIGHASH_ANYONECANPAY()) {
-        val prevOut = tx.tx_in.toArray.flatMap { txIn =>
-          OutPoint.codec.encode(txIn.previous_output).toBytes
-        }
+        val prevOut = tx.tx_in.toArray.flatMap { txIn => OutPoint.codec.encode(txIn.previous_output).toBytes }
         Hash.Hash256(prevOut)
       } else {
         Hash.zeros
