@@ -4,11 +4,7 @@ bitcoin4s
 [![Coverage Status](https://coveralls.io/repos/github/liuhongchao/bitcoin4s/badge.svg?branch=master)](https://coveralls.io/github/liuhongchao/bitcoin4s?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Scala library for experimenting with Bitcoin scripts.
-
-It provides a step by step debugger, through REST API.
-
-Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json) from bitcoin core.
+Scala library for experimenting with Bitcoin scripts. Provides a step by step debugger through REST API. Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json) from bitcoin core.
 
 Table of Content
 ----------------
@@ -27,12 +23,15 @@ scala> import it.softfork.bitcoin4s.script.Parser
 import it.softfork.bitcoin4s.script.Parser
 
 scala> Parser.parse("0x76a9149984a74e6566b5009d47e46949938337081e9e9888ac")
-res6: Seq[it.softfork.bitcoin4s.script.ScriptElement] = List(OP_DUP, OP_HASH160, OP_PUSHDATA(20), ScriptConstant: 0x9984a74e6566b5009d47e46949938337081e9e98, OP_EQUALVERIFY, OP_CHECKSIG)
+res0: Seq[it.softfork.bitcoin4s.script.ScriptElement] = List(OP_DUP, OP_HASH160, OP_PUSHDATA(20), ScriptConstant: 0x9984a74e6566b5009d47e46949938337081e9e98, OP_EQUALVERIFY, OP_CHECKSIG)
 
 ```
 
 Run bitcoin script interpreter
 ------------------------------
+
+The following code would interpret the first input of transaction `bac02148041affd9dec93d30a86d1777d9570ab5d36fa2e0b7a20c0fa208e458`.
+It uses the [Blockcypher API](https://www.blockcypher.com/dev/bitcoin/) to fetch transaction information.
 
 ```scala
 scala> :paste
@@ -147,7 +146,3 @@ with the following resolver
 ```scala
 resolvers += Resolver.bintrayRepo("liuhongchao", "maven")
 ```
-
-# License
-
-MIT: http://rem.mit-license.org
