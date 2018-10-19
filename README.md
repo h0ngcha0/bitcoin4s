@@ -34,7 +34,7 @@ res6: Seq[it.softfork.bitcoin4s.script.ScriptElement] = List(OP_DUP, OP_HASH160,
 Run bitcoin script interpreter
 ------------------------------
 
-```
+```scala
 scala> :paste                                                                                                                                                                                                     
 // Entering paste mode (ctrl-D to finish)                                                                                                                                                                         
                                                                                                                                                                                                                   
@@ -52,11 +52,11 @@ interpretedOutcome.map{ case (finalState@_, interpretedResult) => interpretedRes
 
 // Exiting paste mode, now interpreting.                                                                                                                                                                           
 
-```scala
+```
 
 result could be
 
-```
+```scala
 res0: scala.util.Either[it.softfork.bitcoin4s.script.InterpreterError,Option[Boolean]] = Right(Some(true))
 ```
 
