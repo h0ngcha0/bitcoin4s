@@ -5,6 +5,7 @@ import org.spongycastle.crypto.generators.ECKeyPairGenerator
 import org.spongycastle.crypto.params.{ECKeyGenerationParameters, ECPrivateKeyParameters}
 
 case class PrivateKey(value: BigInt, compressed: Boolean = false) {
+
   def apply(byteArray: Array[Byte]): PrivateKey = {
     val uncompressedKeyLength = 32
     val (first32Bytes, restOfTheBytes) = byteArray.splitAt(uncompressedKeyLength)
@@ -33,6 +34,7 @@ case class PrivateKey(value: BigInt, compressed: Boolean = false) {
 }
 
 object PrivateKey {
+
   def generate(compressed: Boolean) = {
     val secureRandom = new SecureRandom
     val generator = new ECKeyPairGenerator

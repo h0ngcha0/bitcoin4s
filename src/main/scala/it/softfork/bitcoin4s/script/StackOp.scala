@@ -33,6 +33,7 @@ object StackOp {
   val all = TraitEnumeration.values[StackOp]
 
   implicit val interpreter = new InterpretableOp[StackOp] {
+
     def interpret(opCode: StackOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_DUP =>
@@ -135,7 +136,7 @@ object StackOp {
 
         case OP_IFDUP =>
           onStackOp(OP_IFDUP) {
-            case (number: ScriptConstant) :: rest if (ScriptNum.toLong(number.bytes) != 0)=>
+            case (number: ScriptConstant) :: rest if (ScriptNum.toLong(number.bytes) != 0) =>
               number :: number :: rest
             case first :: rest =>
               first :: rest
@@ -149,7 +150,7 @@ object StackOp {
 
         case OP_NIP =>
           onStackOp(OP_NIP) {
-            case first :: (second@_) :: rest =>
+            case first :: (second @ _) :: rest =>
               first :: rest
           }
 
@@ -190,7 +191,7 @@ object StackOp {
                 } match {
                   case Success(nth) =>
                     if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
-                      val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth+1))
+                      val newState = rest(nth) :: (rest.take(nth) ++ rest.drop(nth + 1))
                       setStateAndContinue(state.copy(stack = newState, opCount = state.opCount + 1))
                     } else {
                       abort(InvalidStackOperation(OP_ROLL, state))
@@ -216,7 +217,9 @@ object StackOp {
       }
     }
 
-    def onStackOp(opCode: ScriptOpCode)(stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]): InterpreterContext[Option[Boolean]] = {
+    def onStackOp(
+      opCode: ScriptOpCode
+    )(stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         if (stackConvertFunction.isDefinedAt(state.stack)) {
           val newStack = stackConvertFunction(state.stack)

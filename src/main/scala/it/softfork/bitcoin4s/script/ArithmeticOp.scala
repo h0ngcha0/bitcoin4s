@@ -45,6 +45,7 @@ object ArithmeticOp {
   val disabled = Seq(OP_MUL, OP_2MUL, OP_DIV, OP_2DIV, OP_MOD, OP_LSHIFT, OP_RSHIFT)
 
   implicit val interpreter = new InterpretableOp[ArithmeticOp] {
+
     def interpret(opCode: ArithmeticOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case opc if disabled.contains(opc) =>
@@ -165,7 +166,6 @@ object ArithmeticOp {
                     abort(GeneralError(opCode, state))
                 }
 
-
               case _ :: _ :: _ :: _ =>
                 abort(NotAllOperantsAreConstant(opCode, state))
               case _ =>
@@ -223,7 +223,7 @@ object ArithmeticOp {
 
                 setStateAndContinue(newState)
 
-              case Failure(e@_) =>
+              case Failure(e @ _) =>
                 abort(GeneralError(opCode, state))
             }
 

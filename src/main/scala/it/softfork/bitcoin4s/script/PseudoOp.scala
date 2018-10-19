@@ -15,6 +15,7 @@ object PseudoOp {
   val all = TraitEnumeration.values[PseudoOp]
 
   implicit val interpreter = new InterpretableOp[PseudoOp] {
+
     def interpret(opCode: PseudoOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         abort(BadOpCode(opCode, state, "Invalid opCode when executed"))

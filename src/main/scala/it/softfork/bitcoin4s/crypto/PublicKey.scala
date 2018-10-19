@@ -27,6 +27,7 @@ case class PublicKey(point: ECPoint, compressed: Boolean) {
 
 object PublicKey {
   sealed trait DecodeResult
+
   object DecodeResult {
     case class Ok(key: PublicKey) extends DecodeResult
     case object Failure extends DecodeResult

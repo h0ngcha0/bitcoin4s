@@ -21,7 +21,7 @@ object VarInt {
             a <- uint8L.encode(0xfd)
             b <- uint16L.encode(i.toInt)
           } yield a ++ b
-        case i if (i < 0xffffffffL) =>
+        case i if (i < 0XFFFFFFFFL) =>
           for {
             a <- uint8L.encode(0xfe)
             b <- uint32L.encode(i)
@@ -37,12 +37,14 @@ object VarInt {
         case Successful(byte) =>
           byte.value match {
             case 0xff =>
-              Codec[BigInt].decode(byte.remainder)
+              Codec[BigInt]
+                .decode(byte.remainder)
                 .map { case b => b.map(_.toLong) }
             case 0xfe =>
               uint32L.decode(byte.remainder)
             case 0xfd =>
-              uint16L.decode(byte.remainder)
+              uint16L
+                .decode(byte.remainder)
                 .map { case b => b.map(_.toLong) }
             case _ =>
               Successful(scodec.DecodeResult(byte.value.toLong, byte.remainder))
@@ -50,6 +52,7 @@ object VarInt {
         case Failure(err) =>
           Failure(err)
       }
-    })
+    }
+  )
 
 }

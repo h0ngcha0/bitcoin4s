@@ -25,9 +25,7 @@ object BitwiseLogicOp {
     override def interpret(opCode: BitwiseLogicOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case opc if disabled.contains(opc) =>
-          getState.flatMap( state =>
-            abort(OpcodeDisabled(opc, state))
-          )
+          getState.flatMap(state => abort(OpcodeDisabled(opc, state)))
 
         case OP_EQUAL =>
           onOpEqual()

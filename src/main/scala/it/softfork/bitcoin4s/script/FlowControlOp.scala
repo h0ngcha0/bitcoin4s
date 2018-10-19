@@ -24,6 +24,7 @@ object FlowControlOp {
   val all = TraitEnumeration.values[FlowControlOp]
 
   implicit val interpreter = new InterpretableOp[FlowControlOp] {
+
     def interpret(opCode: FlowControlOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         opCode match {
@@ -82,7 +83,7 @@ object FlowControlOp {
               case Failure(error: InterpreterError) =>
                 abort(error)
 
-              case Failure(e@_) =>
+              case Failure(e @ _) =>
                 abort(UnbalancedConditional(opCode, state))
             }
 
@@ -133,7 +134,7 @@ object FlowControlOp {
       case opCode :: tail if opCode == OP_IF || opCode == OP_NOTIF =>
         val newNestedDepth = nestedDepth + 1
 
-        if (newNestedDepth > 1){
+        if (newNestedDepth > 1) {
           splitScriptOnConditional(
             script = tail,
             nestedDepth = newNestedDepth,
@@ -163,7 +164,7 @@ object FlowControlOp {
             nestedDepth = nestedDepth,
             acc = acc.copy(branches = acc.branches :+ Seq.empty) // add a new empty branch
           )
-        } else if (nestedDepth > 1){
+        } else if (nestedDepth > 1) {
           splitScriptOnConditional(
             script = tail,
             nestedDepth = nestedDepth,

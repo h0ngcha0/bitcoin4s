@@ -9,7 +9,7 @@ final class LongCodecWithNegValue(bits: Int, signed: Boolean, ordering: ByteOrde
   require(bits > 0 && bits <= (if (signed) 64 else 63), "bits must be in range [1, 64] for signed and [1, 63] for unsigned")
 
   val MaxValue = (1L << (if (signed) (bits - 1) else bits)) - 1
-  val MinValue = if (signed) -(1L << (bits - 1)) else -1  // allow -1
+  val MinValue = if (signed) -(1L << (bits - 1)) else -1 // allow -1
 
   private val bitsL = bits.toLong
 

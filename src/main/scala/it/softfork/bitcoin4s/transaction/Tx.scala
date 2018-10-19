@@ -16,6 +16,7 @@ case class Tx(
 )
 
 object Tx {
+
   def codec(version: Int) = {
     ("version" | uint32L) ::
       ("tx_in" | VarList.varList(Codec[TxIn])) ::

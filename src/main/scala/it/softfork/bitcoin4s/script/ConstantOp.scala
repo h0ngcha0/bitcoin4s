@@ -20,7 +20,7 @@ object ConstantOp {
   case object OP_2 extends ConstantOp { val value = 82 }
   case object OP_3 extends ConstantOp { val value = 83 }
   case object OP_4 extends ConstantOp { val value = 84 }
-  case object OP_5 extends ConstantOp { val value = 85}
+  case object OP_5 extends ConstantOp { val value = 85 }
   case object OP_6 extends ConstantOp { val value = 86 }
   case object OP_7 extends ConstantOp { val value = 87 }
   case object OP_8 extends ConstantOp { val value = 88 }
@@ -41,9 +41,29 @@ object ConstantOp {
   val ops_pushdata = for (i <- 1 to 75) yield OP_PUSHDATA(i)
 
   val all = Seq(
-    OP_0, OP_FALSE, OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4, OP_1NEGATE,
-    OP_1, OP_TRUE, OP_2, OP_3, OP_4, OP_5, OP_6, OP_7, OP_8, OP_9, OP_10,
-    OP_11, OP_12, OP_13, OP_14, OP_15, OP_16
+    OP_0,
+    OP_FALSE,
+    OP_PUSHDATA1,
+    OP_PUSHDATA2,
+    OP_PUSHDATA4,
+    OP_1NEGATE,
+    OP_1,
+    OP_TRUE,
+    OP_2,
+    OP_3,
+    OP_4,
+    OP_5,
+    OP_6,
+    OP_7,
+    OP_8,
+    OP_9,
+    OP_10,
+    OP_11,
+    OP_12,
+    OP_13,
+    OP_14,
+    OP_15,
+    OP_16
   ) ++ ops_pushdata
 
   // https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki#numbers
@@ -56,18 +76,22 @@ object ConstantOp {
           getState
             .flatMap { state =>
               // from OP_1NEGATE to OP_16
-              setStateAndContinue(state.copy(
-                stack = ScriptNum(opc.value - 80) +: state.stack
-              ))
+              setStateAndContinue(
+                state.copy(
+                  stack = ScriptNum(opc.value - 80) +: state.stack
+                )
+              )
             }
 
         case OP_0 | OP_FALSE =>
           getState
             .flatMap { state =>
               // Push empty byte array to the stack
-              setStateAndContinue(state.copy(
-                stack = ScriptConstant(Seq.empty[Byte]) +: state.stack
-              ))
+              setStateAndContinue(
+                state.copy(
+                  stack = ScriptConstant(Seq.empty[Byte]) +: state.stack
+                )
+              )
             }
 
         case _: OP_PUSHDATA | OP_PUSHDATA1 | OP_PUSHDATA2 | OP_PUSHDATA4 =>
@@ -78,19 +102,23 @@ object ConstantOp {
                   if (!checkMinimalPush(opCode, dataToPush) && state.ScriptFlags.requireMinimalEncoding()) {
                     abort(NotMinimalEncoding(opCode, state))
                   } else {
-                    setStateAndContinue(state.copy(
-                      currentScript = rest,
-                      stack = dataToPush +: state.stack
-                    ))
+                    setStateAndContinue(
+                      state.copy(
+                        currentScript = rest,
+                        stack = dataToPush +: state.stack
+                      )
+                    )
                   }
                 case OP_0 :: rest =>
                   if (state.ScriptFlags.requireMinimalEncoding()) {
                     abort(NotMinimalEncoding(opCode, state))
                   } else {
-                    setStateAndContinue(state.copy(
-                      currentScript = rest,
-                      stack = ScriptNum(0) +: state.stack
-                    ))
+                    setStateAndContinue(
+                      state.copy(
+                        currentScript = rest,
+                        stack = ScriptNum(0) +: state.stack
+                      )
+                    )
                   }
                 case _ :: _ =>
                   abort(OperantMustBeScriptConstant(opCode, state))

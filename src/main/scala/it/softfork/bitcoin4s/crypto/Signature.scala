@@ -1,6 +1,5 @@
 package it.softfork.bitcoin4s.crypto
 
-
 import it.softfork.bitcoin4s.Utils._
 import java.math.BigInteger
 

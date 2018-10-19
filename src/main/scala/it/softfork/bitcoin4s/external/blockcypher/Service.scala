@@ -52,7 +52,6 @@ class Service(api: ApiInterface)(
     flags: Seq[ScriptFlag] = Seq(ScriptFlag.SCRIPT_VERIFY_P2SH, ScriptFlag.SCRIPT_VERIFY_WITNESS)
   ): Future[Option[InterpreterOutcome]] = {
     getTransaction(txId).flatMap { maybeSpendingTx =>
-
       val maybeTxInput = maybeSpendingTx.flatMap { spendingTx =>
         allCatch.opt(spendingTx.inputs(inputIndex))
       }
@@ -64,9 +63,11 @@ class Service(api: ApiInterface)(
 
           getTransactionOutput(prevId, outputIndex).map { maybeTxOutput =>
             maybeTxOutput.map { txOutout =>
-              val scriptSig = txInput.script.map { s =>
-                Parser.parse(Hash.fromHex(s))
-              }.getOrElse(Seq.empty)
+              val scriptSig = txInput.script
+                .map { s =>
+                  Parser.parse(Hash.fromHex(s))
+                }
+                .getOrElse(Seq.empty)
 
               val scriptPubKey = Parser.parse(Hash.fromHex(txOutout.script))
 
@@ -95,7 +96,7 @@ class Service(api: ApiInterface)(
               logger.info(s"Interpreter finished with $outcome")
 
               outcome.map {
-                case (finalState@_, interpretedResult) =>
+                case (finalState @ _, interpretedResult) =>
                   InterpreterOutcome(
                     result = InterpreterResultOut.fromInterpreterResult(interpretedResult),
                     state = InterpreterStateOut.fromInterpreterState(finalState)

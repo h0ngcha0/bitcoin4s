@@ -6,6 +6,7 @@ import it.softfork.bitcoin4s.Config.MnemonicCodesConfig
 import scala.util.Try
 
 class MnemonicCodes(config: MnemonicCodesConfig) {
+
   // FIXME: type input to have length [128, 160, 192, 224, 256]
   def fromEntropy(input: Array[Byte]): Seq[String] = {
     val inputAsBinaryString = input.map(byteToPaddedBinaryString).mkString

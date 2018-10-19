@@ -42,7 +42,7 @@ class Api(httpSender: HttpSender)(
 class CachedApi(api: Api)(
   implicit
   system: ActorSystem,
-  ec: ExecutionContext,
+  ec: ExecutionContext
 ) extends ApiInterface {
   implicit val transactionCacheActor = system.actorOf(TransactionCacheActor.props())
 
@@ -66,7 +66,6 @@ class CachedApi(api: Api)(
   }
 }
 
-
 object Api {
 
   @json case class TransactionInput(
@@ -80,11 +79,14 @@ object Api {
     witness: Option[List[String]] = None
   ) {
     val prevTxHash = ScodecHash(ByteVector(Hash.fromHex(prev_hash)))
+
     def toTxIn = TxIn(
       previous_output = OutPoint(prevTxHash, output_index),
-      sig_script = script.map { s =>
-        ByteVector(Hash.fromHex(s))
-      }.getOrElse(ByteVector.empty),
+      sig_script = script
+        .map { s =>
+          ByteVector(Hash.fromHex(s))
+        }
+        .getOrElse(ByteVector.empty),
       sequence = sequence
     )
   }
@@ -95,6 +97,7 @@ object Api {
     spent_by: Option[String],
     script_type: String
   ) {
+
     def toTxOut = TxOut(
       value = value,
       pk_script = ByteVector(Parser.parse(Hash.fromHex(script)).flatMap(_.bytes))
@@ -122,6 +125,7 @@ object Api {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
+
     def toTx = Tx(
       version = ver,
       tx_in = inputs.map(_.toTxIn).toList,
@@ -141,5 +145,5 @@ object Api {
     }
   }
 
-  protected implicit val transactionUnmarshaller = Unmarshaller.stringUnmarshaller.map(parseTransaction)
+  implicit protected val transactionUnmarshaller = Unmarshaller.stringUnmarshaller.map(parseTransaction)
 }

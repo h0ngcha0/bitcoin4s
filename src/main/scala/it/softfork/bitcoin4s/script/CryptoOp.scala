@@ -34,6 +34,7 @@ object CryptoOp {
   val all = TraitEnumeration.values[CryptoOp]
 
   sealed trait MultiSigCheckError extends Product
+
   object MultiSigCheckError {
     case object NotEnoughElements extends MultiSigCheckError
     case object WrongNumberOfPubKeys extends MultiSigCheckError
@@ -43,6 +44,7 @@ object CryptoOp {
   }
 
   implicit val interpreter = new InterpretableOp[CryptoOp] {
+
     def interpret(opCode: CryptoOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_RIPEMD160 =>
@@ -84,7 +86,8 @@ object CryptoOp {
                 Signature.decode(encodedSignature.bytes) match {
                   case Some((signature, sigHashFlagBytes)) =>
                     signature match {
-                      case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
+                      case ECDSASignature(_, s)
+                          if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
                         abort(SignatureHighS(opCode, state))
 
                       case _ =>
@@ -111,7 +114,7 @@ object CryptoOp {
                                 }
                               }
 
-                            case DecodeResult.OkButNotStrictEncoded(decodedPublicKey@_) =>
+                            case DecodeResult.OkButNotStrictEncoded(decodedPublicKey @ _) =>
                               abort(PublicKeyWrongEncoding(opCode, state))
 
                             case DecodeResult.Failure =>
@@ -151,9 +154,9 @@ object CryptoOp {
             import MultiSigCheckError._
 
             val maybeSplitStack = for {
-              v1                   <- state.stack.splitAtEither(1, NotEnoughElements)
-              (ms, rest0)          = v1
-              numberOfPubKeys      <- ms.headEither(NotEnoughElements).flatMap { m =>
+              v1 <- state.stack.splitAtEither(1, NotEnoughElements)
+              (ms, rest0) = v1
+              numberOfPubKeys <- ms.headEither(NotEnoughElements).flatMap { m =>
                 Try {
                   ScriptNum(m.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
                 } match {
@@ -166,11 +169,11 @@ object CryptoOp {
                     Left(PubKeysNumberWrongEncoding)
                 }
               }
-              v2                   <- rest0.splitAtEither(numberOfPubKeys, NotEnoughElements)
-              (pubKeys, rest1)     = v2
-              v3                   <- rest1.splitAtEither(1, NotEnoughElements)
-              (ns, rest2)          = v3
-              numberOfSignatures   <- ns.headEither(NotEnoughElements).flatMap { n =>
+              v2 <- rest0.splitAtEither(numberOfPubKeys, NotEnoughElements)
+              (pubKeys, rest1) = v2
+              v3 <- rest1.splitAtEither(1, NotEnoughElements)
+              (ns, rest2) = v3
+              numberOfSignatures <- ns.headEither(NotEnoughElements).flatMap { n =>
                 Try {
                   ScriptNum(n.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
                 } match {
@@ -183,8 +186,8 @@ object CryptoOp {
                     Left(SignatureNumberWrongEncoding)
                 }
               }
-              v4                   <- rest2.splitAtEither(numberOfSignatures, NotEnoughElements)
-              (signatures, rest)   = v4
+              v4 <- rest2.splitAtEither(numberOfSignatures, NotEnoughElements)
+              (signatures, rest) = v4
             } yield (pubKeys, signatures, rest)
 
             maybeSplitStack match {
@@ -282,7 +285,12 @@ object CryptoOp {
   }
 
   @tailrec
-  def checkSignatures(encodedPublicKeys: Seq[ScriptElement], encodedSignatures: Seq[ScriptElement], state: InterpreterState, strictEnc: Boolean = true): Boolean = {
+  def checkSignatures(
+    encodedPublicKeys: Seq[ScriptElement],
+    encodedSignatures: Seq[ScriptElement],
+    state: InterpreterState,
+    strictEnc: Boolean = true
+  ): Boolean = {
     if (encodedSignatures.length > encodedPublicKeys.length) {
       false
     } else {
@@ -292,7 +300,8 @@ object CryptoOp {
             Signature.decode(encodedSignature.bytes) match {
               case Some((signature, sigHashFlagBytes)) =>
                 signature match {
-                  case ECDSASignature(_, s) if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
+                  case ECDSASignature(_, s)
+                      if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
                     throw SignatureHighS(OP_CHECKMULTISIG, state)
 
                   case _ =>

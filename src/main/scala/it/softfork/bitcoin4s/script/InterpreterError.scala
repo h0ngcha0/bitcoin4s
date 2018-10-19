@@ -14,12 +14,14 @@ object InterpreterError {
   }
 
   object NotEnoughElementsInStack {
+
     def apply(opCode: ScriptOpCode, state: InterpreterState) = {
       BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Not enough elements in the stack")
     }
   }
 
-  object NotExecutableReservedOpcode{
+  object NotExecutableReservedOpcode {
+
     def apply(opCode: ScriptOpCode, state: InterpreterState) = {
       BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Found not executable reserved opcode")
     }

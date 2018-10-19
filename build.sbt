@@ -4,7 +4,7 @@ enablePlugins(JavaAppPackaging)
 
 name := "bitcoin4s"
 organization := "it.softfork"
-version := "0.0.5"
+version := "0.1.0"
 
 scalaVersion in ThisBuild := "2.12.7"
 
@@ -114,6 +114,13 @@ resourceGenerators in Compile += Def.task {
     resourceFile
   }
 }.taskValue
+
+val scalafmtAll = taskKey[Unit]("Format all Scala and sbt files")
+scalafmtAll := {
+  (Compile / scalafmt).value
+  (Test / scalafmt).value
+  (Compile / scalafmtSbt).value
+}
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
 

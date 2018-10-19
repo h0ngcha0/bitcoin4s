@@ -12,7 +12,7 @@ sealed trait ScriptFlag extends Product {
 object ScriptFlag {
   // Name and comment copy from https://github.com/bitcoin/bitcoin/blob/master/src/script/interpreter.h
 
-  case object SCRIPT_VERIFY_NONE extends ScriptFlag { val value =  0 }
+  case object SCRIPT_VERIFY_NONE extends ScriptFlag { val value = 0 }
 
   // Evaluate P2SH subscripts (softfork safe, BIP16).
   case object SCRIPT_VERIFY_P2SH extends ScriptFlag { val value = 1 << 0 }
@@ -50,7 +50,7 @@ object ScriptFlag {
   // discouraged NOPs fails the script. This verification flag will never be
   // a mandatory flag applied to scripts in a block. NOPs that are not
   // executed, e.g.  within an unexecuted IF ENDIF block, are *not* rejected.
-  case object SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS  extends ScriptFlag { val value = 1 << 7 }
+  case object SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS extends ScriptFlag { val value = 1 << 7 }
 
   // Require that only a single stack element remains after evaluation. This changes the success criterion from
   // "At least one stack element must remain, and when interpreted as a boolean, it must be true" to

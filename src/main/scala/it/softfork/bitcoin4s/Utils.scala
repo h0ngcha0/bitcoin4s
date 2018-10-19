@@ -22,6 +22,7 @@ package object Utils {
   }
 
   implicit class RichBoolean(b: Boolean) {
+
     def flatOption[T](f: => Option[T]): Option[T] = {
       if (b) f else None
     }
@@ -32,6 +33,7 @@ package object Utils {
   }
 
   implicit class RichAttemptByteVector(attemptByteVector: Attempt[BitVector]) {
+
     def toBytes(): Array[Byte] = {
       attemptByteVector.toEither match {
         case Left(error) =>
@@ -43,13 +45,13 @@ package object Utils {
   }
 
   implicit class RichSeq[T](seq: Seq[T]) {
+
     def forceTake(n: Int): Seq[T] = {
       val maybeNElements = seq.take(n)
       (maybeNElements.length == n)
         .option(maybeNElements)
         .getOrElse(throw new RuntimeException(s"Not enough elements in $seq to take $n."))
     }
-
 
     def takeOpt(n: Int): Option[Seq[T]] = {
       val maybeNElements = seq.take(n)

@@ -17,6 +17,7 @@ import cats.data._
 import cats.implicits._
 
 sealed trait ScriptExecutionStage
+
 object ScriptExecutionStage {
   case object ExecutingScriptSig extends ScriptExecutionStage
   case object ExecutingScriptPubKey extends ScriptExecutionStage
@@ -25,6 +26,7 @@ object ScriptExecutionStage {
 }
 
 object InterpreterState {
+
   def apply(
     scriptPubKey: Seq[ScriptElement],
     scriptSig: Seq[ScriptElement],
@@ -76,6 +78,7 @@ case class InterpreterState(
   def scriptSignature: Seq[Byte] = transactionInput.sig_script.toSeq
 
   object ScriptFlags {
+
     def requireMinimalEncoding(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALDATA)
     }
@@ -105,7 +108,7 @@ object Interpreter {
   val MAX_OPCODES = 201
   val MAX_PUSH_SIZE = 520
   val MAX_STACK_SIZE = 1000
-  val MAX_SCRIPT_SIZE = 10000  // bytes
+  val MAX_SCRIPT_SIZE = 10000 // bytes
 
   def tailRecM[A, B] = FlatMap[InterpreterContext].tailRecM[A, B] _
 
@@ -133,8 +136,8 @@ object Interpreter {
     Left(error).asInstanceOf[InterpreterErrorHandler[Option[Boolean]]]
   }
 
-  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean],Option[Boolean]]] = StateT.liftF {
-    Left(error).asInstanceOf[InterpreterErrorHandler[Either[Option[Boolean],Option[Boolean]]]]
+  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = StateT.liftF {
+    Left(error).asInstanceOf[InterpreterErrorHandler[Either[Option[Boolean], Option[Boolean]]]]
   }
 
   def tailRecMEvaluated(maybeValue: Option[Boolean]): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
@@ -160,17 +163,17 @@ object Interpreter {
 
   private def interpretScript(verbose: Boolean, maybeSteps: Option[Int]): InterpreterContext[Option[Boolean]] = {
     tailRecM((None: Option[Boolean], maybeSteps)) {
-      case (Some(value), maybeNewSteps@_) =>
-        tailRecMEvaluated(Some(value)).map(_.leftMap{(_, maybeNewSteps)})
+      case (Some(value), maybeNewSteps @ _) =>
+        tailRecMEvaluated(Some(value)).map(_.leftMap { (_, maybeNewSteps) })
 
       case (None, Some(newSteps)) if newSteps <= 0 =>
-        tailRecMEvaluated(None).map(_.leftMap{(_, Some(newSteps))})
+        tailRecMEvaluated(None).map(_.leftMap { (_, Some(newSteps)) })
 
       case (None, maybeNewSteps) =>
         for {
-          state  <- getState
-          _      <- checkOpCodeCount()
-          _      <- checkMaxStackSize()
+          state <- getState
+          _ <- checkOpCodeCount()
+          _ <- checkMaxStackSize()
           result <- interpretOneOp(state, verbose, maybeNewSteps)
         } yield {
           result match {
@@ -226,12 +229,14 @@ object Interpreter {
         state.scriptExecutionStage match {
           case ExecutingScriptSig =>
             for {
-              _ <- setState(state.copy(
-                currentScript = state.scriptPubKey,
-                altStack = Seq.empty,
-                opCount = 0,
-                scriptExecutionStage = ExecutingScriptPubKey
-              ))
+              _ <- setState(
+                state.copy(
+                  currentScript = state.scriptPubKey,
+                  altStack = Seq.empty,
+                  opCount = 0,
+                  scriptExecutionStage = ExecutingScriptPubKey
+                )
+              )
               _ <- checkInvalidOpCode()
               _ <- checkDisabledOpCode()
               _ <- checkMaxPushSize()
@@ -257,14 +262,16 @@ object Interpreter {
                           val payToScript = Parser.parse(serializedScript.bytes)
 
                           for {
-                            _ <- setState(state.copy(
-                              currentScript = payToScript,
-                              stack = tail,
-                              altStack = Seq.empty,
-                              opCount = 0,
-                              scriptP2sh = Some(payToScript),
-                              scriptExecutionStage = ExecutingScriptP2SH
-                            ))
+                            _ <- setState(
+                              state.copy(
+                                currentScript = payToScript,
+                                stack = tail,
+                                altStack = Seq.empty,
+                                opCount = 0,
+                                scriptP2sh = Some(payToScript),
+                                scriptExecutionStage = ExecutingScriptP2SH
+                              )
+                            )
                             _ <- checkInvalidOpCode()
                             _ <- checkDisabledOpCode()
                             _ <- checkMaxPushSize()
@@ -442,8 +449,8 @@ object Interpreter {
 
   private def isP2SHScript(scriptPubkey: Seq[ScriptElement]): Boolean = {
     scriptPubkey.headOption.exists(_ == CryptoOp.OP_HASH160) &&
-      scriptPubkey.tail.headOption.exists(_ == ConstantOp.OP_PUSHDATA(20)) &&
-      scriptPubkey.lastOption.exists(_ == BitwiseLogicOp.OP_EQUAL)
+    scriptPubkey.tail.headOption.exists(_ == ConstantOp.OP_PUSHDATA(20)) &&
+    scriptPubkey.lastOption.exists(_ == BitwiseLogicOp.OP_EQUAL)
   }
 
   private def rebuildScriptPubkeyAndStackFromWitness(witnessHash: ScriptConstant, witnessStack: Seq[ScriptElement]) = {
@@ -478,12 +485,32 @@ object Interpreter {
     }
   }
 
-  private def getWitnessScript(scriptPubkey: Seq[ScriptElement], state: InterpreterState): Either[WitnessRebuiltError, (ConstantOp, ScriptConstant)] = {
+  private def getWitnessScript(
+    scriptPubkey: Seq[ScriptElement],
+    state: InterpreterState
+  ): Either[WitnessRebuiltError, (ConstantOp, ScriptConstant)] = {
     import ConstantOp._
 
     val possibleVersionNumbers = Seq(
-      OP_0, OP_FALSE, OP_1, OP_TRUE, OP_2, OP_3, OP_4, OP_5, OP_6, OP_7,
-      OP_8, OP_9, OP_10, OP_11, OP_12, OP_13, OP_14, OP_15, OP_16
+      OP_0,
+      OP_FALSE,
+      OP_1,
+      OP_TRUE,
+      OP_2,
+      OP_3,
+      OP_4,
+      OP_5,
+      OP_6,
+      OP_7,
+      OP_8,
+      OP_9,
+      OP_10,
+      OP_11,
+      OP_12,
+      OP_13,
+      OP_14,
+      OP_15,
+      OP_16
     )
 
     scriptPubkey match {
@@ -517,15 +544,17 @@ object Interpreter {
           val interpreterContext = for {
             _ <- checkWitnessP2WPKHScriptSigEmpty()
             _ <- checkWitnessSuperfluousScriptSigOperation()
-            _ <- setState(state.copy(
-              currentScript = rebuiltScript,
-              stack = rebuiltStack,
-              altStack = Seq.empty,
-              opCount = 0,
-              scriptWitness = Some(rebuiltScript),
-              sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
-              scriptExecutionStage = ExecutingScriptWitness
-            ))
+            _ <- setState(
+              state.copy(
+                currentScript = rebuiltScript,
+                stack = rebuiltStack,
+                altStack = Seq.empty,
+                opCount = 0,
+                scriptWitness = Some(rebuiltScript),
+                sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
+                scriptExecutionStage = ExecutingScriptWitness
+              )
+            )
             _ <- checkInvalidOpCode()
             _ <- checkDisabledOpCode()
             _ <- checkMaxPushSize()
@@ -551,13 +580,14 @@ object Interpreter {
         case Left(WitnessRebuiltError.WitnessProgramUpgradableVersion) =>
           Some(abort(DiscourageUpgradableWitnessProgram(OP_UNKNOWN, state)))
 
-        case Left(error@_) =>
+        case Left(error @ _) =>
           Some(abort(GeneralError(OP_UNKNOWN, state)))
       }
     }
   }
 
   sealed trait WitnessRebuiltError
+
   object WitnessRebuiltError {
     case object WitnessScriptUnableToExtract extends WitnessRebuiltError
     case object WitnessProgramMismatch extends WitnessRebuiltError
@@ -571,7 +601,7 @@ object Interpreter {
     state: InterpreterState
   ): Either[WitnessRebuiltError, (Seq[ScriptElement], Seq[ScriptElement])] = {
     getWitnessScript(script, state).right.flatMap {
-      case (version@_, witnessHash) =>
+      case (version @ _, witnessHash) =>
         rebuildScriptPubkeyAndStackFromWitness(witnessHash, state.scriptWitnessStack.getOrElse(Seq.empty))
     }
   }
@@ -583,9 +613,9 @@ object Interpreter {
   private def getSerializedScript(scriptSig: Seq[ScriptElement]): Option[ScriptElement] = {
     val fromLastPushOp = scriptSig.reverse.dropWhile { element =>
       element.isInstanceOf[OP_PUSHDATA] ||
-        element == OP_PUSHDATA1 ||
-        element == OP_PUSHDATA2 ||
-        element == OP_PUSHDATA4
+      element == OP_PUSHDATA1 ||
+      element == OP_PUSHDATA2 ||
+      element == OP_PUSHDATA4
     }
 
     fromLastPushOp.headOption
@@ -594,9 +624,9 @@ object Interpreter {
   private def removePushOps(script: Seq[ScriptElement]): Seq[ScriptElement] = {
     script.filterNot { element =>
       element.isInstanceOf[OP_PUSHDATA] ||
-        element == OP_PUSHDATA1 ||
-        element == OP_PUSHDATA2 ||
-        element == OP_PUSHDATA4
+      element == OP_PUSHDATA1 ||
+      element == OP_PUSHDATA2 ||
+      element == OP_PUSHDATA4
     }
   }
 }

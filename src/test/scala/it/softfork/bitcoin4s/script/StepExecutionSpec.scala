@@ -14,6 +14,7 @@ class StepExecutionSpec extends Spec {
   implicit class InterpreterResultExtractor(
     interpreterResult: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
   ) {
+
     def currentScript() = {
       getInterpreterState().currentScript
     }
@@ -30,7 +31,6 @@ class StepExecutionSpec extends Spec {
       getInterpreterState().scriptExecutionStage
     }
 
-
     def getInterpreterState(): InterpreterState = {
       interpreterResult.toOption.value._1
     }
@@ -39,7 +39,6 @@ class StepExecutionSpec extends Spec {
       interpreterResult.toOption.value._2
     }
   }
-
 
   "Interpreter" should "execute only the number steps specified" in {
     val scriptPubKey = Parser.parse("DEPTH 0 EQUAL")
@@ -92,7 +91,7 @@ class StepExecutionSpec extends Spec {
     // A fake transaction that is not used since no crypto ops are involved.
     val emptyTx = Tx(
       version = 1,
-      tx_in =  List.empty,
+      tx_in = List.empty,
       tx_out = List.empty,
       lock_time = 1000000
     )

@@ -31,19 +31,19 @@ object ScriptConstant {
 trait ScriptNum extends ScriptConstant {
   val value: Long
 
-  def == (that: ScriptNum) = value == that.value
-  def == (that: Long) = value == that
-  def != (that: Long) = value != that
-  def != (that: ScriptNum) = value != that.value
-  def <= (that: ScriptNum) = value <= that.value
-  def <  (that: ScriptNum) = value < that.value
-  def >= (that: ScriptNum) = value >= that.value
-  def >  (that: ScriptNum) = value > that.value
+  def ==(that: ScriptNum) = value == that.value
+  def ==(that: Long) = value == that
+  def !=(that: Long) = value != that
+  def !=(that: ScriptNum) = value != that.value
+  def <=(that: ScriptNum) = value <= that.value
+  def <(that: ScriptNum) = value < that.value
+  def >=(that: ScriptNum) = value >= that.value
+  def >(that: ScriptNum) = value > that.value
 
-  def +  (that: ScriptNum) = ScriptNum(value + that.value)
-  def +  (that: Long) = ScriptNum(value + that)
-  def -  (that: ScriptNum) = ScriptNum(value - that.value)
-  def -  (that: Long) = ScriptNum(value - that)
+  def +(that: ScriptNum) = ScriptNum(value + that.value)
+  def +(that: Long) = ScriptNum(value + that)
+  def -(that: ScriptNum) = ScriptNum(value - that.value)
+  def -(that: Long) = ScriptNum(value - that)
 
   override def toString: String = s"ScriptNum($value)"
 
@@ -111,7 +111,7 @@ object ScriptNum {
     }
   }
 
-  def toLong(bytes : Seq[Byte]) : Long = {
+  def toLong(bytes: Seq[Byte]): Long = {
     val bytesReversed = bytes.reverse
 
     (bytes.size == 0 || bytes.size == 1 && bytes.head == -128).option(0L).getOrElse {
@@ -125,7 +125,7 @@ object ScriptNum {
     }
   }
 
-  private def setPositive(bytes : Seq[Byte]): Seq[Byte] = {
+  private def setPositive(bytes: Seq[Byte]): Seq[Byte] = {
     bytes match {
       case head +: tail =>
         (head & 0x7F).toByte +: tail
@@ -134,9 +134,9 @@ object ScriptNum {
     }
   }
 
-  private def parseLong(bytes : Seq[Byte]): Long = {
+  private def parseLong(bytes: Seq[Byte]): Long = {
     (bytes.isEmpty).option(0L).getOrElse {
-      java.lang.Long.parseLong(bytes.toHex,16)
+      java.lang.Long.parseLong(bytes.toHex, 16)
     }
   }
 
@@ -169,6 +169,7 @@ trait ScriptOpCode extends ScriptElement with Product {
 }
 
 object OpCodes {
+
   val all = ArithmeticOp.all ++
     BitwiseLogicOp.all ++
     ConstantOp.all ++
@@ -198,7 +199,8 @@ object OpCodes {
 
   // e.g. `OP_DUP` or `DUP`
   def fromString(str: String): Option[ScriptOpCode] = {
-    all.find(_.name == str)
+    all
+      .find(_.name == str)
       .orElse(all.find(_.name.replace("OP_", "") == str))
   }
 }

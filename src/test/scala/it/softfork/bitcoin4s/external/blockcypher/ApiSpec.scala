@@ -28,7 +28,6 @@ class ApiSpec extends Spec with StrictLogging {
     val creditingTransaction = Api.parseTransaction(rawCreditingTransaction)
     val spendingTransaction = Api.parseTransaction(rawSpendingTransaction)
 
-
     // Only look at the first input
     //val firstScriptPutKey = spendingTx.tx_in(0).sig_script
     val spendingTx = spendingTransaction.toTx
@@ -59,7 +58,7 @@ class ApiSpec extends Spec with StrictLogging {
     val interpreterOutcome = Interpreter.create(verbose = false).run(initialState)
 
     interpreterOutcome match {
-      case Right((finalState@_, interpretedResult)) =>
+      case Right((finalState @ _, interpretedResult)) =>
         interpretedResult.value shouldBe true
         logger.info(s"interpretedResult: $interpretedResult")
 

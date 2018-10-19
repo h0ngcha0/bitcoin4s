@@ -10,6 +10,7 @@ sealed trait Address {
 }
 
 case class P2PKHAddress(value: String) extends Address {
+
   def fromPublicKey(version: VersionPrefix, publicKey: PublicKey): P2PKHAddress = {
     val hash = Hash160(publicKey.encoded.toArray)
 

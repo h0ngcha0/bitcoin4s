@@ -17,7 +17,7 @@ object Base58 {
   }
 
   def decode(input: String): Seq[Byte] = {
-    val (leadingZeros, restOfInput) = input.partition(_ == One)  // Index of One is 0
+    val (leadingZeros, restOfInput) = input.partition(_ == One) // Index of One is 0
     val restOfInputAsBigInt = restOfInput.foldLeft(BigInt(0)) { (acc, inputChar) =>
       (acc * Base) + BigInt(AlphabetsWithIndex(inputChar))
     }

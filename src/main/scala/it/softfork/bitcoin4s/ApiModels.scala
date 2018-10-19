@@ -31,6 +31,7 @@ object ApiModels {
   )
 
   object InterpreterStateOut {
+
     def fromInterpreterState(interpreterState: InterpreterState) = {
       InterpreterStateOut(
         scriptPubKey = interpreterState.scriptPubKey,

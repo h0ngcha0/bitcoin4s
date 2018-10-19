@@ -14,14 +14,14 @@ import scala.util.control.Exception.allCatch
 class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
 
   implicit class RichConfigValue(configValue: ConfigValue) {
+
     def toList(): List[ConfigValue] = {
       configValue.asInstanceOf[ConfigList].iterator().asScala.toList
     }
   }
 
   val testConfigString = Source.fromURI(getClass.getResource("/script_test.json").toURI).mkString
-  val testConfig: Config = ConfigFactory.parseString(
-    s"""
+  val testConfig: Config = ConfigFactory.parseString(s"""
        |bitcoin4s {
        |  script_tests = $testConfigString
        |}
@@ -37,15 +37,17 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
       .filter(_.length > 3)
 
     lazy val scriptTests = rawScriptTests.collect {
-      case elements @ (head :: tail)  =>
+      case elements @ (head :: tail) =>
         if (head.isInstanceOf[ConfigList]) {
           val witnessElement = head.toList.map(_.render)
           val amount = (BigDecimal(witnessElement.last) * 100000000).toLong
           val stringTail = tail.map(stripDoubleQuotes)
           val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
-          val witnesses = witnessElement.reverse.tail.flatMap { rawWitness =>
-            allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)).toSeq)
-          }.map(ScriptConstant.apply)
+          val witnesses = witnessElement.reverse.tail
+            .flatMap { rawWitness =>
+              allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)).toSeq)
+            }
+            .map(ScriptConstant.apply)
           val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringTail.take(4)
           val scriptFlags = toScriptFlags(scriptFlagsString)
           val expectedResult = ExpectedResult.fromString(expectedResultString).value

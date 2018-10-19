@@ -12,6 +12,7 @@ object RichTransaction extends StrictLogging {
   val transactionVersion = 1
 
   implicit class RichTx(tx: Tx) {
+
     def serialize(): ByteVector = {
       Tx.codec(transactionVersion).encode(tx).toEither match {
         case Left(error) =>
@@ -39,11 +40,11 @@ object RichTransaction extends StrictLogging {
           updatedTx0
         }
 
-      val updatedTx = sigHashType.SIGHASH_ANYONECANPAY()
+      val updatedTx = sigHashType
+        .SIGHASH_ANYONECANPAY()
         .option(
           updatedTx1.copy(
-            tx_in = updatedTx1.tx_in
-              .zipWithIndex
+            tx_in = updatedTx1.tx_in.zipWithIndex
               .filter(_._2 == inputIndex)
               .map(_._1)
           )
@@ -61,12 +62,13 @@ object RichTransaction extends StrictLogging {
       Hash.Hash256(transactionPreImage)
     }
 
-
     // https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
     // https://github.com/bitcoin/bitcoin/blob/f8528134fc188abc5c7175a19680206964a8fade/src/script/interpreter.cpp#L1113
     def signingHashSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, amount: Long, sigHashType: SignatureHashType): Seq[Byte] = {
-      val prevOutsHash: Array[Byte] = if(!sigHashType.SIGHASH_ANYONECANPAY()) {
-        val prevOut = tx.tx_in.toArray.flatMap { txIn => OutPoint.codec.encode(txIn.previous_output).toBytes }
+      val prevOutsHash: Array[Byte] = if (!sigHashType.SIGHASH_ANYONECANPAY()) {
+        val prevOut = tx.tx_in.toArray.flatMap { txIn =>
+          OutPoint.codec.encode(txIn.previous_output).toBytes
+        }
         Hash.Hash256(prevOut)
       } else {
         Hash.zeros
@@ -75,7 +77,9 @@ object RichTransaction extends StrictLogging {
       val txIn = tx.tx_in(inputIndex)
 
       val sequencesHash = if (!sigHashType.SIGHASH_ANYONECANPAY() && !sigHashType.SIGHASH_NONE() && !sigHashType.SIGHASH_SINGLE()) {
-        val sequenceBytes = tx.tx_in.toArray.flatMap { txIn => uint32ToBytes(txIn.sequence) }
+        val sequenceBytes = tx.tx_in.toArray.flatMap { txIn =>
+          uint32ToBytes(txIn.sequence)
+        }
         Hash.Hash256(sequenceBytes)
       } else {
         Hash.zeros
@@ -174,7 +178,7 @@ object RichTransaction extends StrictLogging {
     // https://github.com/bitcoin/bitcoin/blob/5961b23898ee7c0af2626c46d5d70e80136578d3/src/primitives/transaction.h#L69
 
     /* Setting nSequence to this value for every input in a transaction disables nLockTime. */
-    val SEQUENCE_FINAL = 0xffffffffL
+    val SEQUENCE_FINAL = 0XFFFFFFFFL
 
     /* Below flags apply in the context of BIP 68*/
     /* If this flag set, CTxIn::nSequence is NOT interpreted as a relative lock-time. */
@@ -187,7 +191,7 @@ object RichTransaction extends StrictLogging {
 
     /* If CTxIn::nSequence encodes a relative lock-time, this mask is
      * applied to extract that lock-time from the sequence field. */
-    val SEQUENCE_LOCKTIME_MASK = 0x0000ffffL
+    val SEQUENCE_LOCKTIME_MASK = 0X0000FFFFL
 
     /* In order to use the same number of bits to encode roughly the
      * same wall-clock duration, and because blocks are naturally
@@ -199,4 +203,3 @@ object RichTransaction extends StrictLogging {
     val SEQUENCE_LOCKTIME_GRANULARITY = 9
   }
 }
-

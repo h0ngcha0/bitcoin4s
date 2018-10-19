@@ -1,6 +1,5 @@
 package it.softfork.bitcoin4s.transaction
 
-
 import it.softfork.bitcoin4s.transaction.structure.{LongCodecWithNegValue, OutPoint, VarInt}
 import scodec.Codec
 import scodec.bits.{ByteOrdering, ByteVector}
@@ -27,4 +26,3 @@ object TxIn {
   }.as[TxIn]
 
 }
-

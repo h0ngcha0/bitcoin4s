@@ -62,15 +62,43 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     case object MINIMALIF extends ExpectedResult // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2016-August/013014.html
 
     val all = Seq(
-      OK, EVAL_FALSE, BAD_OPCODE, UNBALANCED_CONDITIONAL, OP_RETURN, VERIFY,
-      INVALID_ALTSTACK_OPERATION, INVALID_STACK_OPERATION, EQUALVERIFY,
-      DISABLED_OPCODE, UNKNOWN_ERROR, DISCOURAGE_UPGRADABLE_NOPS, PUSH_SIZE,
-      OP_COUNT, STACK_SIZE, SCRIPT_SIZE, PUBKEY_COUNT, SIG_COUNT, SIG_PUSHONLY,
-      MINIMALDATA, PUBKEYTYPE, SIG_DER, WITNESS_PROGRAM_MISMATCH, NULLFAIL,
-      SIG_HIGH_S, SIG_HASHTYPE, SIG_NULLDUMMY, CLEANSTACK,
-      DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM, WITNESS_PROGRAM_WRONG_LENGTH,
-      WITNESS_PROGRAM_WITNESS_EMPTY, WITNESS_MALLEATED, WITNESS_MALLEATED_P2SH,
-      WITNESS_UNEXPECTED, WITNESS_PUBKEYTYPE, NEGATIVE_LOCKTIME, UNSATISFIED_LOCKTIME,
+      OK,
+      EVAL_FALSE,
+      BAD_OPCODE,
+      UNBALANCED_CONDITIONAL,
+      OP_RETURN,
+      VERIFY,
+      INVALID_ALTSTACK_OPERATION,
+      INVALID_STACK_OPERATION,
+      EQUALVERIFY,
+      DISABLED_OPCODE,
+      UNKNOWN_ERROR,
+      DISCOURAGE_UPGRADABLE_NOPS,
+      PUSH_SIZE,
+      OP_COUNT,
+      STACK_SIZE,
+      SCRIPT_SIZE,
+      PUBKEY_COUNT,
+      SIG_COUNT,
+      SIG_PUSHONLY,
+      MINIMALDATA,
+      PUBKEYTYPE,
+      SIG_DER,
+      WITNESS_PROGRAM_MISMATCH,
+      NULLFAIL,
+      SIG_HIGH_S,
+      SIG_HASHTYPE,
+      SIG_NULLDUMMY,
+      CLEANSTACK,
+      DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,
+      WITNESS_PROGRAM_WRONG_LENGTH,
+      WITNESS_PROGRAM_WITNESS_EMPTY,
+      WITNESS_MALLEATED,
+      WITNESS_MALLEATED_P2SH,
+      WITNESS_UNEXPECTED,
+      WITNESS_PUBKEYTYPE,
+      NEGATIVE_LOCKTIME,
+      UNSATISFIED_LOCKTIME,
       MINIMALIF
     )
 
@@ -86,7 +114,6 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     witness: Option[(Seq[ScriptConstant], Long)],
     raw: String
   )
-
 
   def run(test: TestCase, testNumber: Int) = {
     logger.info(s"\n\nTest $testNumber: $test\n\n")
@@ -114,7 +141,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
       expectedResult match {
         case ExpectedResult.OK =>
           result match {
-            case Right((finalState@_, result)) =>
+            case Right((finalState @ _, result)) =>
               result shouldEqual Some(true)
 
             case Left(error) =>
@@ -123,7 +150,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
         case ExpectedResult.EVAL_FALSE =>
           result match {
-            case Right((finalState@_, result)) =>
+            case Right((finalState @ _, result)) =>
               result shouldEqual Some(false)
             case Left(error) =>
               fail(error)
@@ -247,10 +274,10 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
   )(implicit expectedResult: ExpectedResult) = {
     result match {
-      case Right((finalState@_, result)) =>
+      case Right((finalState @ _, result)) =>
         fail(s"Expect ${expectedResult.name} but receive $result")
       case Left(error) =>
-        error shouldBe a [T]
+        error shouldBe a[T]
     }
   }
 
@@ -299,7 +326,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     val amount = creditingTransaction.tx_out(0).value
 
     maybeWitnessScript match {
-      case Some(witnessScript@_) =>
+      case Some(witnessScript @ _) =>
         val txOut = TxOut(value = amount, pk_script = ByteVector.empty)
         Tx(
           version = 1,

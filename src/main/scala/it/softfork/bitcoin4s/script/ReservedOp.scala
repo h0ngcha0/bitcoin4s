@@ -26,6 +26,7 @@ object ReservedOp {
   val all = TraitEnumeration.values[ReservedOp]
 
   implicit val interpreter = new InterpretableOp[ReservedOp] {
+
     def interpret(opCode: ReservedOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         opCode match {

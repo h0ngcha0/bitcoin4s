@@ -19,6 +19,7 @@ object LocktimeOp {
   val all = TraitEnumeration.values[LocktimeOp]
 
   implicit val interpreter = new InterpretableOp[LocktimeOp] {
+
     def interpret(opCode: LocktimeOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_CHECKLOCKTIMEVERIFY | OP_NOP2 =>
@@ -126,14 +127,14 @@ object LocktimeOp {
       // We want to compare apples to apples, so fail the script
       // unless the type of nSequenceMasked being tested is the same as
       // the nSequenceMasked in the transaction.
-      val bothLockByBlockHeight = (txToSequenceMasked <  txIn.SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked <  txIn.SEQUENCE_LOCKTIME_TYPE_FLAG)
+      val bothLockByBlockHeight = (txToSequenceMasked < txIn.SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked < txIn.SEQUENCE_LOCKTIME_TYPE_FLAG)
       val bothLockByBlockTime = (txToSequenceMasked >= txIn.SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked >= txIn.SEQUENCE_LOCKTIME_TYPE_FLAG)
       val sameKindOfNSequence = bothLockByBlockHeight || bothLockByBlockTime
 
       transactionVersionNotHighEnough &&
-        csvEnabled &&
-        sameKindOfNSequence &&
-        txToSequenceMasked > nSequenceMasked
+      csvEnabled &&
+      sameKindOfNSequence &&
+      txToSequenceMasked > nSequenceMasked
     }
   }
 }

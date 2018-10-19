@@ -4,7 +4,6 @@ import scodec.Codec
 import scodec.bits.ByteOrdering
 import scodec.codecs._
 
-
 case class OutPoint(
   hash: Hash,
   index: Long

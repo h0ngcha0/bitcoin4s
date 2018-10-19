@@ -6,7 +6,6 @@ import org.spongycastle.crypto.generators.PKCS5S2ParametersGenerator
 import org.spongycastle.crypto.params.KeyParameter
 import org.spongycastle.util.encoders.Hex
 
-
 trait Hash {
   val digest: Digest
 
@@ -29,12 +28,14 @@ object Hash {
   }
 
   object Hash160 {
+
     def apply(input: Array[Byte]): Array[Byte] = {
       RipeMD160(Sha256(input))
     }
   }
 
   object Hash256 {
+
     def apply(input: Array[Byte]): Array[Byte] = {
       Sha256(Sha256(input))
     }

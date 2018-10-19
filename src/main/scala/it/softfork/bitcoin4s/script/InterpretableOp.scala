@@ -16,8 +16,7 @@ import cats.implicits._
         oldState <- StateT.get[InterpreterErrorHandler, InterpreterState]
         newContext <- interpret(opCode)
       } yield {
-        logger.info(
-          s"""
+        logger.info(s"""
              |
              |Script: ${opCode +: oldState.currentScript}
              |stack: ${oldState.stack}
