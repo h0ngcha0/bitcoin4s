@@ -35,28 +35,25 @@ Run bitcoin script interpreter
 ------------------------------
 
 ```scala
-scala> :paste                                                                                                                                                                                                     
-// Entering paste mode (ctrl-D to finish)                                                                                                                                                                         
-                                                                                                                                                                                                                  
-import it.softfork.bitcoin4s.Boot                                                                                                                                                                                 
-val boot = new Boot {}                                                                                                                                                                                            
-import boot._                                                                                                                                                                                                     
-import it.softfork.bitcoin4s.transaction.TxId                                                                                                                                                                      
+scala> :paste
+// Entering paste mode (ctrl-D to finish)
+
+import it.softfork.bitcoin4s.Boot
+val boot = new Boot {}
+import boot._
+import it.softfork.bitcoin4s.transaction.TxId
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-val txId = TxId("bac02148041affd9dec93d30a86d1777d9570ab5d36fa2e0b7a20c0fa208e458")                                                                                                                                
+val txId = TxId("bac02148041affd9dec93d30a86d1777d9570ab5d36fa2e0b7a20c0fa208e458")
 val interpretedOutcome = Await.result(blockcypherService.interpret(txId, 0), 10.seconds)
 
 interpretedOutcome.map{ case (finalState@_, interpretedResult) => interpretedResult }
 
-// Exiting paste mode, now interpreting.                                                                                                                                                                           
+// Exiting paste mode, now interpreting.
 
-```
+...
 
-result could be
-
-```scala
 res0: scala.util.Either[it.softfork.bitcoin4s.script.InterpreterError,Option[Boolean]] = Right(Some(true))
 ```
 
