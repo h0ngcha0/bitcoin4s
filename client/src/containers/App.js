@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import {MuiThemeProvider} from 'material-ui';
-import {MuiThemeProvider as MuiThemeProviderNext} from 'material-ui-next';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import Helmet from 'react-helmet';
 import 'flexboxgrid';
@@ -19,9 +18,7 @@ class App extends Component {
         titleTemplate="%s - bitcoin.reverse"
       />,
       <MuiThemeProvider key="theme">
-        <MuiThemeProviderNext>
           <AppRouter />
-        </MuiThemeProviderNext>
       </MuiThemeProvider>
     ];
   }

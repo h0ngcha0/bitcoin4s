@@ -74,7 +74,10 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
   }
 
   def apply() = {
-    clientRoute ~ transactionRoute
+    clientRoute ~
+    pathPrefix("api") {
+      transactionRoute
+    }
   }
 
   private def toJsonTextMessage[T: Writes](message: T): TextMessage.Strict = {

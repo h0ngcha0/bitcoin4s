@@ -37,5 +37,10 @@
     "test": "./node_modules/.bin/react-scripts test --env=jsdom",
     "eject": "./node_modules/.bin/react-scripts eject"
   },
-  "proxy": "http://localhost:9050"
+  "proxy": {
+    "/api": {
+      "target": "http://localhost:8888",
+      "ws": true
+    }
+  }
 }

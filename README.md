@@ -65,7 +65,7 @@ Running `sbt reStart` under the project root starts up an HTTP server listening 
 Execute the unlocking script of the first input of transaction `85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac` and its corresponding locking script. 
 
 ```bash
-(⎈ |internal:swedbank-test)➜  blockchain curl localhost:8888/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/interpret
+(⎈ |internal:swedbank-test)➜  blockchain curl localhost:8888/v1/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/interpret
 {
   "result" : {
     "type" : "Result",
@@ -121,7 +121,7 @@ Execute the unlocking script of the first input of transaction `85db1042f083a8fd
 Same example as example 1, but stream each of the execution step back using websocket.
 
 ```bash
-(⎈ |internal:default)➜  blockchain wscat -c ws://localhost:8888/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/stream-interpret
+(⎈ |internal:default)➜  blockchain wscat -c ws://localhost:8888/v1/transaction/85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac/input/0/stream-interpret
 connected (press CTRL+C to quit)
 < {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptConstant","value":"0x9b29f00db6970f2435c5576479cb5a79da56b078"},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"currentScript":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"stack":[],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}
 < {"result":{"type":"NoResult"},"state":{"scriptPubKey":[{"type":"OP_DUP","value":118},{"type":"OP_HASH160","value":169},{"type":"OP_PUSHDATA","value":20},{"type":"ScriptConstant","value":"0x9b29f00db6970f2435c5576479cb5a79da56b078"},{"type":"OP_EQUALVERIFY","value":136},{"type":"OP_CHECKSIG","value":172}],"scriptSig":[{"type":"OP_PUSHDATA","value":72},{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"},{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"currentScript":[{"type":"OP_PUSHDATA","value":33},{"type":"ScriptConstant","value":"0x03338efa2d319a07b8487205f5643f709ebe94fedb2b0ce61bbbf04262242b8ad0"}],"stack":[{"type":"ScriptConstant","value":"0x30450221009e1def21a903a4122a36052e0e32d3456ba409df0de45677412c31ea440962b4022036543b57869b3228a6d87f578e0014a10119175183140d7803d9949dfc24a89c01"}],"altStack":[],"stage":{"type":"ExecutingScriptSig"}}}

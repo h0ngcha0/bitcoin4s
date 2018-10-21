@@ -5,6 +5,6 @@ const extractResponseData = (response) => {
 };
 
 export function interpretTransactionInput(transactionId, inputIndex) {
-  return axios.get(`/transaction/${transactionId}/input/${inputIndex}/interpret`)
+  return axios.get(`/api/transaction/${transactionId}/input/${inputIndex}/interpret`)
     .then(extractResponseData);
 }

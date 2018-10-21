@@ -70,7 +70,7 @@ class InterpreterContainer extends React.Component {
     const uri = new URI({
       protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
       hostname: window.location.host,
-      path: `/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/stream-interpret`
+      path: `/api/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/stream-interpret`
     });
 
     this.closeConnection();
