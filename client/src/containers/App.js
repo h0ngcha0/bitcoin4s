@@ -1,26 +1,32 @@
 import React, {Component} from 'react';
-import {MuiThemeProvider} from 'material-ui';
-import injectTapEventPlugin from 'react-tap-event-plugin';
+import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
+import blue from '@material-ui/core/colors/blue';
 import Helmet from 'react-helmet';
 import 'flexboxgrid';
 import AppRouter from './AppRouter';
 
-injectTapEventPlugin();
+const theme = createMuiTheme({
+  palette: {
+    primary: blue
+  }
+});
 
 class App extends Component {
   state = {};
 
   render() {
-    return [
-      <Helmet
-        key="helmet"
-        defaultTitle="bitcoin.reverse"
-        titleTemplate="%s - bitcoin.reverse"
-      />,
-      <MuiThemeProvider key="theme">
+    return (
+      <React.Fragment>
+        <Helmet
+          key="helmet"
+          defaultTitle="bitcoin.reverse"
+          titleTemplate="%s - bitcoin.reverse"
+        />,
+        <MuiThemeProvider theme={theme}>
           <AppRouter />
-      </MuiThemeProvider>
-    ];
+        </MuiThemeProvider>
+      </React.Fragment>
+    );
   }
 }
 

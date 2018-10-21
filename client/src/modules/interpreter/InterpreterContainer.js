@@ -1,16 +1,15 @@
 import React from 'react';
-import {TextField, RaisedButton, Paper, Subheader} from 'material-ui';
+import {TextField, Button, Paper} from '@material-ui/core';
 import InterpreterComponent from "./InterpreterComponent";
 import URI from 'urijs';
 import {interpretTransactionInput} from '../../api';
-import { GridLoader } from 'react-spinners';
-import muiThemeable from 'material-ui/styles/muiThemeable';
+import Loading from '../Loading';
 
 class InterpreterContainer extends React.Component {
   static propTypes = {};
 
   state = {
-    interpretResult: {state: {scriptPubKey: [], scriptSig: [], currentScript: [], stack: [], altStack: [], stage: 'Stage'}, result: {}},
+    interpretResult: undefined,
     inputIndex: 0,
     transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac",
     loading: false,
@@ -100,8 +99,8 @@ class InterpreterContainer extends React.Component {
   render() {
     return (
       <div className="container">
-        <Paper zDepth={1} className={'application-definition'}>
-          <Subheader style={{paddingLeft: 0}}>Bitcoin Script Interpreter</Subheader>
+        <Paper className={'application-definition'}>
+          <h3>Bitcoin Script Interpreter</h3>
           <form
             className="container"
             onSubmit={ (event) => {
@@ -115,7 +114,7 @@ class InterpreterContainer extends React.Component {
             <div>
               <TextField
                 id="transactionId"
-                floatingLabelText="Transaction Id"
+                label="Transaction Id"
                 value={this.state.transactionId}
                 onChange={ (event) => {this.handleSetTransactionId(event.target.value)} }
                 InputLabelProps={{
@@ -127,7 +126,7 @@ class InterpreterContainer extends React.Component {
             <div>
               <TextField
                 id="number"
-                floatingLabelText="Input Index"
+                label="Input Index"
                 value={this.state.inputIndex}
                 onChange={ (event) => {this.handleSetTransactionInputIndex(event.target.value)} }
                 type="number"
@@ -137,14 +136,14 @@ class InterpreterContainer extends React.Component {
                 margin="normal"
               />
             </div>
-            <div style={ {'margin-top': '16px'} }>
+            <div style={ {marginTop: '16px'} }>
               {
                 this.state.loading ?
-                  <GridLoader
-                    color={ this.props.muiTheme.palette.primary1Color }
-                    loading={ this.state.loading }
-                  /> :
-                  <RaisedButton primary type="submit" label="Interpret" disabled={ this.state.executingScript }/>
+                  <Loading /> :
+                  <Button variant="outlined" color="primary" type="submit" disabled={ this.state.executingScript }>
+                    Interpret
+                  </Button>
+
               }
             </div>
           </form>
@@ -161,4 +160,4 @@ class InterpreterContainer extends React.Component {
   }
 }
 
-export default muiThemeable()(InterpreterContainer);
+export default InterpreterContainer;
