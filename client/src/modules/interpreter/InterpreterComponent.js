@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import React from 'react';
-import VirtualList from 'react-tiny-virtual-list';
 import {findElementType} from './ScriptElements';
 
 class InterpreterComponent extends React.Component {
@@ -10,36 +9,24 @@ class InterpreterComponent extends React.Component {
   };
 
   render() {
-
     const {interpretResult} = this.props;
-
     const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
-    const getType = (op) => op.type;
-
-    const scriptPubKeyOps = _.map(scriptPubKey, getType);
-    //const scriptPubKeyOps = ['OP_DUP', 'OP_CHECKSIG', 'OP_VERIFY', 'ScriptConstant', 'OP_1', 'OP_1', 'OP_0', 'OP_2', 'OP_3', 'OP_4', 'OP_5', 'OP_6'];
-    const scriptSigOps = _.map(scriptSig, getType);
-    const currentScriptOps = _.map(currentScript, getType);
-    const stackOps = _.map(stack, getType);
-    const altStackOps = _.map(altStack, getType);
     const result = interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult';
     const executionDescription = result === 'NoResult' ? `Executing ${stage.type}` : `Execution finished with result: ${result}`;
-
-    console.log('findType', findElementType('ScriptConstant'));
 
     return (
       <div>
         <p><i>{executionDescription}</i></p>
         <p><b>Current Script:</b></p>
-        <ScriptOpCodeList opCodes={currentScriptOps} />
+        <ScriptOpCodeList opCodes={currentScript} />
         <p><b>Current Stack:</b></p>
-        <ScriptOpCodeList opCodes={stackOps} />
+        <ScriptOpCodeList opCodes={stack} />
         <p><b>Current Alt Stack:</b></p>
-        <ScriptOpCodeList opCodes={altStackOps} />
+        <ScriptOpCodeList opCodes={altStack} />
         <p><b>ScriptPubKey:</b></p>
-        <ScriptOpCodeList opCodes={scriptPubKeyOps} />
+        <ScriptOpCodeList opCodes={scriptPubKey} />
         <p><b>ScriptSig:</b></p>
-        <ScriptOpCodeList opCodes={scriptSigOps} />
+        <ScriptOpCodeList opCodes={scriptSig} />
 
       </div>
     )
@@ -48,27 +35,22 @@ class InterpreterComponent extends React.Component {
 
 const ScriptOpCodeList = ({opCodes}) => {
   return (
-    <VirtualList
-      className='ScriptOpCodeList'
-      width='auto'
-      height={100}
-      scrollDirection='horizontal'
-      overscanCount={10}
-      itemCount={opCodes.length}
-      itemSize={150} // Also supports variable heights (array or function getter)
-      renderItem={({index, style}) => {
-        const scriptElement = opCodes[index];
-        const elementType = findElementType(scriptElement);
-        const className = `OpCode ${elementType}`
+    <div className='ScriptOpCodeList'>
+      {
+        _(opCodes)
+          .filter((opCode) => opCode.type !== 'OP_PUSHDATA')
+          .map((scriptElement, index) => {
+            const elementType = findElementType(scriptElement.type);
+            const className = `OpCode ${elementType}`
 
-        return (
-          <div className={ className } key={index} style={style}>
-            {opCodes[index]}
-          </div>
-        )
-
-      }}
-    />
+            return (
+              <div className={ className } key={index}>
+                { _.includes(['ScriptConstant', 'ScriptNum'], scriptElement.type) ? scriptElement.value : scriptElement.type }
+              </div>
+            );
+          }).value()
+      }
+    </div>
   )
 };
 
