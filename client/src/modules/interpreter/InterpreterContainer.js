@@ -1,12 +1,15 @@
 import React from 'react';
 import {Button} from '@material-ui/core';
 import InterpreterComponent from "./InterpreterComponent";
-import URI from 'urijs';
 import {interpretTransactionInput} from '../../api';
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
 import Loading from '../Loading';
 import SearchBar from 'material-ui-search-bar'
+import ScriptInterpreterWebsocket from './ScriptInterpreterWebsocket';
+
+// Idea, show the link of a few typical tx, such as p2sh, p2pkh, multi-sig, etc
+// Move web socket out
 
 class InterpreterContainer extends React.Component {
   static propTypes = {};
@@ -14,7 +17,7 @@ class InterpreterContainer extends React.Component {
   state = {
     interpretResult: undefined,
     inputIndex: 0,
-    transactionId: "", // 85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac
+    transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac", // 85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac
     loading: false,
     executingScript: false
   };
@@ -54,49 +57,35 @@ class InterpreterContainer extends React.Component {
       });
   };
 
-  webSocket;
-
-  closeConnection = () => {
-    if (this.webSocket) {
-      this.webSocket.close();
-      this.webSocket = null;
-
-      this.setState({
-        ...this.state,
-        executingScript: false
-      });
-    }
-  };
-
-  interpretScriptWebsocket = () => {
-    const uri = new URI({
-      protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
-      hostname: window.location.host,
-      path: `/api/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/stream-interpret`
-    });
-
-    this.closeConnection();
-
+  initialCallback = () => {
     this.setState({
       ...this.state,
       interpretResult: undefined,
       loading: true,
       executingScript: true
     });
+  };
 
-    this.webSocket = new WebSocket(uri.toString());
+  closeConnectionCallback = () => {
+    this.setState({
+      ...this.state,
+      executingScript: false
+    });
+  };
 
-    this.webSocket.onmessage = event => {
-      const interpretResult = JSON.parse(event.data);
+  onMessageCallback = (interpretResult) => {
+    this.setState({
+      ...this.state,
+      interpretResult: interpretResult,
+      loading: false
+    });
+  };
 
-      this.setState({
-        ...this.state,
-        interpretResult: interpretResult,
-        loading: false
-      });
-    };
+  scriptInterpreterWebsocket = new ScriptInterpreterWebsocket();
+  scriptInterpreter = this.scriptInterpreterWebsocket.interpreterBuilder(this.initialCallback, this.onMessageCallback, this.closeConnectionCallback);
 
-    this.webSocket.onclose = this.closeConnection;
+  interpretScriptWebsocket = (transactionId, inputIndex) => {
+    this.scriptInterpreter(transactionId, inputIndex)
   };
 
   render() {
@@ -111,14 +100,16 @@ class InterpreterContainer extends React.Component {
             onChange={(newValue) => this.handleSetTransactionId(newValue)}
             disabled={ this.state.executingScript }
             onRequestSearch={() => {
-              this.interpretScriptWebsocket();
+              this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex);
             }}
           />
           <div style={ {marginTop: '16px', textAlign: 'center'} }>
             {
               this.state.loading ?
                 <Loading /> :
-                <Button variant="contained" color="primary" disabled={ this.state.executingScript } onClick={ () => this.interpretScriptWebsocket()}>
+                <Button variant="contained" color="primary" disabled={ this.state.executingScript } onClick={ () =>
+                  this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex)
+                }>
                   Search
                 </Button>
 
