@@ -75,6 +75,26 @@ a {
   transform-origin: 50% 50%;
 }
 
+.img-responsive.mobile {
+  display: none;
+}
+
+@media only screen and (max-device-width: 480px) {
+  .img-responsive.desktop {
+    display: none;
+  }
+  .img-responsive.mobile {
+    display: block;
+  }
+}
+
+.logo-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
+
 .ScriptOpCodeList {
   margin: 0;
   border-radius: 2px;

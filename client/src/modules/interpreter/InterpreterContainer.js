@@ -3,7 +3,12 @@ import {TextField, Button, Paper} from '@material-ui/core';
 import InterpreterComponent from "./InterpreterComponent";
 import URI from 'urijs';
 import {interpretTransactionInput} from '../../api';
+import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
+import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
 import Loading from '../Loading';
+import SearchBar from 'material-ui-search-bar'
+/*import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
+import AccountCircle from '@material-ui/icons/AccountCircle';*/
 
 class InterpreterContainer extends React.Component {
   static propTypes = {};
@@ -11,7 +16,7 @@ class InterpreterContainer extends React.Component {
   state = {
     interpretResult: undefined,
     inputIndex: 0,
-    transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac",
+    transactionId: "", // 85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac
     loading: false,
     executingScript: false
   };
@@ -99,9 +104,24 @@ class InterpreterContainer extends React.Component {
   render() {
     return (
       <div className="container">
-        <Paper className={'application-definition'}>
-          <h3>Bitcoin Script Interpreter</h3>
-          <form
+        <div className={'application-definition'}>
+
+
+          <img src={ mobileLogoImage } className={`logo-image img-responsive mobile`}/>
+          <img src={ desktopLogoImage } className={`logo-image img-responsive desktop`}/>
+          <SearchBar
+            value={this.state.transactionId}
+            placeholder="BTC transaction id"
+            onChange={(newValue) => this.handleSetTransactionId(newValue)}
+            disabled={ this.state.executingScript }
+            onRequestSearch={() => {
+              //event.preventDefault();
+              //event.stopPropagation();
+              this.interpretScriptWebsocket();
+            }}
+          />
+
+{/*          <form
             className="container"
             onSubmit={ (event) => {
               event.preventDefault();
@@ -117,10 +137,15 @@ class InterpreterContainer extends React.Component {
                 label="Transaction Id"
                 value={this.state.transactionId}
                 onChange={ (event) => {this.handleSetTransactionId(event.target.value)} }
-                InputLabelProps={{
-                  shrink: true,
-                }}
                 margin="normal"
+                variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AccountCircle />
+                    </InputAdornment>
+                  ),
+                }}
               />
             </div>
             <div>
@@ -146,12 +171,12 @@ class InterpreterContainer extends React.Component {
 
               }
             </div>
-          </form>
+          </form>*/}
           {
             this.state.interpretResult ?
               <InterpreterComponent interpretResult={this.state.interpretResult} /> : null
           }
-        </Paper>
+        </div>
       </div>
     );
   }
