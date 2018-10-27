@@ -75,6 +75,7 @@ object Api {
     output_value: Long,
     sequence: Long,
     script_type: String,
+    addresses: List[String],
     age: Long,
     witness: Option[List[String]] = None
   ) {
@@ -95,6 +96,7 @@ object Api {
     value: Long,
     script: String,
     spent_by: Option[String],
+    addresses: List[String],
     script_type: String
   ) {
 

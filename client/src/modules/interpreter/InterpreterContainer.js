@@ -1,12 +1,13 @@
 import React from 'react';
 import {Button} from '@material-ui/core';
 import InterpreterComponent from "./InterpreterComponent";
-import {interpretTransactionInput} from '../../api';
+import {interpretTransactionInput, fetchTransaction} from '../../api';
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
 import Loading from '../Loading';
 import SearchBar from 'material-ui-search-bar'
 import ScriptInterpreterWebsocket from './ScriptInterpreterWebsocket';
+import TransactionDetailsComponent from "./TransactionDetailsComponent";
 
 // Idea, show the link of a few typical tx, such as p2sh, p2pkh, multi-sig, etc
 // Move web socket out
@@ -15,6 +16,7 @@ class InterpreterContainer extends React.Component {
   static propTypes = {};
 
   state = {
+    transaction: undefined,
     interpretResult: undefined,
     inputIndex: 0,
     transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac", // 85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac
@@ -53,6 +55,27 @@ class InterpreterContainer extends React.Component {
       })
       .catch((error) => {
         // TODO: handle error
+        console.log(error);
+      });
+  };
+
+  loadTransaction = (transactionId) => {
+    this.setState({
+      ...this.state,
+      transaction: undefined,
+      interpretResult: undefined,
+      loading: true
+    });
+
+    fetchTransaction(transactionId)
+      .then((transaction) => {
+        this.setState({
+          ...this.state,
+          loading: false,
+          transaction: transaction
+        });
+      })
+      .catch((error) => {
         console.log(error);
       });
   };
@@ -100,7 +123,7 @@ class InterpreterContainer extends React.Component {
             onChange={(newValue) => this.handleSetTransactionId(newValue)}
             disabled={ this.state.executingScript }
             onRequestSearch={() => {
-              this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex);
+              this.loadTransaction(this.state.transactionId);
             }}
           />
           <div style={ {marginTop: '16px', textAlign: 'center'} }>
@@ -108,13 +131,18 @@ class InterpreterContainer extends React.Component {
               this.state.loading ?
                 <Loading /> :
                 <Button variant="contained" color="primary" disabled={ this.state.executingScript } onClick={ () =>
-                  this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex)
+                  this.loadTransaction(this.state.transactionId)
+                  //this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex)
                 }>
                   Search
                 </Button>
 
             }
           </div>
+          {
+            this.state.transaction ?
+              <TransactionDetailsComponent transaction={this.state.transaction} /> : null
+          }
           {
             this.state.interpretResult ?
               <InterpreterComponent interpretResult={this.state.interpretResult} /> : null
