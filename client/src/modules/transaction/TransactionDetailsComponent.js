@@ -7,7 +7,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Grid from "@material-ui/core/Grid/Grid";
-import {Link} from 'react-router-dom';
+import ScriptOpCodeList from "./ScriptOpCodeList";
 
 class TransactionDetailsComponent extends React.Component {
   render() {
@@ -19,8 +19,8 @@ class TransactionDetailsComponent extends React.Component {
         {
           inputsLength < 0 ?
             null :
-            <Grid container>
-              <Grid item sm={6} xs={12}>
+            <Grid container style={ {maxWidth: '550px', textAlign: 'center', margin: '0 auto'} }>
+              <Grid item sm={12} xs={12} >
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -33,12 +33,18 @@ class TransactionDetailsComponent extends React.Component {
                       _.map(transaction.inputs, (input, index) => {
                         return (
                           <TableRow key={index}>
-                            <TableCell>
+                            <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word" }}>
                               <div className='btc-address'>
                                 {_.head(input.addresses)}
                               </div>
                               <div>
                                 <span className='btc spent'>{input.output_value / 100000000} BTC</span> - <a href={ `/transaction/${input.prev_hash}` }> transaction </a>
+                              </div>
+                              <div style={ {marginTop: "5px"}}>
+                                <ScriptOpCodeList opCodes={input.parsed_script} />
+                              </div>
+                              <div>
+                                <a href={ `/transaction/${transaction.hash}/input/${index}/interpret`}> Interpret </a>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -48,7 +54,7 @@ class TransactionDetailsComponent extends React.Component {
                   </TableBody>
                 </Table>
               </Grid>
-              <Grid item sm={6} xs={12}>
+              <Grid item sm={12} xs={12}>
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -60,7 +66,7 @@ class TransactionDetailsComponent extends React.Component {
                       _.map(transaction.outputs, (output, index) => {
                         return (
                           <TableRow key={index}>
-                            <TableCell>
+                            <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word" }}>
                               <div className='btc-address'>
                                 {_.head(output.addresses)}
                               </div>
@@ -68,6 +74,9 @@ class TransactionDetailsComponent extends React.Component {
                                 <span className='btc to'>{output.value / 100000000} BTC</span> - {
                                   output.spent_by ? <a href={ `/transaction/${output.spent_by}` }> transaction </a> : 'not spent yet'
                                 }
+                              </div>
+                              <div style={ {marginTop: "5px"}}>
+                                <ScriptOpCodeList opCodes={output.parsed_script} />
                               </div>
                             </TableCell>
 

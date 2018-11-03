@@ -9,12 +9,13 @@ import akka.stream.Materializer
 import it.softfork.bitcoin4s.crypto.Hash
 import it.softfork.bitcoin4s.external.HttpSender
 import it.softfork.bitcoin4s.external.blockcypher.Api._
-import it.softfork.bitcoin4s.script.Parser
+import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
 import it.softfork.bitcoin4s.transaction.structure.{OutPoint, Hash => ScodecHash}
 import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
 import tech.minna.playjson.macros.json
+import it.softfork.bitcoin4s.ApiModels.scriptElementFormat
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -72,6 +73,7 @@ object Api {
     prev_hash: String,
     output_index: Int,
     script: Option[String],
+    parsed_script: Option[Seq[ScriptElement]],
     output_value: Long,
     sequence: Long,
     script_type: String,
@@ -90,11 +92,20 @@ object Api {
         .getOrElse(ByteVector.empty),
       sequence = sequence
     )
+
+    def withParsedScript() = {
+      val parsedScript = script.map { scriptStr =>
+        Parser.parse("0x" + scriptStr)
+      }
+
+      copy(parsed_script = parsedScript)
+    }
   }
 
   @json case class TransactionOutput(
     value: Long,
     script: String,
+    parsed_script: Option[Seq[ScriptElement]],
     spent_by: Option[String],
     addresses: List[String],
     script_type: String
@@ -104,6 +115,11 @@ object Api {
       value = value,
       pk_script = ByteVector(Parser.parse(Hash.fromHex(script)).flatMap(_.bytes))
     )
+
+    def withParsedScript() = {
+      val parsedScript = Parser.parse("0x" + script)
+      copy(parsed_script = Some(parsedScript))
+    }
   }
 
   @json case class Transaction(
@@ -134,6 +150,13 @@ object Api {
       tx_out = outputs.map(_.toTxOut).toList,
       lock_time = lock_time
     )
+
+    def withParsedScript() = {
+      val inputsWithParsedScript = inputs.map(_.withParsedScript())
+      val outputsWithParsedScript = outputs.map(_.withParsedScript())
+
+      copy(inputs = inputsWithParsedScript, outputs = outputsWithParsedScript)
+    }
   }
 
   protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000")
