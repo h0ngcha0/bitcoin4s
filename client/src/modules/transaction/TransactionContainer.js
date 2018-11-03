@@ -6,7 +6,7 @@ import {Button} from '@material-ui/core';
 import {fetchTransaction} from '../../api';
 import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
-import SearchBar from 'material-ui-search-bar'
+import SearchBar from 'material-ui-search-bar';
 
 export default class TransactionContainer extends React.Component {
   componentWillMount() {

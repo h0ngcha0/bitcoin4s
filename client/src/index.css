@@ -98,15 +98,15 @@ a {
 .ScriptOpCodeList {
   margin: 0;
   border-radius: 2px;
-  box-shadow:
-    0 1px 5px 0 rgba(0,0,0,.12);
+  box-shadow: 0 1px 5px 0 black;
 }
 
 .OpCode {
-  padding: 1px 10px 4px;
+  padding: 1px 4px 4px;
   box-sizing: border-box;
   border: 1px solid #EEE;
   display: inline-block;
+  overflow-wrap: break-word;
   text-overflow: ellipsis;
   overflow: hidden;
   max-width: 100%;
@@ -118,10 +118,6 @@ a {
 
 .StackOps {
   background: #23c426;
-}
-
-.ConstantOps {
-  background: #c4c211;
 }
 
 .FlowControlOps {
@@ -163,10 +159,14 @@ a {
 .btc-address {
   color: black;
   font-style: italic;
+  font-size: 90%;
+  padding-top: 0px;
+  padding-bottom: 4px;
 }
 
 .btc.spent {
   color: darkred;
+  vertical-align: "middle";
 }
 
 .btc.to {

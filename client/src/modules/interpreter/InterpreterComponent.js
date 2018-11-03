@@ -4,10 +4,6 @@ import ScriptOpCodeList from '../transaction/ScriptOpCodeList';
 
 class InterpreterComponent extends React.Component {
 
-  state = {
-    isVisible: true
-  };
-
   render() {
     const {interpretResult} = this.props;
     const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
