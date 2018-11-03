@@ -1,9 +1,9 @@
 package it.softfork.bitcoin4s
 
 import it.softfork.bitcoin4s.script._
-import play.api.libs.json._
 import julienrf.json.derived.flat.owrites
 import it.softfork.bitcoin4s.Utils._
+import play.api.libs.json._
 
 object ApiModels {
 
@@ -66,6 +66,20 @@ object ApiModels {
     case scriptOpcode: ScriptOpCode =>
       Json.obj("type" -> scriptOpcode.name, "value" -> scriptOpcode.value)
   }
+
+  // TODO: We do not need reader, this is just to make @json happy for Transaction
+  implicit val scriptElementReader: Reads[ScriptElement] = Reads[ScriptElement] { in =>
+    (in \ "type").validate[String].flatMap {
+      case "ScriptNum" =>
+        (in \ "value").validate[String].map { x =>
+          ScriptNum.apply(x.toLong)
+        }
+      case _ =>
+        throw new NotImplementedError("Script element reader not implemented")
+    }
+  }
+
+  implicit val scriptElementFormat: Format[ScriptElement] = Format(scriptElementReader, scriptElementWriter)
 
   implicit val scriptExecutionStageWriter: OWrites[ScriptExecutionStage] = {
     owrites[ScriptExecutionStage]((JsPath \ "type").format[String])

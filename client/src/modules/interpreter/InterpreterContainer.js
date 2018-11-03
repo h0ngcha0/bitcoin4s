@@ -1,17 +1,30 @@
 import React from 'react';
-import {TextField, Button, Paper} from '@material-ui/core';
+import {Button} from '@material-ui/core';
 import InterpreterComponent from "./InterpreterComponent";
-import URI from 'urijs';
 import {interpretTransactionInput} from '../../api';
+import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
+import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
 import Loading from '../Loading';
+import SearchBar from 'material-ui-search-bar'
+import ScriptInterpreterWebsocket from './ScriptInterpreterWebsocket';
+
+// Idea, show the link of a few typical tx, such as p2sh, p2pkh, multi-sig, etc
+// Move web socket out
 
 class InterpreterContainer extends React.Component {
   static propTypes = {};
 
+  componentDidMount() {
+    if (this.state.transactionId && this.state.inputIndex) {
+      this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex);
+    }
+  }
+
   state = {
+    transaction: undefined,
     interpretResult: undefined,
-    inputIndex: 0,
-    transactionId: "85db1042f083a8fd6f96fd1a76dc7b8373df9f434979bdcf2432ecf9e0c212ac",
+    inputIndex: this.props.inputIndex,
+    transactionId: this.props.transactionId,
     loading: false,
     executingScript: false
   };
@@ -51,112 +64,72 @@ class InterpreterContainer extends React.Component {
       });
   };
 
-  webSocket;
-
-  closeConnection = () => {
-    if (this.webSocket) {
-      this.webSocket.close();
-      this.webSocket = null;
-
-      this.setState({
-        ...this.state,
-        executingScript: false
-      });
-    }
-  };
-
-  interpretScriptWebsocket = () => {
-    const uri = new URI({
-      protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
-      hostname: window.location.host,
-      path: `/api/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/stream-interpret`
-    });
-
-    this.closeConnection();
-
+  initialCallback = () => {
     this.setState({
       ...this.state,
       interpretResult: undefined,
       loading: true,
       executingScript: true
     });
+  };
 
-    this.webSocket = new WebSocket(uri.toString());
+  closeConnectionCallback = () => {
+    this.setState({
+      ...this.state,
+      executingScript: false
+    });
+  };
 
-    this.webSocket.onmessage = event => {
-      const interpretResult = JSON.parse(event.data);
+  onMessageCallback = (interpretResult) => {
+    this.setState({
+      ...this.state,
+      interpretResult: interpretResult,
+      loading: false
+    });
+  };
 
-      this.setState({
-        ...this.state,
-        interpretResult: interpretResult,
-        loading: false
-      });
-    };
+  scriptInterpreterWebsocket = new ScriptInterpreterWebsocket();
+  scriptInterpreter = this.scriptInterpreterWebsocket.interpreterBuilder(this.initialCallback, this.onMessageCallback, this.closeConnectionCallback);
 
-    this.webSocket.onclose = this.closeConnection;
+  interpretScriptWebsocket = (transactionId, inputIndex) => {
+    this.scriptInterpreter(transactionId, inputIndex)
   };
 
   render() {
     return (
       <div className="container">
-        <Paper className={'application-definition'}>
-          <h3>Bitcoin Script Interpreter</h3>
-          <form
-            className="container"
-            onSubmit={ (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              this.interpretScriptWebsocket();
+        <div className={'application-definition'}>
+          <img src={ mobileLogoImage } className={`logo-image img-responsive mobile`} alt="Bitcoin Playground"/>
+          <img src={ desktopLogoImage } className={`logo-image img-responsive desktop`} alt="Bitcoin Playground"/>
+          <SearchBar
+            value={this.state.transactionId}
+            placeholder="BTC transaction id"
+            onChange={(newValue) => this.handleSetTransactionId(newValue)}
+            disabled={ this.state.executingScript }
+            style={ {maxWidth: '500px', textAlign: 'center', margin: '0 auto'} }
+            onRequestSearch={() => {
+              this.props.push(`/transaction/${this.state.transactionId}`);
             }}
-            noValidate
-            autoComplete="off"
-          >
-            <div>
-              <TextField
-                id="transactionId"
-                label="Transaction Id"
-                value={this.state.transactionId}
-                onChange={ (event) => {this.handleSetTransactionId(event.target.value)} }
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                margin="normal"
-              />
-            </div>
-            <div>
-              <TextField
-                id="number"
-                label="Input Index"
-                value={this.state.inputIndex}
-                onChange={ (event) => {this.handleSetTransactionInputIndex(event.target.value)} }
-                type="number"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                margin="normal"
-              />
-            </div>
-            <div style={ {marginTop: '16px'} }>
-              {
-                this.state.loading ?
-                  <Loading /> :
-                  <Button variant="outlined" color="primary" type="submit" disabled={ this.state.executingScript }>
-                    Interpret
-                  </Button>
+          />
+          <div style={ {marginTop: '16px', textAlign: 'center'} }>
+            {
+              this.state.loading ?
+                <Loading /> :
+                <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
+                  this.props.push(`/transaction/${this.state.transactionId}`)
+                }>
+                  Search
+                </Button>
 
-              }
-            </div>
-          </form>
+            }
+          </div>
           {
             this.state.interpretResult ?
               <InterpreterComponent interpretResult={this.state.interpretResult} /> : null
           }
-        </Paper>
+        </div>
       </div>
     );
-  }
-
-  componentDidMount() {
   }
 }
 

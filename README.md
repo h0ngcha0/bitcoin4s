@@ -14,7 +14,6 @@ Table of Content
 * [Rest API](#rest-api)
 * [How to use](#how-to-use)
 
-
 Parse bitcoin script
 --------------------
 

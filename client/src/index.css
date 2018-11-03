@@ -3,7 +3,7 @@ body {
   padding: 0;
   font-family: sans-serif;
 
-  background: #f5f5f5;
+  background: white;
 }
 
 .application-definition {
@@ -75,6 +75,26 @@ a {
   transform-origin: 50% 50%;
 }
 
+.img-responsive.mobile {
+  display: none;
+}
+
+@media only screen and (max-device-width: 480px) {
+  .img-responsive.desktop {
+    display: none;
+  }
+  .img-responsive.mobile {
+    display: block;
+  }
+}
+
+.logo-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
+
 .ScriptOpCodeList {
   margin: 0;
   border-radius: 2px;
@@ -138,4 +158,17 @@ a {
 
 .SpliceOps {
   background: #18c47d;
+}
+
+.btc-address {
+  color: black;
+  font-style: italic;
+}
+
+.btc.spent {
+  color: darkred;
+}
+
+.btc.to {
+  color: darkgreen;
 }
