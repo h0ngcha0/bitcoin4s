@@ -159,3 +159,16 @@ a {
 .SpliceOps {
   background: #18c47d;
 }
+
+.btc-address {
+  color: black;
+  font-style: italic;
+}
+
+.btc.spent {
+  color: darkred;
+}
+
+.btc.to {
+  color: darkgreen;
+}

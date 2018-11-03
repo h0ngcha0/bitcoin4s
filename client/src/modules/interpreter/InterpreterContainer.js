@@ -7,7 +7,7 @@ import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
 import Loading from '../Loading';
 import SearchBar from 'material-ui-search-bar'
 import ScriptInterpreterWebsocket from './ScriptInterpreterWebsocket';
-import TransactionDetailsComponent from "./TransactionDetailsComponent";
+import TransactionDetailsComponent from "../transaction/TransactionDetailsComponent";
 
 // Idea, show the link of a few typical tx, such as p2sh, p2pkh, multi-sig, etc
 // Move web socket out
@@ -122,6 +122,7 @@ class InterpreterContainer extends React.Component {
             placeholder="BTC transaction id"
             onChange={(newValue) => this.handleSetTransactionId(newValue)}
             disabled={ this.state.executingScript }
+            style={ {maxWidth: '500px', textAlign: 'center', margin: '0 auto'} }
             onRequestSearch={() => {
               this.loadTransaction(this.state.transactionId);
             }}
@@ -130,7 +131,7 @@ class InterpreterContainer extends React.Component {
             {
               this.state.loading ?
                 <Loading /> :
-                <Button variant="contained" color="primary" disabled={ this.state.executingScript } onClick={ () =>
+                <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
                   this.loadTransaction(this.state.transactionId)
                   //this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex)
                 }>
