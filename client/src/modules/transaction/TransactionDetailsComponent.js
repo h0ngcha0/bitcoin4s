@@ -44,7 +44,7 @@ class TransactionDetailsComponent extends React.Component {
                                 <ScriptOpCodeList opCodes={input.parsed_script} />
                               </div>
                               <div>
-                                <a href={ `/transaction/${transaction.hash}/input/${index}/interpret`}> Interpret </a>
+                                <a href={ `/transaction/${transaction.hash}/input/${index}/interpret`}> Interpret script </a>
                               </div>
                             </TableCell>
                           </TableRow>
