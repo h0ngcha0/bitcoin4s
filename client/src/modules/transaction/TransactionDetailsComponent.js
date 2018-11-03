@@ -38,13 +38,13 @@ class TransactionDetailsComponent extends React.Component {
                                 {_.head(input.addresses)}
                               </div>
                               <div>
-                                <span className='btc spent'>{input.output_value / 100000000} BTC</span> - <a href={ `/transaction/${input.prev_hash}` }> transaction </a>
+                                <span className='btc spent'>{input.output_value / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prev_hash}` }> transaction </a>
                               </div>
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={input.parsed_script} />
                               </div>
                               <div>
-                                <a href={ `/transaction/${transaction.hash}/input/${index}/interpret`}> Interpret script </a>
+                                <a href={ `/#/transaction/${transaction.hash}/input/${index}/interpret`}> Interpret script </a>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -72,7 +72,7 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div>
                                 <span className='btc to'>{output.value / 100000000} BTC</span> - {
-                                  output.spent_by ? <a href={ `/transaction/${output.spent_by}` }> transaction </a> : 'not spent yet'
+                                  output.spent_by ? <a href={ `/#/transaction/${output.spent_by}` }> transaction </a> : 'not spent yet'
                                 }
                               </div>
                               <div style={ {marginTop: "5px"}}>

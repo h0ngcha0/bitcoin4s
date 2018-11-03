@@ -9,16 +9,24 @@ import Loading from "../Loading";
 import SearchBar from 'material-ui-search-bar'
 
 export default class TransactionContainer extends React.Component {
+  componentWillMount() {
+    this.setState({
+      transactionId: this.props.transactionId,
+      transaction: undefined
+    });
+  }
+
   componentDidMount() {
     if (this.props.transactionId) {
       this.loadTransaction(this.props.transactionId);
     }
   }
 
-  state = {
-    transactionId: this.props.transactionId,
-    transaction: undefined
-  };
+  componentWillReceiveProps(nextProps) {
+    if (this.props.transactionId !== nextProps.transactionId) {
+      this.loadTransaction(nextProps.transactionId);
+    }
+  }
 
   handleSetTransactionId = (txId) => {
     this.setState({
@@ -32,6 +40,7 @@ export default class TransactionContainer extends React.Component {
       ...this.state,
       transaction: undefined,
       interpretResult: undefined,
+      transactionId: transactionId,
       loading: true
     });
 
