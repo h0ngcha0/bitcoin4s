@@ -70,7 +70,6 @@ export default class TransactionContainer extends React.Component {
                 <Loading /> :
                 <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
                   this.loadTransaction(this.state.transactionId)
-                  //this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex)
                 }>
                   Search
                 </Button>

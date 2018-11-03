@@ -67,7 +67,7 @@ object ApiModels {
       Json.obj("type" -> scriptOpcode.name, "value" -> scriptOpcode.value)
   }
 
-
+  // TODO: We do not need reader, this is just to make @json happy for Transaction
   implicit val scriptElementReader: Reads[ScriptElement] = Reads[ScriptElement] { in =>
     (in \ "type").validate[String].flatMap {
       case "ScriptNum" =>
