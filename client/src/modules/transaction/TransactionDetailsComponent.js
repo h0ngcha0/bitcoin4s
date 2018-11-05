@@ -49,7 +49,7 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div>
                                 <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span> Script</span> - <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret`}> interpret</a>
+                                <span> Unlocking script</span> - <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret`}> interpret</a>
                               </div>
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={input.parsed_script} />
@@ -87,7 +87,7 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div>
                                 <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span style={{verticalAlign: "middle"}}> Script</span>
+                                <span style={{verticalAlign: "middle"}}> Locking script</span>
                               </div>
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={output.parsed_script} />
