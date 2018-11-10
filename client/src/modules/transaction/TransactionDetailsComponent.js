@@ -8,8 +8,10 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Grid from "@material-ui/core/Grid/Grid";
 import HomeIcon from '@material-ui/icons/Home';
-import CodeIcon from '@material-ui/icons/Code';
+import LockIcon from '@material-ui/icons/Lock';
+import LockOpenIcon from '@material-ui/icons/LockOpen';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
+import CodeIcon from '@material-ui/icons/BugReport';
 import MoneyOffIcon from '@material-ui/icons/MoneyOff';
 import ScriptOpCodeList from "./ScriptOpCodeList";
 
@@ -17,7 +19,6 @@ class TransactionDetailsComponent extends React.Component {
   render() {
     const {transaction} = this.props;
     const inputsLength = transaction.inputs.length;
-
 
     return (
       <div style={ {maxWidth: '550px', textAlign: 'center', margin: '0 auto'} }>
@@ -46,13 +47,20 @@ class TransactionDetailsComponent extends React.Component {
                               <div>
                                 <MoneyOffIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
                                 <span className='btc spent'> {input.output_value / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prev_hash}` }> transaction </a>
+                                {
+                                  input.output_index ? <span> output {input.output_index} </span> : null
+                                }
                               </div>
                               <div>
-                                <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span> Unlocking script</span> - <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret`}> interpret</a>
+                                <LockOpenIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <span> Unlocking script</span> - <ScriptType scriptTypeRaw={input.script_type}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={input.parsed_script} />
+                              </div>
+                              <div>
+                                <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}> Interpret</a> or debug
                               </div>
                             </TableCell>
                           </TableRow>
@@ -86,8 +94,8 @@ class TransactionDetailsComponent extends React.Component {
                                 }
                               </div>
                               <div>
-                                <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span style={{verticalAlign: "middle"}}> Locking script</span>
+                                <LockIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <span style={{verticalAlign: "middle"}}> Locking script</span> - <ScriptType scriptTypeRaw={output.script_type}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={output.parsed_script} />
@@ -107,5 +115,22 @@ class TransactionDetailsComponent extends React.Component {
     )
   }
 };
+
+const ScriptType = ({scriptTypeRaw}) => {
+  if (scriptTypeRaw === "pay-to-pubkey-hash") {
+    return (
+      <a href="https://en.bitcoinwiki.org/wiki/Pay-to-Pubkey_Hash"> p2pkh </a>
+    );
+  } if(scriptTypeRaw === "pay-to-script-hash") {
+    return (
+      <a href="https://en.bitcoinwiki.org/wiki/Pay-to-Script_Hash"> p2sh </a>
+    );
+  } else if (scriptTypeRaw){
+    return (<span> {scriptTypeRaw} </span>);
+  } else {
+    return null;
+  }
+};
+
 
 export default TransactionDetailsComponent;

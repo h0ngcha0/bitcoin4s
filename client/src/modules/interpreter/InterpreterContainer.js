@@ -9,20 +9,22 @@ import SearchBar from 'material-ui-search-bar'
 import ScriptInterpreterWebsocket from './ScriptInterpreterWebsocket';
 
 // Idea, show the link of a few typical tx, such as p2sh, p2pkh, multi-sig, etc
-// Move web socket out
 
 class InterpreterContainer extends React.Component {
   static propTypes = {};
 
   componentDidMount() {
     if (this.state.transactionId && this.state.inputIndex) {
-      this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex);
+      if (this.state.automatic) {
+        this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex);
+      }
     }
   }
 
   state = {
     transaction: undefined,
     interpretResult: undefined,
+    automatic: this.props.automatic,
     inputIndex: this.props.inputIndex,
     transactionId: this.props.transactionId,
     loading: false,
@@ -89,10 +91,10 @@ class InterpreterContainer extends React.Component {
   };
 
   scriptInterpreterWebsocket = new ScriptInterpreterWebsocket();
-  scriptInterpreter = this.scriptInterpreterWebsocket.interpreterBuilder(this.initialCallback, this.onMessageCallback, this.closeConnectionCallback);
 
   interpretScriptWebsocket = (transactionId, inputIndex) => {
-    this.scriptInterpreter(transactionId, inputIndex)
+    const interpreter = this.scriptInterpreterWebsocket.interpreterBuilder(this.initialCallback, this.onMessageCallback, this.closeConnectionCallback);
+    interpreter(transactionId, inputIndex)
   };
 
   render() {
