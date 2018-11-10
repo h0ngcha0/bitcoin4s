@@ -2,7 +2,7 @@ import {HashRouter, Redirect, Route, Switch} from 'react-router-dom';
 import React from 'react';
 import InterpreterContainer from '../modules/interpreter/InterpreterContainer';
 import TransactionContainer from '../modules/transaction/TransactionContainer';
-import qs from 'query-string';
+import qs from 'qs';
 
 const AppRouter = () => {
   return (
