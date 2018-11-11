@@ -164,10 +164,10 @@ class InterpreterContainer extends React.Component {
     return (
       <div className="container">
         <div className={'application-definition'}>
-          <a href={ `/#/transaction`}>
+          <a href={ `/#/transaction/${this.state.transactionId}`}>
             <img src={ mobileLogoImage } className={`logo-image img-responsive mobile`} alt="Bitcoin Playground"/>
           </a>
-          <a href={ `/#/transaction`}>
+          <a href={ `/#/transaction/${this.state.transactionId}`}>
             <img src={ desktopLogoImage } className={`logo-image img-responsive desktop`} alt="Bitcoin Playground"/>
           </a>
           {

@@ -18,21 +18,21 @@ class InterpreterComponent extends React.Component {
     const executionDescription = () => {
       if (result === 'NoResult') {
         if (stage.type === 'ExecutingScriptSig') {
-          return <span className="executionStatus">Executing <span style={{fontWeight: "bold"}}>Script Sig</span></span>;
+          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Sig</span></span>;
         } else if (stage.type === 'ExecutingScriptPubKey') {
-          return <span>Executing <span style={{fontWeight: "bold"}}>Script PubKey</span></span>;
+          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script PubKey</span></span>;
         } else if (stage.type === 'ExecutingScriptP2SH') {
-          return <span>Executing <span style={{fontWeight: "bold"}}>Script P2SH</span></span>;
+          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script P2SH</span></span>;
         } else if (stage.type === 'ExecutingScriptWitness') {
-          return <span>Executing <span style={{fontWeight: "bold"}}>Script Witness</span></span>;
+          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Witness</span></span>;
         } else {
-          return <span>`Executing <span style={{fontWeight: "bold"}}>${stage.type}`</span></span>;
+          return <span style={{textDecoration: "underline"}}>`Executing <span style={{fontWeight: "bold"}}>${stage.type}`</span></span>;
         }
       } else {
         if (result === 'True') {
-          return <span className="executionStatus" style={{color: "green"}}>Execution Succeeded</span>;
+          return <span style={{color: "green", textDecoration: "underline"}}>Execution Succeeded</span>;
         } else {
-          return <span style={{color: "red"}}>Execution Failed</span>;
+          return <span style={{color: "red", textDecoration: "underline"}}>Execution Failed</span>;
         }
 
       }
@@ -40,7 +40,7 @@ class InterpreterComponent extends React.Component {
 
     return (
       <div style={ {maxWidth: '480px', margin: '0 auto'} }>
-        <div style={ {textAlign: 'center', marginTop: '20px', fontSize: '12px'} }> {executionDescription()} </div>
+        <div style={ {textAlign: 'center', marginTop: '20px', fontSize: '13px'} }> {executionDescription()} </div>
         <Table padding="none">
           <TableHead>
             <TableRow>

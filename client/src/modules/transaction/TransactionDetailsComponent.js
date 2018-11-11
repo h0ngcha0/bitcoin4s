@@ -58,11 +58,11 @@ class TransactionDetailsComponent extends React.Component {
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={input.parsed_script} />
                               </div>
-                              <div>
+                              <div style={{ paddingBottom: "10px"}}>
                                 <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
                                 <span> </span>
                                 <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}>Interpret</a> or
-                                <span> </span><a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?step=0`}>Debug</a>
+                                <span> </span><a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?step=0`}>debug</a>
                               </div>
                             </TableCell>
                           </TableRow>
