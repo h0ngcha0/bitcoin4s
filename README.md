@@ -135,9 +135,4 @@ disconnected
 NIOCTIB website
 ---------------
 
-The goal of the [nioctib.tech](https://nioctib.tech) website is purely educational. It currently offers a more detailed view of how a 
-Bitcoin transaction is executed.
-
-![Transaction view](/nioctib/transaction.jpg?raw=true "transaction")
-
-![Debugging view](/nioctib/debug.jpg?raw=true "debug")
+The goal of the [nioctib.tech](https://nioctib.tech) website is purely educational. It currently offers a more detailed view of how a Bitcoin transaction is executed, at the op code level.
