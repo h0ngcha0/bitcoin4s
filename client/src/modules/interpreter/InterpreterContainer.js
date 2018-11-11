@@ -19,7 +19,6 @@ class InterpreterContainer extends React.Component {
         this.interpretScriptWebsocket();
       } else {
         const step = this.props.step ? this.props.step : 0;
-        console.log('step', step);
         this.interpretScript(step);
       }
     }

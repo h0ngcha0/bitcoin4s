@@ -14,13 +14,34 @@ class InterpreterComponent extends React.Component {
     const {interpretResult} = this.props;
     const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
     const result = interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult';
-    const executionDescription = result === 'NoResult' ? `Executing ${stage.type}` : `Execution finished with result: ${result}`;
+
+    const executionDescription = () => {
+      if (result === 'NoResult') {
+        if (stage.type === 'ExecutingScriptSig') {
+          return <span className="executionStatus">Executing <span style={{fontWeight: "bold"}}>Script Sig</span></span>;
+        } else if (stage.type === 'ExecutingScriptPubKey') {
+          return <span>Executing <span style={{fontWeight: "bold"}}>Script PubKey</span></span>;
+        } else if (stage.type === 'ExecutingScriptP2SH') {
+          return <span>Executing <span style={{fontWeight: "bold"}}>Script P2SH</span></span>;
+        } else if (stage.type === 'ExecutingScriptWitness') {
+          return <span>Executing <span style={{fontWeight: "bold"}}>Script Witness</span></span>;
+        } else {
+          return <span>`Executing <span style={{fontWeight: "bold"}}>${stage.type}`</span></span>;
+        }
+      } else {
+        if (result === 'True') {
+          return <span className="executionStatus" style={{color: "green"}}>Execution Succeeded</span>;
+        } else {
+          return <span style={{color: "red"}}>Execution Failed</span>;
+        }
+
+      }
+    };
 
     return (
-      <div style={ {maxWidth: '550px', margin: '0 auto'} }>
-        {/*<div style={{fontSize: "12px"}}>{executionDescription}</div>*/}
-
-        <Table>
+      <div style={ {maxWidth: '480px', margin: '0 auto'} }>
+        <div style={ {textAlign: 'center', marginTop: '20px', fontSize: '12px'} }> {executionDescription()} </div>
+        <Table padding="none">
           <TableHead>
             <TableRow>
               <TableCell>Current Stack</TableCell>
@@ -37,10 +58,10 @@ class InterpreterComponent extends React.Component {
             </TableRow>
           </TableBody>
         </Table>
-        <Table>
+        <Table padding="none">
           <TableHead>
             <TableRow>
-              <TableCell>Current Script: {executionDescription}</TableCell>
+              <TableCell>Current Script:</TableCell>
             </TableRow>
           </TableHead>
 
@@ -57,7 +78,7 @@ class InterpreterComponent extends React.Component {
 
         {
           !_.isEmpty(altStack) ? (
-            <Table>
+            <Table padding="none">
               <TableHead>
                 <TableRow>
                   <TableCell>Current Alt Stack</TableCell>
@@ -76,7 +97,7 @@ class InterpreterComponent extends React.Component {
             </Table>
           ) : null
         }
-        <Table>
+        <Table padding="none">
           <TableHead>
             <TableRow>
               <TableCell>ScriptPubKey:</TableCell>
@@ -94,7 +115,7 @@ class InterpreterComponent extends React.Component {
           </TableBody>
         </Table>
 
-        <Table>
+        <Table padding="none">
           <TableHead>
             <TableRow>
               <TableCell>ScriptSig:</TableCell>

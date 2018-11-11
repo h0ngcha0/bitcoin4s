@@ -21,13 +21,13 @@ class TransactionDetailsComponent extends React.Component {
     const inputsLength = transaction.inputs.length;
 
     return (
-      <div style={ {maxWidth: '550px', textAlign: 'center', margin: '0 auto'} }>
+      <div style={ {maxWidth: '480px', textAlign: 'center', margin: '0 auto'} }>
         {
           inputsLength < 0 ?
             null :
             <Grid container >
               <Grid item sm={12} xs={12} >
-                <Table>
+                <Table padding="none">
                   <TableHead>
                     <TableRow>
                       <TableCell>Paying from</TableCell>
@@ -53,7 +53,7 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div>
                                 <LockOpenIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span> Unlocking script</span> - <ScriptType scriptTypeRaw={input.script_type}/>
+                                <span> ScriptSig</span> - <ScriptType scriptTypeRaw={input.script_type}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={input.parsed_script} />
@@ -61,7 +61,8 @@ class TransactionDetailsComponent extends React.Component {
                               <div>
                                 <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
                                 <span> </span>
-                                <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}>Interpret</a> or debug
+                                <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}>Interpret</a> or
+                                <span> </span><a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?step=0`}>Debug</a>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -72,7 +73,7 @@ class TransactionDetailsComponent extends React.Component {
                 </Table>
               </Grid>
               <Grid item sm={12} xs={12}>
-                <Table>
+                <Table padding="none">
                   <TableHead>
                     <TableRow>
                       <TableCell>To</TableCell>
@@ -96,7 +97,7 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div>
                                 <LockIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span style={{verticalAlign: "middle"}}> Locking script</span> - <ScriptType scriptTypeRaw={output.script_type}/>
+                                <span style={{verticalAlign: "middle"}}> ScriptPubKey</span> - <ScriptType scriptTypeRaw={output.script_type}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
                                 <ScriptOpCodeList opCodes={output.parsed_script} />
