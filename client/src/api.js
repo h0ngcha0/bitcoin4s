@@ -9,6 +9,11 @@ export function interpretTransactionInput(transactionId, inputIndex) {
     .then(extractResponseData);
 }
 
+export function interpretTransactionInputWithSteps(transactionId, inputIndex, step) {
+  return axios.get(`/api/transaction/${transactionId}/input/${inputIndex}/interpret-with-steps/${step}`)
+    .then(extractResponseData);
+}
+
 export function fetchTransaction(transactionId) {
   return axios.get(`/api/transaction/${transactionId}`)
     .then(extractResponseData);

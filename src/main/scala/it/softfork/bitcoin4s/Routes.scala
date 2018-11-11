@@ -35,16 +35,16 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
               }
             } ~
               rejectEmptyResponse {
+                pathPrefix("interpret-with-steps" / IntNumber) { number =>
+                  pathEndOrSingleSlash {
+                    complete(blockcypherService.interpret(txId, inputIndex, Some(number)))
+                  }
+                } ~
                 pathPrefix("interpret") {
                   rejectEmptyResponse {
                     complete(blockcypherService.interpret(txId, inputIndex))
                   }
-                } ~
-                  pathPrefix("interpret-with-steps" / IntNumber) { number =>
-                    pathEndOrSingleSlash {
-                      complete(blockcypherService.interpret(txId, inputIndex, Some(number)))
-                    }
-                  }
+                }
               } ~
               path("stream-interpret") {
                 extractUpgradeToWebSocket { upgrade =>

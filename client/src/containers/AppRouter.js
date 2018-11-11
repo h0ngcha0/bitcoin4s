@@ -4,6 +4,8 @@ import InterpreterContainer from '../modules/interpreter/InterpreterContainer';
 import TransactionContainer from '../modules/transaction/TransactionContainer';
 import qs from 'qs';
 
+// TODO:
+// 4) display all in the current script, not just a little bit, do not display the total script
 const AppRouter = () => {
   return (
     <HashRouter>
@@ -11,7 +13,9 @@ const AppRouter = () => {
         <Route exact path="/transaction/:transactionId/input/:inputIndex/interpret" render={
           ({match: {params: {transactionId, inputIndex}}, history, location}) => {
             const queryParams = qs.parse(location.search, { ignoreQueryPrefix: true });
-            return (<InterpreterContainer transactionId={transactionId} inputIndex={inputIndex} automatic={queryParams.automatic} push={history.push}/>);
+            const automatic = queryParams.automatic;
+            const step = queryParams.step;
+            return (<InterpreterContainer transactionId={transactionId} inputIndex={inputIndex} automatic={automatic} step={step} push={history.push}/>);
           }
 
         } />

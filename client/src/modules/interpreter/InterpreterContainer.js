@@ -1,14 +1,14 @@
 import React from 'react';
-import {Button} from '@material-ui/core';
+
 import InterpreterComponent from "./InterpreterComponent";
-import {interpretTransactionInput} from '../../api';
+import {interpretTransactionInputWithSteps} from '../../api';
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
 import Loading from '../Loading';
-import SearchBar from 'material-ui-search-bar'
+import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore';
+import NavigateNextIcon from '@material-ui/icons/NavigateNext';
 import ScriptInterpreterWebsocket from './ScriptInterpreterWebsocket';
-
-// Idea, show the link of a few typical tx, such as p2sh, p2pkh, multi-sig, etc
+import Grid from "@material-ui/core/Grid/Grid";
 
 class InterpreterContainer extends React.Component {
   static propTypes = {};
@@ -16,14 +16,25 @@ class InterpreterContainer extends React.Component {
   componentDidMount() {
     if (this.state.transactionId && this.state.inputIndex) {
       if (this.state.automatic) {
-        this.interpretScriptWebsocket(this.state.transactionId, this.state.inputIndex);
+        this.interpretScriptWebsocket();
+      } else {
+        const step = this.props.step ? this.props.step : 0;
+        console.log('step', step);
+        this.interpretScript(step);
       }
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (!this.props.automatic && (this.props.step !== prevProps.step)) {
+      this.interpretScript(this.props.step);
     }
   }
 
   state = {
     transaction: undefined,
     interpretResult: undefined,
+    currentStep: this.props.step,
     automatic: this.props.automatic,
     inputIndex: this.props.inputIndex,
     transactionId: this.props.transactionId,
@@ -31,28 +42,15 @@ class InterpreterContainer extends React.Component {
     executingScript: false
   };
 
-  handleSetTransactionId = (txId) => {
+  interpretScript = (step) => {
     this.setState({
       ...this.state,
-      transactionId: txId
-    });
-  };
-
-  handleSetTransactionInputIndex = (inputIndex) => {
-    this.setState({
-      ...this.state,
-      inputIndex: inputIndex
-    });
-  };
-
-  interpretScript = () => {
-    this.setState({
-      ...this.state,
+      currentStep: step,
       interpretResult: undefined,
       loading: true
     });
 
-    interpretTransactionInput(this.state.transactionId, this.state.inputIndex)
+    interpretTransactionInputWithSteps(this.state.transactionId, this.state.inputIndex, step)
       .then((interpretResponse) => {
         this.setState({
           ...this.state,
@@ -66,68 +64,118 @@ class InterpreterContainer extends React.Component {
       });
   };
 
-  initialCallback = () => {
-    this.setState({
-      ...this.state,
-      interpretResult: undefined,
-      loading: true,
-      executingScript: true
-    });
-  };
-
-  closeConnectionCallback = () => {
-    this.setState({
-      ...this.state,
-      executingScript: false
-    });
-  };
-
-  onMessageCallback = (interpretResult) => {
-    this.setState({
-      ...this.state,
-      interpretResult: interpretResult,
-      loading: false
-    });
-  };
-
   scriptInterpreterWebsocket = new ScriptInterpreterWebsocket();
 
-  interpretScriptWebsocket = (transactionId, inputIndex) => {
-    const interpreter = this.scriptInterpreterWebsocket.interpreterBuilder(this.initialCallback, this.onMessageCallback, this.closeConnectionCallback);
-    interpreter(transactionId, inputIndex)
+  interpretScriptWebsocket = () => {
+    const initialCallback = () => {
+      this.setState({
+        ...this.state,
+        interpretResult: undefined,
+        loading: true,
+        executingScript: true
+      });
+    };
+
+    const closeConnectionCallback = () => {
+      this.setState({
+        ...this.state,
+        executingScript: false
+      });
+    };
+
+    const onMessageCallback = (interpretResult) => {
+      this.setState({
+        ...this.state,
+        interpretResult: interpretResult,
+        loading: false
+      });
+    };
+
+    const interpreter = this.scriptInterpreterWebsocket.interpreterBuilder(initialCallback, onMessageCallback, closeConnectionCallback);
+    interpreter(this.state.transactionId, this.state.inputIndex)
+  };
+
+
+  prevNextButtons = () => {
+    const calculatePrevStep = () => {
+      return this.state.currentStep > 0 ?
+        `/#/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/interpret?step=${parseInt(this.props.step) - 1}` : null
+    };
+
+    const calculateNextStep = () => {
+      const result = this.state.interpretResult ? this.state.interpretResult.result.value : false;
+      const step = this.props.step ? this.props.step : 0;
+      return ((result !== true)) ?
+        `/#/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/interpret?step=${parseInt(step) + 1}` : null
+    };
+
+    if (!this.state.automatic) {
+      const prevStep = calculatePrevStep();
+      const nextStep = calculateNextStep();
+
+      const prevStepClassName = prevStep === null ? "not-active" : "";
+      const prevStepIconStyle = prevStep === null ?
+        {verticalAlign: "middle", fontSize: "16px", color: "grey"} :
+        {verticalAlign: "middle", fontSize: "16px", color: "rgb(219, 56, 111)"};
+      const nextStepClassName = nextStep === null ? "not-active" : "";
+      const nextStepIconStyle = nextStep === null ?
+        {verticalAlign: "middle", fontSize: "16px", color: "grey"} :
+        {verticalAlign: "middle", fontSize: "16px", color: "rgb(219, 56, 111)"};
+
+      return (
+        <div style={{maxWidth: '550px', textAlign: 'center', margin: '0 auto', marginTop: "30px"}}>
+          <Grid container>
+            <Grid item sm={6} xs={6} >
+              <div>
+                <NavigateBeforeIcon style={prevStepIconStyle}/>
+                <a className={prevStepClassName} href={prevStep}>
+                  <span style={{fontSize: "14px"}}>Prev</span>
+                </a>
+              </div>
+            </Grid>
+            <Grid item sm={6} xs={6} >
+              <div>
+                <a className={nextStepClassName} href={nextStep}>
+                  <span style={{fontSize: "14px"}}>Next</span>
+                </a>
+                <NavigateNextIcon style={nextStepIconStyle}/>
+              </div>
+            </Grid>
+          </Grid>
+        </div>
+      )
+    } else {
+      return null;
+    }
+  };
+
+  interpretState = () => {
+    if (this.state.loading) {
+      return <Loading/>;
+    } else {
+      if (this.state.interpretResult) {
+        return <InterpreterComponent interpretResult={this.state.interpretResult} />;
+      } else {
+        return null;
+      }
+    }
   };
 
   render() {
     return (
       <div className="container">
         <div className={'application-definition'}>
-          <img src={ mobileLogoImage } className={`logo-image img-responsive mobile`} alt="Bitcoin Playground"/>
-          <img src={ desktopLogoImage } className={`logo-image img-responsive desktop`} alt="Bitcoin Playground"/>
-          <SearchBar
-            value={this.state.transactionId}
-            placeholder="BTC transaction id"
-            onChange={(newValue) => this.handleSetTransactionId(newValue)}
-            disabled={ this.state.executingScript }
-            style={ {maxWidth: '500px', textAlign: 'center', margin: '0 auto'} }
-            onRequestSearch={() => {
-              this.props.push(`/transaction/${this.state.transactionId}`);
-            }}
-          />
-          <div style={ {marginTop: '16px', textAlign: 'center'} }>
-            {
-              this.state.loading ?
-                <Loading /> :
-                <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
-                  this.props.push(`/transaction/${this.state.transactionId}`)
-                }>
-                  Search
-                </Button>
-
-            }
-          </div>
+          <a href={ `/#/transaction`}>
+            <img src={ mobileLogoImage } className={`logo-image img-responsive mobile`} alt="Bitcoin Playground"/>
+          </a>
+          <a href={ `/#/transaction`}>
+            <img src={ desktopLogoImage } className={`logo-image img-responsive desktop`} alt="Bitcoin Playground"/>
+          </a>
           {
-            this.state.interpretResult ?
-              <InterpreterComponent interpretResult={this.state.interpretResult} /> : null
+            this.prevNextButtons()
+          }
+          {
+            this.interpretState()
           }
         </div>
       </div>

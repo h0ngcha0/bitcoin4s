@@ -46,7 +46,7 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div>
                                 <MoneyOffIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span className='btc spent'> {input.output_value / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prev_hash}` }> transaction </a>
+                                <span className='btc spent'> {input.output_value / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prev_hash}` }>Transaction</a>
                                 {
                                   input.output_index ? <span> output {input.output_index} </span> : null
                                 }
@@ -60,7 +60,8 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div>
                                 <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}> Interpret</a> or debug
+                                <span> </span>
+                                <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}>Interpret</a> or debug
                               </div>
                             </TableCell>
                           </TableRow>
@@ -90,7 +91,7 @@ class TransactionDetailsComponent extends React.Component {
                               <div>
                                 <AttachMoneyIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
                                 <span className='btc to'>{output.value / 100000000} BTC</span> - {
-                                  output.spent_by ? <a href={ `/#/transaction/${output.spent_by}` }> transaction </a> : 'not spent yet'
+                                  output.spent_by ? <a href={ `/#/transaction/${output.spent_by}` }> Transaction </a> : 'not spent yet'
                                 }
                               </div>
                               <div>
@@ -119,11 +120,11 @@ class TransactionDetailsComponent extends React.Component {
 const ScriptType = ({scriptTypeRaw}) => {
   if (scriptTypeRaw === "pay-to-pubkey-hash") {
     return (
-      <a href="https://en.bitcoinwiki.org/wiki/Pay-to-Pubkey_Hash"> p2pkh </a>
+      <a href="https://en.bitcoinwiki.org/wiki/Pay-to-Pubkey_Hash"> P2PKH </a>
     );
   } if(scriptTypeRaw === "pay-to-script-hash") {
     return (
-      <a href="https://en.bitcoinwiki.org/wiki/Pay-to-Script_Hash"> p2sh </a>
+      <a href="https://en.bitcoinwiki.org/wiki/Pay-to-Script_Hash"> P2SH </a>
     );
   } else if (scriptTypeRaw){
     return (<span> {scriptTypeRaw} </span>);

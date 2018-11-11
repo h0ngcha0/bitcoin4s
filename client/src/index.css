@@ -16,8 +16,17 @@ body {
 }
 
 a {
-  color: rgb(33, 150, 243);
+  color: rgb(219, 56, 111);
   text-decoration: none;
+  border-bottom: rgb(219, 56, 111) dashed 1px;
+}
+
+.not-active {
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none;
+  border-bottom: grey dashed 1px;
+  color: grey;
 }
 
 .title {
