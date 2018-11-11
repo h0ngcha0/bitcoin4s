@@ -40,11 +40,11 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
                     complete(blockcypherService.interpret(txId, inputIndex, Some(number)))
                   }
                 } ~
-                pathPrefix("interpret") {
-                  rejectEmptyResponse {
-                    complete(blockcypherService.interpret(txId, inputIndex))
+                  pathPrefix("interpret") {
+                    rejectEmptyResponse {
+                      complete(blockcypherService.interpret(txId, inputIndex))
+                    }
                   }
-                }
               } ~
               path("stream-interpret") {
                 extractUpgradeToWebSocket { upgrade =>

@@ -12,7 +12,7 @@ Table of Content
 * [Parse bitcoin script](#parse-bitcoin-script)
 * [Run bitcoin script interpreter](#run-bitcoin-script-interpreter)
 * [Rest API](#rest-api)
-* [How to use](#how-to-use)
+* [Nioctib.tech website](#nioctib-website)
 
 Parse bitcoin script
 --------------------
@@ -131,17 +131,13 @@ connected (press CTRL+C to quit)
 disconnected
 ```
 
-How to use
-----------
 
-Add the following to your build.sbt
+NIOCTIB website
+---------------
 
-```scala
-libraryDependencies += "it.softfork" %% "bitcoin4s" % "0.1.0"
-```
+The goal of the [nioctib.tech](https://nioctib.tech) website is purely educational. It currently offers a more detailed view of how a 
+Bitcoin transaction is executed.
 
-with the following resolver
+![Transaction view](/nioctib/transaction.jpg?raw=true "transaction")
 
-```scala
-resolvers += Resolver.bintrayRepo("liuhongchao", "maven")
-```
+![Debugging view](/nioctib/debug.jpg?raw=true "debug")
