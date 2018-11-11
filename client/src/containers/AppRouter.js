@@ -4,8 +4,6 @@ import InterpreterContainer from '../modules/interpreter/InterpreterContainer';
 import TransactionContainer from '../modules/transaction/TransactionContainer';
 import qs from 'qs';
 
-// TODO:
-// 4) display all in the current script, not just a little bit, do not display the total script
 const AppRouter = () => {
   return (
     <HashRouter>

@@ -49,7 +49,8 @@ object ApiModels {
 
   case class InterpreterOutcome(
     result: InterpreterResultOut,
-    state: InterpreterStateOut
+    state: InterpreterStateOut,
+    step: Option[Int] = None
   )
 
   case object TransactionInputNotFound extends RuntimeException("Transaction input not found")

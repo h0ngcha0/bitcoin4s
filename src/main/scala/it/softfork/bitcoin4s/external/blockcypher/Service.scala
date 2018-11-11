@@ -48,7 +48,7 @@ class Service(api: ApiInterface)(
   def interpret(
     txId: TxId,
     inputIndex: Int,
-    maybeSteps: Option[Int] = None,
+    maybeStep: Option[Int] = None,
     flags: Seq[ScriptFlag] = Seq(ScriptFlag.SCRIPT_VERIFY_P2SH, ScriptFlag.SCRIPT_VERIFY_WITNESS)
   ): Future[Option[InterpreterOutcome]] = {
     getTransaction(txId).flatMap { maybeSpendingTx =>
@@ -91,7 +91,7 @@ class Service(api: ApiInterface)(
                 sigVersion = sigVersion
               )
 
-              val outcome = Interpreter.create(verbose = false, maybeSteps).run(initialState)
+              val outcome = Interpreter.create(verbose = false, maybeStep).run(initialState)
 
               logger.info(s"Interpreter finished with $outcome")
 
@@ -99,7 +99,8 @@ class Service(api: ApiInterface)(
                 case (finalState @ _, interpretedResult) =>
                   InterpreterOutcome(
                     result = InterpreterResultOut.fromInterpreterResult(interpretedResult),
-                    state = InterpreterStateOut.fromInterpreterState(finalState)
+                    state = InterpreterStateOut.fromInterpreterState(finalState),
+                    step = maybeStep
                   )
               } match {
                 case Left(e) =>

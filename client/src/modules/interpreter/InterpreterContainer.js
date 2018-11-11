@@ -85,6 +85,7 @@ class InterpreterContainer extends React.Component {
     const onMessageCallback = (interpretResult) => {
       this.setState({
         ...this.state,
+        currentStep: interpretResult.step,
         interpretResult: interpretResult,
         loading: false
       });
@@ -112,14 +113,12 @@ class InterpreterContainer extends React.Component {
       const prevStep = calculatePrevStep();
       const nextStep = calculateNextStep();
 
+      const disabledIconStyle = {verticalAlign: "middle", fontSize: "16px", color: "grey"};
+      const activeIconStyle = {verticalAlign: "middle", fontSize: "16px", color: "rgb(219, 56, 111)"};
       const prevStepClassName = prevStep === null ? "not-active" : "";
-      const prevStepIconStyle = prevStep === null ?
-        {verticalAlign: "middle", fontSize: "16px", color: "grey"} :
-        {verticalAlign: "middle", fontSize: "16px", color: "rgb(219, 56, 111)"};
+      const prevStepIconStyle = prevStep === null ? disabledIconStyle : activeIconStyle;
       const nextStepClassName = nextStep === null ? "not-active" : "";
-      const nextStepIconStyle = nextStep === null ?
-        {verticalAlign: "middle", fontSize: "16px", color: "grey"} :
-        {verticalAlign: "middle", fontSize: "16px", color: "rgb(219, 56, 111)"};
+      const nextStepIconStyle = nextStep === null ? disabledIconStyle : activeIconStyle;
 
       return (
         <div style={{maxWidth: '550px', textAlign: 'center', margin: '0 auto', marginTop: "30px"}}>
@@ -153,7 +152,7 @@ class InterpreterContainer extends React.Component {
       return <Loading/>;
     } else {
       if (this.state.interpretResult) {
-        return <InterpreterComponent interpretResult={this.state.interpretResult} step={this.props.step}/>;
+        return <InterpreterComponent interpretResult={this.state.interpretResult} step={this.state.currentStep}/>;
       } else {
         return null;
       }

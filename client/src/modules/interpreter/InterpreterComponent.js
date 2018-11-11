@@ -12,7 +12,7 @@ class InterpreterComponent extends React.Component {
 
   render() {
     const {interpretResult} = this.props;
-    const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
+    const {scriptPubKey, currentScript, stack, altStack, stage} = interpretResult.state;
     const result = interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult';
 
     const currentRemainingScript = () => {
@@ -27,26 +27,27 @@ class InterpreterComponent extends React.Component {
       }
     };
 
+    const executionDescriptionComponent = (scriptType) => {
+      return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>{scriptType}</span></span> [{this.props.step}]</span>;
+    };
+
     const executionDescription = () => {
       if (result === 'NoResult') {
         if (stage.type === 'ExecutingScriptSig') {
-          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Sig</span></span> [{this.props.step}]</span>;
+          return executionDescriptionComponent("Script Sig");
         } else if (stage.type === 'ExecutingScriptPubKey') {
-          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script PubKey</span></span> [{this.props.step}]</span>;
+          return executionDescriptionComponent("Script PubKey");
         } else if (stage.type === 'ExecutingScriptP2SH') {
-          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script P2SH</span></span> [{this.props.step}]</span>;
+          return executionDescriptionComponent("Script P2SH");
         } else if (stage.type === 'ExecutingScriptWitness') {
-          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Witness</span></span> [{this.props.step}]</span>;
+          return executionDescriptionComponent("Script Witness");
         } else {
-          return <span><span style={{textDecoration: "underline"}}>`Executing <span style={{fontWeight: "bold"}}>${stage.type}`</span></span> [{this.props.step}]</span>;
+          return executionDescriptionComponent(stage.type);
         }
       } else {
-        if (result === 'True') {
-          return <span style={{color: "green", textDecoration: "underline"}}>Execution Succeeded</span>;
-        } else {
-          return <span style={{color: "red", textDecoration: "underline"}}>Execution Failed</span>;
-        }
-
+        return result === 'True' ?
+          <span style={{color: "green", textDecoration: "underline"}}>Execution Succeeded</span> :
+          <span style={{color: "red", textDecoration: "underline"}}>Execution Failed</span>;
       }
     };
 

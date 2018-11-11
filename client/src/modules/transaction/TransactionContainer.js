@@ -7,6 +7,7 @@ import {fetchTransaction} from '../../api';
 import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
 import SearchBar from 'material-ui-search-bar';
+import BitcoinIcon from './BitcoinIcon';
 
 export default class TransactionContainer extends React.Component {
   componentWillMount() {
@@ -22,7 +23,7 @@ export default class TransactionContainer extends React.Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps, _) {
     if (this.props.transactionId !== nextProps.transactionId) {
       this.loadTransaction(nextProps.transactionId);
     }
@@ -49,12 +50,33 @@ export default class TransactionContainer extends React.Component {
         this.setState({
           ...this.state,
           loading: false,
+          error: undefined,
           transaction: transaction
         });
       })
       .catch((error) => {
-        console.log(error);
+        this.setState({
+          ...this.state,
+          loading: false,
+          error: error.response
+        });
       });
+  };
+
+  showTransactionDetails = () => {
+    if (this.state.error) {
+      if (this.state.error.status === 404) {
+        return (
+          <div style={ {marginTop: '32px', textAlign: 'center'} }> 404, <BitcoinIcon style={{verticalAlign: "middle", fontSize: "200px"}}/> transaction not found </div>
+        );
+      } else {
+        return <div style={ {marginTop: '32px', textAlign: 'center'} }>{this.state.error.status},  {this.state.error.statusText}</div>;
+      }
+    } else if (this.state.transaction) {
+      return <TransactionDetailsComponent transaction={this.state.transaction} />;
+    } else {
+      return null;
+    }
   };
 
   render() {
@@ -86,8 +108,7 @@ export default class TransactionContainer extends React.Component {
             }
           </div>
           {
-            this.state.transaction ?
-              <TransactionDetailsComponent transaction={this.state.transaction} /> : null
+            this.showTransactionDetails()
           }
         </div>
       </div>
