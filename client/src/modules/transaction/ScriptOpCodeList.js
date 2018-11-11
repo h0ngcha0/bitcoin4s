@@ -2,7 +2,6 @@ import _ from 'lodash';
 import React from 'react';
 import {findElementType} from './ScriptElements';
 
-
 const ScriptOpCodeList = ({opCodes}) => {
   return (
     <div className='ScriptOpCodeList'>

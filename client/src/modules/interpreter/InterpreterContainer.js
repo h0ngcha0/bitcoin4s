@@ -153,7 +153,7 @@ class InterpreterContainer extends React.Component {
       return <Loading/>;
     } else {
       if (this.state.interpretResult) {
-        return <InterpreterComponent interpretResult={this.state.interpretResult} />;
+        return <InterpreterComponent interpretResult={this.state.interpretResult} step={this.props.step}/>;
       } else {
         return null;
       }

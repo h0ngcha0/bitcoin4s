@@ -15,18 +15,30 @@ class InterpreterComponent extends React.Component {
     const {scriptPubKey, scriptSig, currentScript, stack, altStack, stage} = interpretResult.state;
     const result = interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult';
 
+    const currentRemainingScript = () => {
+      if (result === 'NoResult') {
+        if (stage.type === 'ExecutingScriptSig') {
+          return currentScript.concat(scriptPubKey);
+        } else {
+          return currentScript;
+        }
+      } else {
+        return currentScript;
+      }
+    };
+
     const executionDescription = () => {
       if (result === 'NoResult') {
         if (stage.type === 'ExecutingScriptSig') {
-          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Sig</span></span>;
+          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Sig</span></span> [{this.props.step}]</span>;
         } else if (stage.type === 'ExecutingScriptPubKey') {
-          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script PubKey</span></span>;
+          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script PubKey</span></span> [{this.props.step}]</span>;
         } else if (stage.type === 'ExecutingScriptP2SH') {
-          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script P2SH</span></span>;
+          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script P2SH</span></span> [{this.props.step}]</span>;
         } else if (stage.type === 'ExecutingScriptWitness') {
-          return <span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Witness</span></span>;
+          return <span><span style={{textDecoration: "underline"}}>Executing <span style={{fontWeight: "bold"}}>Script Witness</span></span> [{this.props.step}]</span>;
         } else {
-          return <span style={{textDecoration: "underline"}}>`Executing <span style={{fontWeight: "bold"}}>${stage.type}`</span></span>;
+          return <span><span style={{textDecoration: "underline"}}>`Executing <span style={{fontWeight: "bold"}}>${stage.type}`</span></span> [{this.props.step}]</span>;
         }
       } else {
         if (result === 'True') {
@@ -44,7 +56,7 @@ class InterpreterComponent extends React.Component {
         <Table padding="none">
           <TableHead>
             <TableRow>
-              <TableCell>Current Stack</TableCell>
+              <TableCell>Stack</TableCell>
             </TableRow>
           </TableHead>
 
@@ -61,7 +73,7 @@ class InterpreterComponent extends React.Component {
         <Table padding="none">
           <TableHead>
             <TableRow>
-              <TableCell>Current Script:</TableCell>
+              <TableCell>Script:</TableCell>
             </TableRow>
           </TableHead>
 
@@ -69,7 +81,7 @@ class InterpreterComponent extends React.Component {
             <TableRow>
               <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px" }}>
                 <div style={ {marginTop: "5px"}}>
-                  <ScriptOpCodeList opCodes={currentScript} />
+                  <ScriptOpCodeList opCodes={currentRemainingScript()} />
                 </div>
               </TableCell>
             </TableRow>
@@ -97,41 +109,6 @@ class InterpreterComponent extends React.Component {
             </Table>
           ) : null
         }
-        <Table padding="none">
-          <TableHead>
-            <TableRow>
-              <TableCell>ScriptPubKey:</TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            <TableRow>
-              <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px" }}>
-                <div style={ {marginTop: "5px"}}>
-                  <ScriptOpCodeList opCodes={scriptPubKey} />
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-
-        <Table padding="none">
-          <TableHead>
-            <TableRow>
-              <TableCell>ScriptSig:</TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            <TableRow>
-              <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px" }}>
-                <div style={ {marginTop: "5px"}}>
-                  <ScriptOpCodeList opCodes={scriptSig} />
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
       </div>
     )
   }
