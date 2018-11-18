@@ -4,7 +4,10 @@ bitcoin4s
 [![Coverage Status](https://coveralls.io/repos/github/liuhongchao/bitcoin4s/badge.svg?branch=master)](https://coveralls.io/github/liuhongchao/bitcoin4s?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Scala library for experimenting with Bitcoin scripts. Provides a step by step debugger through REST API. Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json) from bitcoin core.
+Scala library for experimenting with Bitcoin scripts. Provides a step by step debugger through REST API.
+Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json) from bitcoin core.
+
+The code in repository runs the https://nioctib.tech website.
 
 Table of Content
 ----------------
@@ -12,7 +15,7 @@ Table of Content
 * [Parse bitcoin script](#parse-bitcoin-script)
 * [Run bitcoin script interpreter](#run-bitcoin-script-interpreter)
 * [Rest API](#rest-api)
-* [Nioctib.tech website](#nioctib-website)
+* [Develop nioctib.tech website](#develop-nioctib-website)
 
 Parse bitcoin script
 --------------------
@@ -132,11 +135,22 @@ disconnected
 ```
 
 
-NIOCTIB website
+Develop nioctib website
 ---------------
 
-The goal of the [nioctib.tech](https://nioctib.tech) website is purely educational. It currently offers a more detailed view of how a 
-Bitcoin transaction is executed.
+[nioctib.tech](https://nioctib.tech) website is intended to be a Bitcoin educational site. Right now it supports
+displaying and debugging Bitcoin transactions at the OpCode level.
+
+* Start backend server
+
+In the project root directory, run `sbt reStart`, it will start the backend web server at the port `8888`
+
+* Start frontend development server
+
+In the `client` directory, run `yarn install` to install neccessary packages, then run `yarn run start` to
+start the frontend development server at port `3000`. Now the website should be available at http://localhost:3000
+
+
 
 ![Transaction view](/nioctib/transaction.jpg?raw=true "transaction")
 
