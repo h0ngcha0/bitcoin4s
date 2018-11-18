@@ -141,11 +141,11 @@ Develop nioctib website locally
 [nioctib.tech](https://nioctib.tech) website is intended to be a Bitcoin educational site. Right now it supports
 displaying and debugging Bitcoin transactions at the OpCode level.
 
-* Start backend server
+##### Start backend server
 
 In the project root directory, run `sbt reStart`, it will start the backend web server at the port `8888`
 
-* Start frontend development server
+##### Start frontend development server
 
 In the `client` directory, run `yarn install` to install neccessary packages, then run `yarn run start` to
 start the frontend development server at port `3000`. Now the website should be available at http://localhost:3000
