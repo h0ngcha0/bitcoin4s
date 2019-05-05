@@ -9,3 +9,5 @@ logs/
 ensime.sbt
 yarn-error.log
 .yarn
+.bloop
+.metals
