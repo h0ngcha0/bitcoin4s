@@ -12,7 +12,7 @@
     "bytes": "^3.0.0",
     "classnames": "^2.2.5",
     "flexboxgrid": "^6.3.1",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.13",
     "material-ui-search-bar": "^1.0.0-beta.13",
     "moment": "^2.22.2",
     "prop-types": "^15.6.0",
