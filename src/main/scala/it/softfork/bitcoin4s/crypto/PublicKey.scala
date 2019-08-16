@@ -7,7 +7,7 @@ import it.softfork.bitcoin4s.Utils._
 import it.softfork.bitcoin4s.crypto.Signature.ECDSASignature
 
 case class PublicKey(point: ECPoint, compressed: Boolean) {
-  val encoded: Seq[Byte] = point.getEncoded(compressed)
+  val encoded: Array[Byte] = point.getEncoded(compressed)
 
   def verify(data: Seq[Byte], signature: ECDSASignature): Boolean = {
     val signer = new ECDSASigner

@@ -8,6 +8,8 @@ import it.softfork.bitcoin4s.Utils._
 import it.softfork.bitcoin4s.crypto.Hash
 import it.softfork.bitcoin4s.transaction.structure.OutPoint
 
+import scala.collection.immutable.ArraySeq
+
 object RichTransaction extends StrictLogging {
   val transactionVersion = 1
 
@@ -59,7 +61,7 @@ object RichTransaction extends StrictLogging {
       }
 
       val transactionPreImage = serialisedTx ++ uint32ToBytes(sigHashType.value)
-      Hash.Hash256(transactionPreImage)
+      ArraySeq.unsafeWrapArray(Hash.Hash256(transactionPreImage))
     }
 
     // https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
@@ -124,7 +126,7 @@ object RichTransaction extends StrictLogging {
           locktimeBytes ++
           sigHashTypeBytes
 
-      Hash.Hash256(preImage.toArray)
+      ArraySeq.unsafeWrapArray(Hash.Hash256(preImage.toArray))
     }
 
     def removeSigScript(): Tx = {

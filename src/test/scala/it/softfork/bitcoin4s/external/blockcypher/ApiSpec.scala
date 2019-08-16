@@ -7,8 +7,9 @@ import it.softfork.bitcoin4s.crypto.Hash
 import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
 import it.softfork.bitcoin4s.script._
 import org.spongycastle.util.encoders.Hex
-import scala.io.Source
 
+import scala.collection.immutable.ArraySeq
+import scala.io.Source
 import scala.util.control.Exception.allCatch
 
 class ApiSpec extends Spec with StrictLogging {
@@ -68,11 +69,12 @@ class ApiSpec extends Spec with StrictLogging {
   }
 
   private def parseHexString(hex: String): Seq[ScriptElement] = {
-    Parser.parse(Hash.fromHex(hex))
+    Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(hex)))
   }
 
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {
-    scriptFlagsString.split(",").map(_.trim).flatMap(ScriptFlag.fromString)
+    val result = scriptFlagsString.split(",").map(_.trim).flatMap(ScriptFlag.fromString _)
+    ArraySeq.unsafeWrapArray(result)
   }
 
   private def rawJsonFromResource(resourcePath: String): String = {

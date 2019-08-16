@@ -8,6 +8,7 @@ import org.spongycastle.util.encoders.Hex
 
 import scala.util.control.Exception.allCatch
 import scala.annotation.tailrec
+import scala.collection.immutable.ArraySeq
 
 object Parser {
 
@@ -56,12 +57,12 @@ object Parser {
             if (unquotedString == "") {
               parseTokensToBytes(tail, OP_0.bytes +: acc)
             } else {
-              parseTokensToBytes(tail, bytesAndLength(unquotedString.getBytes()) +: acc)
+              parseTokensToBytes(tail, bytesAndLength(ArraySeq.unsafeWrapArray(unquotedString.getBytes())) +: acc)
             }
 
           case t =>
             val dataBytes = t.getBytes()
-            parseTokensToBytes(tail, bytesAndLength(dataBytes) +: acc)
+            parseTokensToBytes(tail, bytesAndLength(ArraySeq.unsafeWrapArray(dataBytes)) +: acc)
         }
       case Nil =>
         acc

@@ -2,6 +2,8 @@ package it.softfork.bitcoin4s.crypto
 
 import it.softfork.bitcoin4s.crypto.Hash._
 
+import scala.collection.immutable.ArraySeq
+
 object Base58Check {
   def checksum(input: Array[Byte]) = Sha256(Sha256(input)).take(4)
 
@@ -11,7 +13,7 @@ object Base58Check {
 
   def encode(versionPrefix: Array[Byte], payload: Array[Byte]): String = {
     val versionPrefixAndPayload = versionPrefix ++ payload
-    Base58.encode(versionPrefixAndPayload ++ checksum(versionPrefixAndPayload))
+    Base58.encode(ArraySeq.unsafeWrapArray(versionPrefixAndPayload ++ checksum(versionPrefixAndPayload)))
   }
 
   // Type the prefix

@@ -107,7 +107,7 @@ object ScriptNum {
         result(result.length - 1) = (result(result.length - 1) | 0x80).toByte
       }
 
-      result
+      result.toSeq
     }
   }
 

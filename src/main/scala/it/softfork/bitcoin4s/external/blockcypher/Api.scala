@@ -12,11 +12,11 @@ import it.softfork.bitcoin4s.external.blockcypher.Api._
 import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
 import it.softfork.bitcoin4s.transaction.structure.{OutPoint, Hash => ScodecHash}
 import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut}
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.{Format, JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
-import tech.minna.playjson.macros.json
 import it.softfork.bitcoin4s.ApiModels.scriptElementFormat
 
+import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
 
 // https://www.blockcypher.com/dev/bitcoin/#transaction-api
@@ -69,7 +69,7 @@ class CachedApi(api: Api)(
 
 object Api {
 
-  @json case class TransactionInput(
+  case class TransactionInput(
     prev_hash: String,
     output_index: Int,
     script: Option[String],
@@ -102,7 +102,11 @@ object Api {
     }
   }
 
-  @json case class TransactionOutput(
+  object TransactionInput {
+    implicit val format: Format[TransactionInput] = Json.using[Json.WithDefaultValues].format[TransactionInput]
+  }
+
+  case class TransactionOutput(
     value: Long,
     script: String,
     parsed_script: Option[Seq[ScriptElement]],
@@ -113,7 +117,7 @@ object Api {
 
     def toTxOut = TxOut(
       value = value,
-      pk_script = ByteVector(Parser.parse(Hash.fromHex(script)).flatMap(_.bytes))
+      pk_script = ByteVector(Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(script))).flatMap(_.bytes))
     )
 
     def withParsedScript() = {
@@ -122,7 +126,11 @@ object Api {
     }
   }
 
-  @json case class Transaction(
+  object TransactionOutput {
+    implicit val format: Format[TransactionOutput] = Json.using[Json.WithDefaultValues].format[TransactionOutput]
+  }
+
+  case class Transaction(
     block_hash: String,
     block_height: Long,
     block_index: Int,
@@ -157,6 +165,10 @@ object Api {
 
       copy(inputs = inputsWithParsedScript, outputs = outputsWithParsedScript)
     }
+  }
+
+  object Transaction {
+    implicit val format: Format[Transaction] = Json.using[Json.WithDefaultValues].format[Transaction]
   }
 
   protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000")
