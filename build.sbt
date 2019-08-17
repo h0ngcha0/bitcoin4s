@@ -114,11 +114,4 @@ resourceGenerators in Compile += Def.task {
   }
 }.taskValue
 
-val scalafmtAll = taskKey[Unit]("Format all Scala and sbt files")
-scalafmtAll := {
-  (Compile / scalafmt).value
-  (Test / scalafmt).value
-  (Compile / scalafmtSbt).value
-}
-
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
