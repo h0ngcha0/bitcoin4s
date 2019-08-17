@@ -3,6 +3,7 @@ package it.softfork.bitcoin4s.script
 import it.softfork.bitcoin4s.Utils._
 import org.spongycastle.util.encoders.Hex
 
+import scala.collection.immutable.ArraySeq
 import scala.collection.mutable.ArrayBuffer
 
 // Reference: https://en.bitcoin.it/wiki/Script
@@ -24,7 +25,7 @@ trait ScriptConstant extends ScriptElement {
 }
 
 object ScriptConstant {
-  def apply(bytesIn: Seq[Byte]) = new ScriptConstant { override val bytes = bytesIn }
+  def apply(bytesIn: Array[Byte]): ScriptConstant = new ScriptConstant { override val bytes = ArraySeq.unsafeWrapArray(bytesIn) }
 }
 
 // Reference: https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L205

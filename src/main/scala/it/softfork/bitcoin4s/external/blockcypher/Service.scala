@@ -75,7 +75,7 @@ class Service(api: ApiInterface)(
 
               val witnessesStack = txInput.witness.map { rawWitnesses =>
                 rawWitnesses.reverse.flatMap { rawWitness =>
-                  allCatch.opt(Hex.decode(rawWitness).toSeq).map(ScriptConstant.apply)
+                  allCatch.opt(Hex.decode(rawWitness)).map(ScriptConstant.apply)
                 }
               }
 

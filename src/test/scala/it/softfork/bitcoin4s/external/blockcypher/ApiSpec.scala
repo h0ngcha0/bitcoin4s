@@ -38,7 +38,7 @@ class ApiSpec extends Spec with StrictLogging {
     val scriptPubKey = parseHexString(txOut.script)
     val witnessesStack = txIn.witness.map { rawWitnesses =>
       rawWitnesses.reverse.flatMap { rawWitness =>
-        allCatch.opt(Hex.decode(rawWitness).toSeq).map(ScriptConstant.apply)
+        allCatch.opt(Hex.decode(rawWitness)).map(ScriptConstant.apply)
       }
     }
 

@@ -90,7 +90,7 @@ object Parser {
           val maybeBytesToPush = restOfData.takeOpt(numberOfBytesToPush)
           val restOfBytes = restOfData.drop(numberOfBytesToPush)
           val maybeConstantToBePushed = maybeBytesToPush.map { bytesToPush =>
-            (bytesToPush.isEmpty).option(OP_0).getOrElse(ScriptConstant(bytesToPush))
+            (bytesToPush.isEmpty).option(OP_0).getOrElse(ScriptConstant(bytesToPush.toArray))
           }
 
           (restOfBytes, (Seq(opCode) ++ maybeConstantToBePushed.toList) +: acc)

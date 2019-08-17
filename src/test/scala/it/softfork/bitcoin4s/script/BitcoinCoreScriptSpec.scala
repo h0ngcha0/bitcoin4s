@@ -46,7 +46,7 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
           val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
           val witnesses = witnessElement.reverse.tail
             .flatMap { rawWitness =>
-              allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)).toSeq)
+              allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)))
             }
             .map(ScriptConstant.apply)
           val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringTail.take(4)

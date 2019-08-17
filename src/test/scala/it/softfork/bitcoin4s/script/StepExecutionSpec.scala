@@ -60,7 +60,7 @@ class StepExecutionSpec extends Spec {
 
     val thirdStep = execScript(scriptPubKey, scriptSig, maybeSteps = Some(3))
     thirdStep.currentScript shouldEqual List(OP_EQUAL)
-    thirdStep.stack shouldBe Seq(ScriptConstant(Seq.empty), ScriptNum(0))
+    thirdStep.stack shouldBe Seq(ScriptConstant(Array.empty), ScriptNum(0))
     thirdStep.altStack shouldBe empty
     thirdStep.executionStage shouldBe ExecutingScriptPubKey
     thirdStep.result shouldBe None

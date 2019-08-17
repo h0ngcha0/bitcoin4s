@@ -15,7 +15,6 @@ import it.softfork.bitcoin4s.crypto.Signature.{ECDSASignature, EmptySignature}
 import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 
-import scala.collection.immutable.ArraySeq
 import scala.util.{Failure, Success, Try}
 
 sealed trait CryptoOp extends ScriptOpCode
@@ -276,7 +275,7 @@ object CryptoOp {
           val hashed = hash(head.bytes.toArray)
           setStateAndContinue(
             state.copy(
-              stack = ScriptConstant(ArraySeq.unsafeWrapArray(hashed)) +: tail,
+              stack = ScriptConstant(hashed) +: tail,
               opCount = state.opCount + 1
             )
           )
