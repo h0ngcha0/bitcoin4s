@@ -2,7 +2,6 @@ package it.softfork.bitcoin4s.script
 
 import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError.BadOpCode
-import tech.minna.utilities.TraitEnumeration
 import cats.implicits._
 
 sealed trait PseudoOp extends ScriptOpCode
@@ -12,7 +11,7 @@ object PseudoOp {
   case object OP_PUBKEY extends PseudoOp { val value = 254 }
   case object OP_INVALIDOPCODE extends PseudoOp { val value = 255 }
 
-  val all = TraitEnumeration.values[PseudoOp]
+  val all = Set(OP_PUBKEY, OP_PUBKEYHASH, OP_INVALIDOPCODE)
 
   implicit val interpreter = new InterpretableOp[PseudoOp] {
 

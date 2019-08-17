@@ -4,7 +4,6 @@ import it.softfork.bitcoin4s.Utils._
 import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError._
-import tech.minna.utilities.TraitEnumeration
 import cats.implicits._
 
 sealed trait BitwiseLogicOp extends ScriptOpCode
@@ -17,7 +16,9 @@ object BitwiseLogicOp {
   case object OP_EQUAL extends BitwiseLogicOp { val value = 135 }
   case object OP_EQUALVERIFY extends BitwiseLogicOp { val value = 136 }
 
-  val all = TraitEnumeration.values[BitwiseLogicOp]
+  val all = Set(
+    OP_INVERT, OP_AND, OP_OR, OP_XOR, OP_EQUAL, OP_EQUALVERIFY
+  )
 
   val disabled = Seq(OP_INVERT, OP_AND, OP_OR, OP_XOR)
 

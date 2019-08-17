@@ -8,8 +8,8 @@ object Base58 {
   val One = Alphabets.charAt(0)
   val Base = BigInt(58)
 
-  def encode(input: Seq[Byte]): String = {
-    val inputAsBigInt = BigInt(1, input.toArray)
+  def encode(input: Array[Byte]): String = {
+    val inputAsBigInt = BigInt(1, input)
     val encodedBigInt = encodeBigInt(inputAsBigInt)
     val encodedLeadingZeros = input.takeWhile(_ == 0).map(_.toInt).map(Alphabets.charAt)
 

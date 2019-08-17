@@ -7,7 +7,7 @@ import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.RichTransaction._
 import it.softfork.bitcoin4s.script.Interpreter._
-import tech.minna.utilities.TraitEnumeration
+
 import scala.annotation.tailrec
 import cats.implicits._
 import it.softfork.bitcoin4s.crypto.PublicKey.DecodeResult
@@ -31,7 +31,10 @@ object CryptoOp {
   case object OP_CHECKMULTISIG extends CryptoOp { val value = 174 }
   case object OP_CHECKMULTISIGVERIFY extends CryptoOp { val value = 175 }
 
-  val all = TraitEnumeration.values[CryptoOp]
+  val all = Set(
+    OP_RIPEMD160, OP_SHA1, OP_SHA256, OP_HASH160, OP_HASH256, OP_CODESEPARATOR,
+    OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_CHECKMULTISIG, OP_CHECKMULTISIGVERIFY
+  )
 
   sealed trait MultiSigCheckError extends Product
 

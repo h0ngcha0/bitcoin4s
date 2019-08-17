@@ -1,7 +1,5 @@
 package it.softfork.bitcoin4s.script
 
-import tech.minna.utilities.TraitEnumeration
-
 sealed trait ScriptFlag extends Product {
   val value: Int
   val name = productPrefix
@@ -89,7 +87,25 @@ object ScriptFlag {
   //
   case object SCRIPT_VERIFY_WITNESS_PUBKEYTYPE extends ScriptFlag { val value = 1 << 15 }
 
-  val all = TraitEnumeration.values[ScriptFlag]
+  val all = Set(
+    SCRIPT_VERIFY_NONE,
+    SCRIPT_VERIFY_P2SH,
+    SCRIPT_VERIFY_STRICTENC,
+    SCRIPT_VERIFY_DERSIG,
+    SCRIPT_VERIFY_LOW_S,
+    SCRIPT_VERIFY_NULLDUMMY,
+    SCRIPT_VERIFY_SIGPUSHONLY,
+    SCRIPT_VERIFY_MINIMALDATA,
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS,
+    SCRIPT_VERIFY_CLEANSTACK,
+    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY,
+    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY,
+    SCRIPT_VERIFY_WITNESS,
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,
+    SCRIPT_VERIFY_MINIMALIF,
+    SCRIPT_VERIFY_NULLFAIL,
+    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE
+  )
 
   def fromString(str: String): Option[ScriptFlag] = {
     all.find(_.name == str) orElse all.find(_.name.stripPrefix("SCRIPT_VERIFY_") == str)

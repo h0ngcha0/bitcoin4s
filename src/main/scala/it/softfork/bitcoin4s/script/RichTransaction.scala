@@ -22,7 +22,7 @@ object RichTransaction extends StrictLogging {
       }
     }
 
-    def signingHashPreSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, sigHashType: SignatureHashType): Seq[Byte] = {
+    def signingHashPreSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, sigHashType: SignatureHashType): Array[Byte] = {
       val updatedTx0 = tx
         .removeSigScript()
         .updateTxInWithPubKeyScript(pubKeyScript, inputIndex)
@@ -58,13 +58,13 @@ object RichTransaction extends StrictLogging {
           v.toByteArray
       }
 
-      val transactionPreImage = serialisedTx ++ uint32ToBytes(sigHashType.value)
+      val transactionPreImage: Array[Byte] = serialisedTx ++ uint32ToBytes(sigHashType.value)
       Hash.Hash256(transactionPreImage)
     }
 
     // https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
     // https://github.com/bitcoin/bitcoin/blob/f8528134fc188abc5c7175a19680206964a8fade/src/script/interpreter.cpp#L1113
-    def signingHashSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, amount: Long, sigHashType: SignatureHashType): Seq[Byte] = {
+    def signingHashSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, amount: Long, sigHashType: SignatureHashType): Array[Byte] = {
       val prevOutsHash: Array[Byte] = if (!sigHashType.SIGHASH_ANYONECANPAY()) {
         val prevOut = tx.tx_in.toArray.flatMap { txIn =>
           OutPoint.codec.encode(txIn.previous_output).toBytes
@@ -112,7 +112,7 @@ object RichTransaction extends StrictLogging {
       val locktimeBytes = uint32ToBytes(tx.lock_time)
       val sigHashTypeBytes = uint32ToBytes(sigHashType.value)
 
-      val preImage: Seq[Byte] =
+      val preImage: Array[Byte] =
         versionBytes ++
           prevOutsHash ++
           sequencesHash ++
@@ -124,7 +124,7 @@ object RichTransaction extends StrictLogging {
           locktimeBytes ++
           sigHashTypeBytes
 
-      Hash.Hash256(preImage.toArray)
+      Hash.Hash256(preImage)
     }
 
     def removeSigScript(): Tx = {

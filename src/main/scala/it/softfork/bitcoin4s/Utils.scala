@@ -1,7 +1,6 @@
 package it.softfork.bitcoin4s
 
 import java.nio.{ByteBuffer, ByteOrder}
-
 import scodec.Attempt
 import scodec.bits.BitVector
 
@@ -96,18 +95,18 @@ package object Utils {
     byteBuffer.getInt & 0xFFFFFFFF
   }
 
-  def uint32ToBytes(input: Long): Seq[Byte] = uint32ToBytes(input, ByteOrder.LITTLE_ENDIAN)
+  def uint32ToBytes(input: Long): Array[Byte] = uint32ToBytes(input, ByteOrder.LITTLE_ENDIAN)
 
-  def uint32ToBytes(input: Long, order: ByteOrder): Seq[Byte] = {
+  def uint32ToBytes(input: Long, order: ByteOrder): Array[Byte] = {
     val bin = new Array[Byte](4)
     val buffer = ByteBuffer.wrap(bin).order(order)
     buffer.putInt((input & 0xffffffff).toInt)
     bin
   }
 
-  def uInt64ToBytes(input: Long): Seq[Byte] = uInt64ToBytes(input, ByteOrder.LITTLE_ENDIAN)
+  def uInt64ToBytes(input: Long): Array[Byte] = uInt64ToBytes(input, ByteOrder.LITTLE_ENDIAN)
 
-  def uInt64ToBytes(input: Long, order: ByteOrder): Seq[Byte] = {
+  def uInt64ToBytes(input: Long, order: ByteOrder): Array[Byte] = {
     val bin = new Array[Byte](8)
     val buffer = ByteBuffer.wrap(bin).order(order)
     buffer.putLong(input)

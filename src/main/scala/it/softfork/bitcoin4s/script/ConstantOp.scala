@@ -89,7 +89,7 @@ object ConstantOp {
               // Push empty byte array to the stack
               setStateAndContinue(
                 state.copy(
-                  stack = ScriptConstant(Seq.empty[Byte]) +: state.stack
+                  stack = ScriptConstant(Array.empty[Byte]) +: state.stack
                 )
               )
             }

@@ -18,6 +18,8 @@ import cats.implicits._
 import it.softfork.bitcoin4s.ApiModels.InterpreterResultOut.NoResult
 import it.softfork.bitcoin4s.ApiModels.{InterpreterOutcome, InterpreterResultOut, InterpreterStateOut, TransactionInputNotFound}
 
+import scala.collection.immutable.ArraySeq
+
 class Service(api: ApiInterface)(
   implicit
   ec: ExecutionContext,
@@ -65,15 +67,15 @@ class Service(api: ApiInterface)(
             maybeTxOutput.map { txOutout =>
               val scriptSig = txInput.script
                 .map { s =>
-                  Parser.parse(Hash.fromHex(s))
+                  Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(s)))
                 }
                 .getOrElse(Seq.empty)
 
-              val scriptPubKey = Parser.parse(Hash.fromHex(txOutout.script))
+              val scriptPubKey = Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(txOutout.script)))
 
               val witnessesStack = txInput.witness.map { rawWitnesses =>
                 rawWitnesses.reverse.flatMap { rawWitness =>
-                  allCatch.opt(Hex.decode(rawWitness).toSeq).map(ScriptConstant.apply)
+                  allCatch.opt(Hex.decode(rawWitness)).map(ScriptConstant.apply)
                 }
               }
 

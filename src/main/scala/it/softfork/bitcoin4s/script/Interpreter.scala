@@ -600,7 +600,7 @@ object Interpreter {
     script: Seq[ScriptElement],
     state: InterpreterState
   ): Either[WitnessRebuiltError, (Seq[ScriptElement], Seq[ScriptElement])] = {
-    getWitnessScript(script, state).right.flatMap {
+    getWitnessScript(script, state).flatMap {
       case (version @ _, witnessHash) =>
         rebuildScriptPubkeyAndStackFromWitness(witnessHash, state.scriptWitnessStack.getOrElse(Seq.empty))
     }

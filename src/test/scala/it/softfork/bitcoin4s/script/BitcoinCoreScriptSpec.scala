@@ -2,11 +2,12 @@ package it.softfork.bitcoin4s.script
 
 import com.typesafe.config._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import it.softfork.bitcoin4s.Spec
 import it.softfork.bitcoin4s.Utils._
 import org.spongycastle.util.encoders.Hex
 
+import scala.collection.immutable.ArraySeq
 import scala.io.Source
 import scala.util.control.Exception.allCatch
 
@@ -45,7 +46,7 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
           val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
           val witnesses = witnessElement.reverse.tail
             .flatMap { rawWitness =>
-              allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)).toSeq)
+              allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)))
             }
             .map(ScriptConstant.apply)
           val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringTail.take(4)
@@ -86,7 +87,8 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
   }
 
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {
-    scriptFlagsString.split(",").map(_.trim).flatMap(ScriptFlag.fromString)
+    val result = scriptFlagsString.split(",").map(_.trim).flatMap(ScriptFlag.fromString _)
+    ArraySeq.unsafeWrapArray(result)
   }
 
   private def stripDoubleQuotes(config: ConfigValue): String = {
