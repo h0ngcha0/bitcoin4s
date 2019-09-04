@@ -173,6 +173,12 @@ a {
   padding-bottom: 4px;
 }
 
+.btc-amount {
+  color: black;
+  padding-top: 2px;
+  padding-bottom: 4px;
+}
+
 .btc.spent {
   color: darkred;
   vertical-align: "middle";

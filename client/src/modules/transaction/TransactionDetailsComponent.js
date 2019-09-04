@@ -10,10 +10,9 @@ import Grid from "@material-ui/core/Grid/Grid";
 import HomeIcon from '@material-ui/icons/Home';
 import LockIcon from '@material-ui/icons/Lock';
 import LockOpenIcon from '@material-ui/icons/LockOpen';
-import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import CodeIcon from '@material-ui/icons/BugReport';
-import MoneyOffIcon from '@material-ui/icons/MoneyOff';
 import ScriptOpCodeList from "./ScriptOpCodeList";
+import BitcoinIcon from "./BitcoinIcon";
 
 class TransactionDetailsComponent extends React.Component {
   render() {
@@ -44,8 +43,8 @@ class TransactionDetailsComponent extends React.Component {
                                 <HomeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
                                 <span style={{verticalAlign: "middle"}}> {_.head(input.addresses)} </span>
                               </div>
-                              <div>
-                                <MoneyOffIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                              <div className='btc-amount'>
+                                <BitcoinIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
                                 <span className='btc spent'> {input.output_value / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prev_hash}` }>Transaction</a>
                                 {
                                   input.output_index ? <span> output {input.output_index} </span> : null
@@ -89,9 +88,9 @@ class TransactionDetailsComponent extends React.Component {
                                 <HomeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
                                 <span style={{verticalAlign: "middle"}}>{_.head(output.addresses)}</span>
                               </div>
-                              <div>
-                                <AttachMoneyIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span className='btc to'>{output.value / 100000000} BTC</span> - {
+                              <div className='btc-amount'>
+                                <BitcoinIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <span className='btc to'> {output.value / 100000000} BTC</span> - {
                                   output.spent_by ? <a href={ `/#/transaction/${output.spent_by}` }> Transaction </a> : 'not spent yet'
                                 }
                               </div>
