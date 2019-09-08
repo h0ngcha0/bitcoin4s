@@ -1,5 +1,12 @@
 package it.softfork.bitcoin4s.miniscript
 
+import it.softfork.bitcoin4s.crypto.Hash
+
+// Not complete yet, types and extra data
+case class Miniscript[Pk <: MiniscriptKey[_]](
+  node: AbstractSyntaxTree[Pk]
+)
+
 // Terminal in rust-bitcoin
 sealed trait AbstractSyntaxTree[Pk <: MiniscriptKey[_]] {
   val description: String
@@ -37,17 +44,87 @@ object AbstractSyntaxTree {
   }
 
   // hashlocks
-  //case class Sha256()
+  case class Sha256[Pk <: MiniscriptKey[_]](value: Hash.Sha256) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "SIZE 32 EQUALVERIFY SHA256 <hash> EQUAL"
+  }
+
+  case class Hash256[Pk <: MiniscriptKey[_]](value: Hash.Hash256) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "SIZE 32 EQUALVERIFY HASH256 <hash> EQUAL"
+  }
+
+  case class Ripemd160[Pk <: MiniscriptKey[_]](value: Hash.RipeMD160) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "SIZE 32 EQUALVERIFY RIPEMD160 <hash> EQUAL"
+  }
+
+  case class Hash160[Pk <: MiniscriptKey[_]](value: Hash.Hash160) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "SIZE 32 EQUALVERIFY HASH160 <hash> EQUAL"
+  }
 
   // wrappers
+  case class Alt[Pk <: MiniscriptKey[_]](value: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "TOALTSTACK [E] FROMALTSTACK"
+  }
+
+  case class Swap[Pk <: MiniscriptKey[_]](value: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "SWAP [E1]"
+  }
+
+  case class Check[Pk <: MiniscriptKey[_]](value: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[Kt]/[Ke] CHECKSIG"
+  }
+
+  case class DupIf[Pk <: MiniscriptKey[_]](value: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "DUP IF [V] ENDIF"
+  }
+
+  case class Verify[Pk <: MiniscriptKey[_]](value: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[T] Verify"
+  }
+
+  case class NoneZero[Pk <: MiniscriptKey[_]](value: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "SIZE 0NOTEQUAL IF [Fn] ENDIF"
+  }
+
+  case class ZeroNotEqual[Pk <: MiniscriptKey[_]](value: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[X] 0NOTEQUAL"
+  }
+
+  // conjunctions
+  case class AndV[Pk <: MiniscriptKey[_]](left: Miniscript[Pk], right: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[V] [T]/[V]/[F]/[Kt]"
+  }
+
+  case class AndB[Pk <: MiniscriptKey[_]](left: Miniscript[Pk], right: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[E] [W] BOOLAND"
+  }
+
+  case class AndOr[Pk <: MiniscriptKey[_]](first: Miniscript[Pk], second: Miniscript[Pk], third: MiniscriptKey[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[various] NOTIF [various] ELSE [various] ENDIF"
+  }
+
+  // disjunction
+  case class OrB[Pk <: MiniscriptKey[_]](left: Miniscript[Pk], right: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[E] [W] BOOLOR"
+  }
+
+  case class OrD[Pk <: MiniscriptKey[_]](left: Miniscript[Pk], right: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[E] IFDUP NOTIF [T]/[E] ENDIF"
+  }
+
+  case class OrC[Pk <: MiniscriptKey[_]](left: Miniscript[Pk], right: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[E] NOTIF [V] ENDIF"
+  }
+
+  case class OrI[Pk <: MiniscriptKey[_]](left: Miniscript[Pk], right: Miniscript[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "IF [various] ELSE [various] ENDIF"
+  }
 
   // thresholds
-  case class Multi[P <: MiniscriptKey[_]](k: Int, keys: Seq[P]) extends AbstractSyntaxTree[P] {
-    override val description: String = "<k> <keys...> <n> CHECKMULTISIG"
+  case class Thresh[Pk <: MiniscriptKey[_]](k: Int, values: Seq[Miniscript[Pk]]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "[E] ([W] ADD)* k EQUAL"
   }
 
-  case class MultiV[P <: MiniscriptKey[_]](k: Int, keys: Seq[P]) extends AbstractSyntaxTree[P] {
-    override val description: String = "<k> <keys...> <n> CHECKMULTISIGVERIFY"
+  case class ThreshM[Pk <: MiniscriptKey[_]](k: Int, keys: Seq[Pk]) extends AbstractSyntaxTree[Pk] {
+    override val description: String = "k (<key>)* n CHECKMULTISIG"
   }
-
 }
