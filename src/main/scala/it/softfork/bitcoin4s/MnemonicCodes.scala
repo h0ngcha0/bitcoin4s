@@ -10,7 +10,7 @@ class MnemonicCodes(config: MnemonicCodesConfig) {
   // FIXME: type input to have length [128, 160, 192, 224, 256]
   def fromEntropy(input: Array[Byte]): Seq[String] = {
     val inputAsBinaryString = input.map(byteToPaddedBinaryString).mkString
-    val checkSumAsBinaryString = Sha256(input).map(byteToPaddedBinaryString).mkString
+    val checkSumAsBinaryString = Sha256.hash(input).value.map(byteToPaddedBinaryString).mkString
     val checkSumBitsLength = input.length / 4
     val allBits = inputAsBinaryString ++ checkSumAsBinaryString.take(checkSumBitsLength)
 
@@ -32,7 +32,7 @@ class MnemonicCodes(config: MnemonicCodesConfig) {
       Integer.parseInt(byteAsBinaryString, 2).toByte
     }
 
-    if (Sha256(entropy).map(byteToPaddedBinaryString).mkString != checksumBinaryString) {
+    if (Sha256.hash(entropy).value.map(byteToPaddedBinaryString).mkString != checksumBinaryString) {
       throw new IllegalArgumentException(s"Incorrect mnemonic codes, checksum mismatched: $mnemonicCodes")
     }
 
@@ -45,7 +45,7 @@ class MnemonicCodes(config: MnemonicCodesConfig) {
 
   def toSeed(mnemonicCodes: Seq[String], passphrase: Option[String]): Array[Byte] = {
     val salt = ("mnemonic" + passphrase.getOrElse("")).getBytes
-    PBKDF2WithHmacSha512(mnemonicCodes.mkString(" ").getBytes, salt)
+    PBKDF2WithHmacSha512.hash(mnemonicCodes.mkString(" ").getBytes, salt).value
   }
 
   private def byteToPaddedBinaryString(byte: Byte): String = {

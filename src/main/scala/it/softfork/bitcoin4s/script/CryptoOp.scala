@@ -51,19 +51,19 @@ object CryptoOp {
     def interpret(opCode: CryptoOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_RIPEMD160 =>
-          onOpHash(opCode, RipeMD160.apply _)
+          onOpHash(opCode, RipeMD160.hashBytes)
 
         case OP_SHA1 =>
-          onOpHash(opCode, Sha1.apply _)
+          onOpHash(opCode, Sha1.hashBytes)
 
         case OP_SHA256 =>
-          onOpHash(opCode, Sha256.apply _)
+          onOpHash(opCode, Sha256.hashBytes)
 
         case OP_HASH160 =>
-          onOpHash(opCode, Hash160.apply _)
+          onOpHash(opCode, Hash160.hashBytes)
 
         case OP_HASH256 =>
-          onOpHash(opCode, Hash256.apply _)
+          onOpHash(opCode, Hash256.hashBytes)
 
         case OP_CODESEPARATOR =>
           continue
@@ -366,7 +366,7 @@ object CryptoOp {
           throw InvalidSigHashType(OP_UNKNOWN, state)
         }
 
-        val hashedTransaction = state.sigVersion match {
+        val hashedTransaction: Hash256 = state.sigVersion match {
           case SIGVERSION_BASE =>
             state.transaction.signingHashPreSegwit(
               currentScript,
@@ -383,7 +383,7 @@ object CryptoOp {
             )
         }
 
-        pubKey.verify(hashedTransaction, ecdsaSignature)
+        pubKey.verify(hashedTransaction.value, ecdsaSignature)
     }
   }
 

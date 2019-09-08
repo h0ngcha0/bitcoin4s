@@ -316,7 +316,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
     import scodec.bits._
 
-    val prevId = Hash(ByteVector(Hash256(creditingTransaction.serialize().toArray)).reverse)
+    val prevId = Hash(ByteVector(Hash256.hash(creditingTransaction.serialize().toArray).value).reverse)
     val txIn = TxIn(
       previous_output = OutPoint(prevId, 0),
       sig_script = ByteVector(scriptSig),

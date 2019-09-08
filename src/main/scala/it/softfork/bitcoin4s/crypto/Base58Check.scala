@@ -3,7 +3,7 @@ package it.softfork.bitcoin4s.crypto
 import it.softfork.bitcoin4s.crypto.Hash._
 
 object Base58Check {
-  def checksum(input: Array[Byte]): Array[Byte] = Sha256(Sha256(input)).take(4)
+  def checksum(input: Array[Byte]): Array[Byte] = Hash256(input).value.take(4)
 
   def encode(versionPrefix: Byte, payload: Array[Byte]): String = {
     encode(Array(versionPrefix), payload)
