@@ -33,7 +33,9 @@ object Hash {
   }
 
   case class Hash160(value: Array[Byte])
+
   object Hash160 {
+
     def hash(input: Array[Byte]): Hash160 = {
       Hash160(RipeMD160.hashBytes(Sha256.hashBytes(input)))
     }
@@ -44,7 +46,9 @@ object Hash {
   }
 
   case class Hash256(value: Array[Byte])
+
   object Hash256 {
+
     def hash(input: Array[Byte]): Hash256 = {
       Hash256(Sha256.hashBytes(Sha256.hashBytes(input)))
     }

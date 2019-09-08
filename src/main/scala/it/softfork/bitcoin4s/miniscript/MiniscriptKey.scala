@@ -6,6 +6,11 @@ import simulacrum._
 
 import scala.language.implicitConversions
 
+// Not complete yet, types and extra data
+case class Miniscript[Pk <: MiniscriptKey[_]](
+  node: Terminal[Pk]
+)
+
 @typeclass trait MiniscriptKey[KeyType] {
   type Hash
   def toPubKeyHash(key: KeyType): Hash

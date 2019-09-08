@@ -16,7 +16,10 @@ object LocktimeOp {
   case object OP_NOP3 extends LocktimeOp { val value = 178 }
 
   val all = Set(
-    OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY, OP_NOP2, OP_NOP3
+    OP_CHECKLOCKTIMEVERIFY,
+    OP_CHECKSEQUENCEVERIFY,
+    OP_NOP2,
+    OP_NOP3
   )
 
   implicit val interpreter = new InterpretableOp[LocktimeOp] {
