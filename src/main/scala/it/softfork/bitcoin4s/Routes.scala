@@ -1,5 +1,6 @@
 package it.softfork.bitcoin4s
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Sink
@@ -18,6 +19,12 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
       pathPrefix("static") {
         getFromResourceDirectory("client/static")
       }
+  }
+
+  val healthRoute = {
+    (path("ping") & get) {
+      complete(StatusCodes.OK)
+    }
   }
 
   val transactionRoute = pathPrefix("transaction") {
@@ -76,7 +83,8 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
   def apply() = {
     clientRoute ~
       pathPrefix("api") {
-        transactionRoute
+        transactionRoute ~
+          healthRoute
       }
   }
 
