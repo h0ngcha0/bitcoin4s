@@ -23,6 +23,7 @@
     </appender>
 
     <logger name="akka" level="INFO"/>
+    <logger name="akka.http.impl.engine.client.PoolGateway" level="WARN"/>
 
     <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>

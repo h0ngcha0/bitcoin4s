@@ -260,7 +260,6 @@ object Interpreter {
                       getSerializedScript(state.scriptSig) match {
                         case Some(serializedScript) =>
                           val payToScript = Parser.parse(serializedScript.bytes)
-
                           for {
                             _ <- setState(
                               state.copy(

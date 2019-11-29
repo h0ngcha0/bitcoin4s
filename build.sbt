@@ -42,7 +42,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.7.4",
   "com.typesafe.play" %% "play-functional" % "2.7.4",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.29.1",
-  "org.julienrf" %% "play-json-derived-codecs" % "6.0.0"
+  "org.julienrf" %% "play-json-derived-codecs" % "6.0.0",
+  "com.lihaoyi" %% "pprint" % "0.5.6"
 )
 
 resolvers ++= Seq(
@@ -113,5 +114,7 @@ resourceGenerators in Compile += Def.task {
     resourceFile
   }
 }.taskValue
+
+Revolver.enableDebugging(port = 5050, suspend = false)
 
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
