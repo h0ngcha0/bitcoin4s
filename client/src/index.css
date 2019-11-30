@@ -187,3 +187,9 @@ a {
 .btc.to {
   color: darkgreen;
 }
+
+.button-divider {
+  width: 8px;
+  height: auto;
+  display: inline-block;
+}

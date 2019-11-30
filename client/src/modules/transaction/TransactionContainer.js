@@ -2,10 +2,11 @@ import React from 'react';
 
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
-import {Button} from '@material-ui/core';
+import {Button, Typography} from '@material-ui/core';
 import {fetchTransaction} from '../../api';
 import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
+import {PurpleColorButton, BlueColorButton} from "../PurpleColorButton";
 import SearchBar from 'material-ui-search-bar';
 import BitcoinIcon from './BitcoinIcon';
 
@@ -101,17 +102,17 @@ export default class TransactionContainer extends React.Component {
                 <Loading /> :
                 (
                   <span>
-                    <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
+                    <PurpleColorButton variant="outlined" size="small" disabled={ this.state.executingScript } onClick={ () =>
                       this.loadTransaction(this.state.transactionId)
                     }>
                       Search
-                    </Button>
-
-                    <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
+                    </PurpleColorButton>
+                    <div className="button-divider"/>
+                    <BlueColorButton variant="contained" size="small" disabled={ this.state.executingScript } onClick={ () =>
                       this.props.push("/safello")
                     }>
                       Buy BTC
-                    </Button>
+                    </BlueColorButton>
                   </span>
                 )
 
