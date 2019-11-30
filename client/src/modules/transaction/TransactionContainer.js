@@ -99,11 +99,21 @@ export default class TransactionContainer extends React.Component {
             {
               this.state.loading ?
                 <Loading /> :
-                <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
-                  this.loadTransaction(this.state.transactionId)
-                }>
-                  Search
-                </Button>
+                (
+                  <span>
+                    <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
+                      this.loadTransaction(this.state.transactionId)
+                    }>
+                      Search
+                    </Button>
+
+                    <Button variant="contained" disabled={ this.state.executingScript } onClick={ () =>
+                      this.props.push("/safello")
+                    }>
+                      Buy BTC
+                    </Button>
+                  </span>
+                )
 
             }
           </div>
