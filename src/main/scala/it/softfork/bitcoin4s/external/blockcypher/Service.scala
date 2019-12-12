@@ -5,7 +5,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import com.typesafe.scalalogging.StrictLogging
 import it.softfork.bitcoin4s.crypto.Hash
-import it.softfork.bitcoin4s.external.blockcypher.Api.{Transaction, TransactionInput, TransactionOutput}
+import it.softfork.bitcoin4s.external.{Transaction, TransactionInput, TransactionOutput}
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 import it.softfork.bitcoin4s.script._
 import it.softfork.bitcoin4s.transaction.TxId

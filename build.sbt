@@ -20,7 +20,7 @@ scalacOptions := Seq(
   "-Ywarn-unused:locals",
   "-Ywarn-unused:patvars",
   "-Ywarn-unused:privates",
-  "-Ywarn-unused:imports",
+//  "-Ywarn-unused:imports",
   "-Ymacro-annotations"
 )
 

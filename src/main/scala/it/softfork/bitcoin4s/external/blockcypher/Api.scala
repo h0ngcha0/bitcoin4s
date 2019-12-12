@@ -15,6 +15,7 @@ import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut}
 import play.api.libs.json.{Format, JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
 import it.softfork.bitcoin4s.ApiModels.scriptElementFormat
+import it.softfork.bitcoin4s.external._
 
 import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
@@ -68,109 +69,6 @@ class CachedApi(api: Api)(
 }
 
 object Api {
-
-  case class TransactionInput(
-    prev_hash: String,
-    output_index: Int,
-    script: Option[String],
-    parsed_script: Option[Seq[ScriptElement]],
-    output_value: Long,
-    sequence: Long,
-    script_type: String,
-    addresses: List[String],
-    age: Long,
-    witness: Option[List[String]] = None
-  ) {
-    val prevTxHash = ScodecHash(ByteVector(Hash.fromHex(prev_hash)))
-
-    def toTxIn = TxIn(
-      previous_output = OutPoint(prevTxHash, output_index),
-      sig_script = script
-        .map { s =>
-          ByteVector(Hash.fromHex(s))
-        }
-        .getOrElse(ByteVector.empty),
-      sequence = sequence
-    )
-
-    def withParsedScript() = {
-      val parsedScript = script.map { scriptStr =>
-        Parser.parse("0x" + scriptStr)
-      }
-
-      copy(parsed_script = parsedScript)
-    }
-  }
-
-  object TransactionInput {
-    implicit val format: Format[TransactionInput] = Json.using[Json.WithDefaultValues].format[TransactionInput]
-  }
-
-  case class TransactionOutput(
-    value: Long,
-    script: String,
-    parsed_script: Option[Seq[ScriptElement]],
-    spent_by: Option[String],
-    addresses: List[String],
-    script_type: String
-  ) {
-
-    def toTxOut = TxOut(
-      value = value,
-      pk_script = ByteVector(Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(script))).flatMap(_.bytes))
-    )
-
-    def withParsedScript() = {
-      val parsedScript = Parser.parse("0x" + script)
-      copy(parsed_script = Some(parsedScript))
-    }
-  }
-
-  object TransactionOutput {
-    implicit val format: Format[TransactionOutput] = Json.using[Json.WithDefaultValues].format[TransactionOutput]
-  }
-
-  case class Transaction(
-    block_hash: String,
-    block_height: Long,
-    block_index: Int,
-    hash: String,
-    addresses: Seq[String],
-    total: Long,
-    fees: Long,
-    size: Long,
-    confirmed: ZonedDateTime,
-    received: ZonedDateTime,
-    ver: Int,
-    lock_time: Long = 0,
-    double_spend: Boolean,
-    vin_sz: Int,
-    vout_sz: Int,
-    confirmations: Long,
-    confidence: Int,
-    inputs: Seq[TransactionInput],
-    outputs: Seq[TransactionOutput]
-  ) {
-
-    def toTx = Tx(
-      version = ver,
-      tx_in = inputs.map(_.toTxIn).toList,
-      tx_out = outputs.map(_.toTxOut).toList,
-      lock_time = lock_time
-    )
-
-    def withParsedScript() = {
-      val inputsWithParsedScript = inputs.map(_.withParsedScript())
-      val outputsWithParsedScript = outputs.map(_.withParsedScript())
-
-      copy(inputs = inputsWithParsedScript, outputs = outputsWithParsedScript)
-    }
-  }
-
-  object Transaction {
-    implicit val format: Format[Transaction] = Json.using[Json.WithDefaultValues].format[Transaction]
-  }
-
   protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000")
 
   def parseTransaction(raw: String): Transaction = {
