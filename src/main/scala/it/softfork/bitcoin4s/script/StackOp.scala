@@ -30,9 +30,25 @@ object StackOp {
   case object OP_TUCK extends StackOp { val value = 125 }
 
   val all = Set(
-    OP_TOALTSTACK, OP_FROMALTSTACK, OP_2DROP, OP_2DUP, OP_3DUP, OP_2OVER, OP_2ROT,
-    OP_2SWAP, OP_IFDUP, OP_DEPTH, OP_DROP, OP_DUP, OP_NIP, OP_OVER, OP_PICK, OP_ROLL,
-    OP_ROT, OP_SWAP, OP_TUCK
+    OP_TOALTSTACK,
+    OP_FROMALTSTACK,
+    OP_2DROP,
+    OP_2DUP,
+    OP_3DUP,
+    OP_2OVER,
+    OP_2ROT,
+    OP_2SWAP,
+    OP_IFDUP,
+    OP_DEPTH,
+    OP_DROP,
+    OP_DUP,
+    OP_NIP,
+    OP_OVER,
+    OP_PICK,
+    OP_ROLL,
+    OP_ROT,
+    OP_SWAP,
+    OP_TUCK
   )
 
   implicit val interpreter = new InterpretableOp[StackOp] {

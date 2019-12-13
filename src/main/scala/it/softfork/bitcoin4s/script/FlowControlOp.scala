@@ -21,7 +21,13 @@ object FlowControlOp {
   case object OP_RETURN extends FlowControlOp { val value = 106 }
 
   val all = Set(
-    OP_NOP, OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, OP_VERIFY, OP_RETURN
+    OP_NOP,
+    OP_IF,
+    OP_NOTIF,
+    OP_ELSE,
+    OP_ENDIF,
+    OP_VERIFY,
+    OP_RETURN
   )
 
   implicit val interpreter = new InterpretableOp[FlowControlOp] {

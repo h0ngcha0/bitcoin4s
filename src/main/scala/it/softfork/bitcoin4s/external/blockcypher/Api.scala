@@ -156,24 +156,27 @@ object Api {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
+
     def toTx = {
-      hex.map { h =>
-        Tx.codec(1).decodeValue(BitVector(Hash.fromHex(h))) match {
-          case Attempt.Successful(tx) =>
-            tx
-          case Attempt.Failure(err) =>
-            throw new RuntimeException(err.messageWithContext)
+      hex
+        .map { h =>
+          Tx.codec(1).decodeValue(BitVector(Hash.fromHex(h))) match {
+            case Attempt.Successful(tx) =>
+              tx
+            case Attempt.Failure(err) =>
+              throw new RuntimeException(err.messageWithContext)
+          }
         }
-      }.getOrElse {
-        Tx(
-          version = ver,
-          flag = false,
-          tx_in = inputs.map(_.toTxIn).toList,
-          tx_out = outputs.map(_.toTxOut).toList,
-          tx_witness = List.empty,
-          lock_time = lock_time
-        )
-      }
+        .getOrElse {
+          Tx(
+            version = ver,
+            flag = false,
+            tx_in = inputs.map(_.toTxIn).toList,
+            tx_out = outputs.map(_.toTxOut).toList,
+            tx_witness = List.empty,
+            lock_time = lock_time
+          )
+        }
     }
 
     def withParsedScript() = {

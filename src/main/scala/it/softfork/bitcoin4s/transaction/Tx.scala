@@ -21,6 +21,7 @@ case class Tx(
 )
 
 object Tx {
+
   def codec(version: Int): Codec[Tx] = {
     def encode(tx: Tx) = {
       val txCodec: Codec[Tx] =
@@ -49,26 +50,26 @@ object Tx {
   private[Tx] object WitnessFlag {
     implicit def codec: Codec[WitnessFlag] = {
       ("flag1" | uint8L) ::
-      ("flag2" | uint8L)
+        ("flag2" | uint8L)
     }.as[WitnessFlag]
   }
 
   private def codecWithoutWitness(version: Int) = {
     ("version" | uint32L) ::
-    ("flag" | provide(false)) ::
-    ("tx_in" | VarList.varList(Codec[TxIn])) ::
-    ("tx_out" | VarList.varList(Codec[TxOut])) ::
-    ("tx_witness" | provide(List[List[TxWitness]]())) ::
-    ("lock_time" | uint32L)
+      ("flag" | provide(false)) ::
+      ("tx_in" | VarList.varList(Codec[TxIn])) ::
+      ("tx_out" | VarList.varList(Codec[TxOut])) ::
+      ("tx_witness" | provide(List[List[TxWitness]]())) ::
+      ("lock_time" | uint32L)
   }.as[Tx]
 
   private def codecWithWitness(version: Int, txInsCount: Int): Codec[Tx] = {
     ("version" | uint32L) ::
-    ("flag" | mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1))) ::
-    ("tx_in" | VarList.varList(Codec[TxIn])) ::
-    ("tx_out" | VarList.varList(Codec[TxOut])) ::
-    ("tx_witness" | new ListCodec(VarList.varList(Codec[TxWitness]), Some(txInsCount))) ::
-    ("lock_time" | uint32L)
+      ("flag" | mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1))) ::
+      ("tx_in" | VarList.varList(Codec[TxIn])) ::
+      ("tx_out" | VarList.varList(Codec[TxOut])) ::
+      ("tx_witness" | new ListCodec(VarList.varList(Codec[TxWitness]), Some(txInsCount))) ::
+      ("lock_time" | uint32L)
   }.as[Tx]
 
   private def decodeWitnessFlag(bits: BitVector) = {

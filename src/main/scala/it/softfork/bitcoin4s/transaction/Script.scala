@@ -10,7 +10,7 @@ case class Script(value: ByteVector) {
 }
 
 object Script {
-  implicit val codec:Codec[Script] = {
+  implicit val codec: Codec[Script] = {
     val countCodec = VarInt.varIntCodec.xmap(_.toInt, (i: Int) => i.toLong)
     variableSizeBytes(countCodec, bytes).as[Script]
   }
