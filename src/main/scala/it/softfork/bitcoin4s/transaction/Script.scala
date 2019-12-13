@@ -6,7 +6,8 @@ import scodec.codecs.{bytes, variableSizeBytes}
 import it.softfork.bitcoin4s.transaction.structure.VarInt
 
 case class Script(value: ByteVector) {
-  override def toString = s"Script(0x${value.toHex})"
+  val hex = value.toHex
+  override def toString = s"Script(0x$hex)"
 }
 
 object Script {

@@ -13,6 +13,7 @@ import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
 import it.softfork.bitcoin4s.transaction.structure.{OutPoint, Hash => ScodecHash}
 import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut}
 import play.api.libs.json.{Format, JsError, JsSuccess, Json}
+import it.softfork.bitcoin4s.transaction.TxWitness
 import scodec.bits.ByteVector
 import it.softfork.bitcoin4s.ApiModels.scriptElementFormat
 
@@ -157,7 +158,7 @@ object Api {
     outputs: Seq[TransactionOutput]
   ) {
 
-    def toTx = {
+    val tx = {
       hex
         .map { h =>
           Tx.codec(1).decodeValue(BitVector(Hash.fromHex(h))) match {
@@ -184,6 +185,23 @@ object Api {
       val outputsWithParsedScript = outputs.map(_.withParsedScript())
 
       copy(inputs = inputsWithParsedScript, outputs = outputsWithParsedScript)
+    }
+
+    def withWitness() = {
+      val paddedWitness = tx.tx_witness
+        .map(Option.apply _)
+        .padTo(inputs.length, Option.empty[List[TxWitness]])
+
+      val updatedInputs = inputs.zip(paddedWitness).map {
+        case (input, witnessMaybe) =>
+          witnessMaybe
+            .map { witness =>
+              input.copy(witness = Some(witness.map(_.witness.hex)))
+            }
+            .getOrElse(input)
+      }
+
+      copy(inputs = updatedInputs)
     }
   }
 

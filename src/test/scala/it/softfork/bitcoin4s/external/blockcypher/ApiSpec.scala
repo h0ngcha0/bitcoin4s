@@ -31,7 +31,7 @@ class ApiSpec extends Spec with StrictLogging {
 
     // Only look at the first input
     //val firstScriptPutKey = spendingTx.tx_in(0).sig_script
-    val spendingTx = spendingTransaction.toTx
+    val spendingTx = spendingTransaction.tx
     val txIn = spendingTransaction.inputs(0)
     val txOut = creditingTransaction.outputs(txIn.output_index)
     val scriptSig = txIn.script.map(parseHexString _).getOrElse(Seq.empty[ScriptElement])

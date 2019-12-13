@@ -28,8 +28,7 @@ class Service(api: ApiInterface)(
 
   def getTransaction(txId: TxId): Future[Option[Transaction]] = {
     logger.info(s"Fetching transaction $txId")
-    // api.getTransaction(txId).map(_.map(_.withParsedScript().withTransactionInputWitness()))
-    api.getTransaction(txId).map(_.map(_.withParsedScript()))
+    api.getTransaction(txId).map(_.map(_.withParsedScript().withWitness()))
   }
 
   def getTransactionInput(txId: TxId, inputIndex: Int): Future[Option[TransactionInput]] = {
@@ -61,8 +60,6 @@ class Service(api: ApiInterface)(
 
       maybeTxInput match {
         case Some(txInput) =>
-          println(s"txInput: $txInput")
-          println(s"witness: ${txInput.witness}")
           val prevId = TxId(txInput.prevTxHash.toString)
           val outputIndex = txInput.output_index
 
@@ -90,7 +87,7 @@ class Service(api: ApiInterface)(
                 scriptSig = scriptSig,
                 scriptWitnessStack = witnessesStack,
                 flags = flags,
-                transaction = maybeSpendingTx.get.toTx, // Has to exist
+                transaction = maybeSpendingTx.get.tx, // Has to exist
                 inputIndex = inputIndex,
                 amount = amount,
                 sigVersion = sigVersion
