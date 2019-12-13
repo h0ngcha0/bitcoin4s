@@ -28,7 +28,8 @@ class Service(api: ApiInterface)(
 
   def getTransaction(txId: TxId): Future[Option[Transaction]] = {
     logger.info(s"Fetching transaction $txId")
-    api.getTransaction(txId).map(_.map(_.withParsedScript().withTransactionInputWitness()))
+    // api.getTransaction(txId).map(_.map(_.withParsedScript().withTransactionInputWitness()))
+    api.getTransaction(txId).map(_.map(_.withParsedScript()))
   }
 
   def getTransactionInput(txId: TxId, inputIndex: Int): Future[Option[TransactionInput]] = {

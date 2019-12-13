@@ -156,33 +156,13 @@ object Api {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
-
-    // println(hex)
-
-//    val tx = Tx.codec(1).decodeValue(BitVector(Hash.fromHex(hex))) match {
-//      case Attempt.Successful(tx) =>
-//        println(tx.tx_witness)
-//      case Attempt.Failure(e) =>
-//        println(e)
-//    }
     def toTx = {
-//      Tx(
-//        version = ver,
-//        flag = true,
-//        tx_in = inputs.map(_.toTxIn).toList,
-//        tx_out = outputs.map(_.toTxOut).toList,
-//        tx_witness = tx.tx_witness,
-//        lock_time = lock_time
-//      )
-      val tx = Tx.codec(1).decodeValue(BitVector(Hash.fromHex(hex))) match {
+      Tx.codec(1).decodeValue(BitVector(Hash.fromHex(hex))) match {
         case Attempt.Successful(tx) =>
           tx
-        case Attempt.Failure(e@_) =>
-          println(s"niux: $e")
-          throw new RuntimeException("niux")
+        case Attempt.Failure(err) =>
+          throw new RuntimeException(err.messageWithContext)
       }
-
-      tx
     }
 
     def withParsedScript() = {
@@ -190,20 +170,6 @@ object Api {
       val outputsWithParsedScript = outputs.map(_.withParsedScript())
 
       copy(inputs = inputsWithParsedScript, outputs = outputsWithParsedScript)
-    }
-
-    def withTransactionInputWitness() = {
-      val tx = toTx
-      println(s"input size: ${inputs.size}")
-      println(s"witness size: ${tx.tx_witness.size}")
-      //assert(inputs.size == tx.tx_witness.size, "input size not the same as witness size")
-
-      //val updatedInputs = inputs.zip(tx.tx_witness).map {
-      //  case (input, witnesses) =>
-      //    input.copy(witness = Some(witnesses.map(_.witness.value.toString)))
-      //}
-      println(tx)
-      copy(inputs = inputs)
     }
   }
 
