@@ -139,7 +139,7 @@ object Api {
     block_height: Long,
     block_index: Int,
     hash: String,
-    hex: String,
+    hex: Option[String],
     addresses: Seq[String],
     total: Long,
     fees: Long,
@@ -157,11 +157,22 @@ object Api {
     outputs: Seq[TransactionOutput]
   ) {
     def toTx = {
-      Tx.codec(1).decodeValue(BitVector(Hash.fromHex(hex))) match {
-        case Attempt.Successful(tx) =>
-          tx
-        case Attempt.Failure(err) =>
-          throw new RuntimeException(err.messageWithContext)
+      hex.map { h =>
+        Tx.codec(1).decodeValue(BitVector(Hash.fromHex(h))) match {
+          case Attempt.Successful(tx) =>
+            tx
+          case Attempt.Failure(err) =>
+            throw new RuntimeException(err.messageWithContext)
+        }
+      }.getOrElse {
+        Tx(
+          version = ver,
+          flag = false,
+          tx_in = inputs.map(_.toTxIn).toList,
+          tx_out = outputs.map(_.toTxOut).toList,
+          tx_witness = List.empty,
+          lock_time = lock_time
+        )
       }
     }
 

@@ -12,6 +12,7 @@ import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 import it.softfork.bitcoin4s.transaction.structure.{Hash, OutPoint}
+import org.spongycastle.util.encoders.Hex
 
 import scala.reflect.ClassTag
 
@@ -296,16 +297,20 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
         val txOut = TxOut(value = amount, pk_script = Script(ByteVector(scriptPubKey)))
         Tx(
           version = 1,
+          flag = false,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
+          tx_witness = List.empty,
           lock_time = 0
         )
       case None =>
         val txOut = TxOut(value = 0, pk_script = Script(ByteVector(scriptPubKey)))
         Tx(
           version = 1,
+          flag = false,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
+          tx_witness = List.empty,
           lock_time = 0
         )
     }
@@ -328,18 +333,27 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     maybeWitnessScript match {
       case Some(witnessScript @ _) =>
         val txOut = TxOut(value = amount, pk_script = Script.empty)
+        val txWitnesses = witnessScript.toList.map { scriptConstant =>
+          val scriptConstantInHex = scriptConstant.toHex.stripPrefix("0x")
+          TxWitness(Script(ByteVector(Hex.decode(scriptConstantInHex))))
+        }
+
         Tx(
           version = 1,
+          flag = true,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
+          tx_witness = List(txWitnesses),
           lock_time = 0
         )
       case None =>
         val txOut = TxOut(value = amount, pk_script = Script.empty)
         Tx(
           version = 1,
+          flag = false,
           tx_in = txIn :: Nil,
           tx_out = txOut :: Nil,
+          tx_witness = List.empty,
           lock_time = 0
         )
     }

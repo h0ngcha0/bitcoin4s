@@ -87,10 +87,10 @@ object RichTransaction extends StrictLogging {
 
       val prevOutBytes = OutPoint.codec.encode(txIn.previous_output).toBytes
 
-//      val encodedScriptBytes = {
-//        val scriptBytes = pubKeyScript.flatMap(_.bytes).toArray
-//        TxIn.scriptCodec.encode(ByteVector(scriptBytes)).toBytes
-//      }
+      val encodedScriptBytes = {
+        val scriptBytes = pubKeyScript.flatMap(_.bytes).toArray
+        Script.codec.encode(Script(ByteVector(scriptBytes))).toBytes
+      }
 
       val amountBytes = uInt64ToBytes(amount)
 
@@ -117,7 +117,7 @@ object RichTransaction extends StrictLogging {
           prevOutsHash ++
           sequencesHash ++
           prevOutBytes ++
-//          encodedScriptBytes ++
+          encodedScriptBytes ++
           amountBytes ++
           sequenceBytes ++
           outputHash ++

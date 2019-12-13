@@ -91,8 +91,10 @@ class StepExecutionSpec extends Spec {
     // A fake transaction that is not used since no crypto ops are involved.
     val emptyTx = Tx(
       version = 1,
+      flag = false,
       tx_in = List.empty,
       tx_out = List.empty,
+      tx_witness = List.empty,
       lock_time = 1000000
     )
 
