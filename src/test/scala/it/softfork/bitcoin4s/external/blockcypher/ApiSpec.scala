@@ -3,11 +3,10 @@ package it.softfork.bitcoin4s.external.blockcypher
 import cats.implicits._
 import com.typesafe.scalalogging.StrictLogging
 import it.softfork.bitcoin4s.Spec
-import it.softfork.bitcoin4s.crypto.Hash
 import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
 import it.softfork.bitcoin4s.script._
 import org.spongycastle.util.encoders.Hex
-
+import it.softfork.bitcoin4s.Utils.hexToBytes
 import scala.collection.immutable.ArraySeq
 import scala.io.Source
 import scala.util.control.Exception.allCatch
@@ -29,9 +28,7 @@ class ApiSpec extends Spec with StrictLogging {
     val creditingTransaction = Api.parseTransaction(rawCreditingTransaction)
     val spendingTransaction = Api.parseTransaction(rawSpendingTransaction)
 
-    // Only look at the first input
-    //val firstScriptPutKey = spendingTx.tx_in(0).sig_script
-    val spendingTx = spendingTransaction.toTx
+    val spendingTx = spendingTransaction.tx
     val txIn = spendingTransaction.inputs(0)
     val txOut = creditingTransaction.outputs(txIn.output_index)
     val scriptSig = txIn.script.map(parseHexString _).getOrElse(Seq.empty[ScriptElement])
@@ -69,7 +66,7 @@ class ApiSpec extends Spec with StrictLogging {
   }
 
   private def parseHexString(hex: String): Seq[ScriptElement] = {
-    Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(hex)))
+    Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(hex)))
   }
 
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {

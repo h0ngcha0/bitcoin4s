@@ -10,10 +10,11 @@ import scala.collection.mutable.ArrayBuffer
 
 sealed trait ScriptElement {
   def bytes: Seq[Byte]
+  def toHex = s"0x${bytes.toHex}"
 }
 
 trait ScriptConstant extends ScriptElement {
-  override def toString: String = s"ScriptConstant: 0x${bytes.toHex}"
+  override def toString: String = s"ScriptConstant: $toHex"
 
   override def equals(obj: scala.Any): Boolean = {
     if (obj.isInstanceOf[ScriptConstant]) {

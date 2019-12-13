@@ -1,8 +1,9 @@
-package it.softfork.bitcoin4s.transaction.structure
+package it.softfork.bitcoin4s.transaction
 
 import scodec.Codec
 import scodec.bits.ByteOrdering
 import scodec.codecs._
+import it.softfork.bitcoin4s.transaction.structure._
 
 case class OutPoint(
   hash: Hash,
@@ -16,5 +17,4 @@ object OutPoint {
     ("hash" | Codec[Hash]) ::
       ("index" | uInt32WithNegValue)
   }.as[OutPoint]
-
 }

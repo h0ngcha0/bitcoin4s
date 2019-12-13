@@ -3,6 +3,7 @@ package it.softfork.bitcoin4s
 import java.nio.{ByteBuffer, ByteOrder}
 import scodec.Attempt
 import scodec.bits.BitVector
+import org.spongycastle.util.encoders.Hex
 
 package object Utils {
   implicit class Rich[T](value: T) {
@@ -113,4 +114,7 @@ package object Utils {
     bin
   }
 
+  def hexToBytes(hex: String): Array[Byte] = {
+    Hex.decode(hex.stripPrefix("0x"))
+  }
 }

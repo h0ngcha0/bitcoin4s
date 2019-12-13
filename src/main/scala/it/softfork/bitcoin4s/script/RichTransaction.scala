@@ -6,7 +6,7 @@ import it.softfork.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
 import it.softfork.bitcoin4s.Utils._
 import it.softfork.bitcoin4s.crypto.Hash
-import it.softfork.bitcoin4s.transaction.structure.OutPoint
+import it.softfork.bitcoin4s.transaction.OutPoint
 
 object RichTransaction extends StrictLogging {
   val transactionVersion = 1
@@ -89,7 +89,7 @@ object RichTransaction extends StrictLogging {
 
       val encodedScriptBytes = {
         val scriptBytes = pubKeyScript.flatMap(_.bytes).toArray
-        TxIn.scriptCodec.encode(ByteVector(scriptBytes)).toBytes
+        Script.codec.encode(Script(scriptBytes)).toBytes
       }
 
       val amountBytes = uInt64ToBytes(amount)
@@ -129,7 +129,7 @@ object RichTransaction extends StrictLogging {
 
     def removeSigScript(): Tx = {
       val txIns = tx.tx_in.map { txIn =>
-        txIn.copy(sig_script = ByteVector.empty)
+        txIn.copy(sig_script = Script.empty)
       }
 
       tx.copy(tx_in = txIns)
@@ -151,7 +151,7 @@ object RichTransaction extends StrictLogging {
       val updatedScriptTxIns = tx.tx_in.zipWithIndex.map {
         case (txIn, index) =>
           (index == inputIndex)
-            .option(txIn.copy(sig_script = ByteVector(updatedPubKeyScript.flatMap(_.bytes))))
+            .option(txIn.copy(sig_script = Script(updatedPubKeyScript.flatMap(_.bytes))))
             .getOrElse(txIn)
       }
       tx.copy(tx_in = updatedScriptTxIns)
@@ -166,7 +166,7 @@ object RichTransaction extends StrictLogging {
         case (txIn, index) =>
           (index == inputIndex)
             .option(txIn)
-            .getOrElse(txIn.copy(value = -1, pk_script = ByteVector.empty))
+            .getOrElse(txIn.copy(value = -1, pk_script = Script.empty))
       }
 
       tx.copy(tx_out = updatedTxOut)

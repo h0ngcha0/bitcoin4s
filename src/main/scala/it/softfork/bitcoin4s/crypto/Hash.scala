@@ -4,7 +4,7 @@ import org.spongycastle.crypto.Digest
 import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA1Digest, SHA256Digest, SHA512Digest}
 import org.spongycastle.crypto.generators.PKCS5S2ParametersGenerator
 import org.spongycastle.crypto.params.KeyParameter
-import org.spongycastle.util.encoders.Hex
+import it.softfork.bitcoin4s.Utils.hexToBytes
 
 trait Hash {
   val digest: Digest
@@ -60,9 +60,5 @@ object Hash {
     }
   }
 
-  val zeros: Array[Byte] = Hash256(fromHex("0000000000000000000000000000000000000000000000000000000000000000"))
-
-  def fromHex(hex: String): Array[Byte] = {
-    Hex.decode(hex.stripPrefix("0x"))
-  }
+  val zeros: Array[Byte] = Hash256(hexToBytes("0000000000000000000000000000000000000000000000000000000000000000"))
 }
