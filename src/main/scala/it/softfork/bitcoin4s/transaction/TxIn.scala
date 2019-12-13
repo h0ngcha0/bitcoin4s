@@ -1,6 +1,6 @@
 package it.softfork.bitcoin4s.transaction
 
-import it.softfork.bitcoin4s.transaction.structure.{LongCodecWithNegValue, OutPoint}
+import it.softfork.bitcoin4s.transaction.structure.{LongCodecWithNegValue}
 import scodec.Codec
 import scodec.bits.ByteOrdering
 import scodec.codecs._

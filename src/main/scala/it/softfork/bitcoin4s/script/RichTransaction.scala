@@ -6,7 +6,7 @@ import it.softfork.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
 import it.softfork.bitcoin4s.Utils._
 import it.softfork.bitcoin4s.crypto.Hash
-import it.softfork.bitcoin4s.transaction.structure.OutPoint
+import it.softfork.bitcoin4s.transaction.OutPoint
 
 object RichTransaction extends StrictLogging {
   val transactionVersion = 1

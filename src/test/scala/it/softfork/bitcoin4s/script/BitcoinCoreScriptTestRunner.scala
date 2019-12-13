@@ -11,7 +11,8 @@ import com.typesafe.scalalogging.StrictLogging
 import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
-import it.softfork.bitcoin4s.transaction.structure.{Hash, OutPoint}
+import it.softfork.bitcoin4s.transaction.structure.Hash
+import it.softfork.bitcoin4s.transaction.OutPoint
 import scala.reflect.ClassTag
 
 trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>

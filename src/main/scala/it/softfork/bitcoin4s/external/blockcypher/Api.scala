@@ -9,8 +9,8 @@ import akka.stream.Materializer
 import it.softfork.bitcoin4s.external.HttpSender
 import it.softfork.bitcoin4s.external.blockcypher.Api._
 import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
-import it.softfork.bitcoin4s.transaction.structure.{OutPoint, Hash => ScodecHash}
-import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut}
+import it.softfork.bitcoin4s.transaction.structure.{Hash => ScodecHash}
+import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut, OutPoint}
 import play.api.libs.json.{Format, JsError, JsSuccess, Json}
 import it.softfork.bitcoin4s.transaction.TxWitness
 import scodec.bits.ByteVector
