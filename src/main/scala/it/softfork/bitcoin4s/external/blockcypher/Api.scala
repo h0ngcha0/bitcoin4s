@@ -157,7 +157,7 @@ object Api {
     outputs: Seq[TransactionOutput]
   ) {
 
-    println(hex)
+    // println(hex)
 
 //    val tx = Tx.codec(1).decodeValue(BitVector(Hash.fromHex(hex))) match {
 //      case Attempt.Successful(tx) =>
@@ -194,14 +194,16 @@ object Api {
 
     def withTransactionInputWitness() = {
       val tx = toTx
-      println(s"input size not the same as witness size: ${inputs.size}")
-      assert(inputs.size == tx.tx_witness.size, "input size not the same as witness size")
+      println(s"input size: ${inputs.size}")
+      println(s"witness size: ${tx.tx_witness.size}")
+      //assert(inputs.size == tx.tx_witness.size, "input size not the same as witness size")
 
-      val updatedInputs = inputs.zip(tx.tx_witness).map {
-        case (input, witnesses) =>
-          input.copy(witness = Some(witnesses.map(_.witness.value.toString)))
-      }
-      copy(inputs = updatedInputs)
+      //val updatedInputs = inputs.zip(tx.tx_witness).map {
+      //  case (input, witnesses) =>
+      //    input.copy(witness = Some(witnesses.map(_.witness.value.toString)))
+      //}
+      println(tx)
+      copy(inputs = inputs)
     }
   }
 

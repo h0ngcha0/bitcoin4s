@@ -5,7 +5,7 @@ import scodec.Codec
 import scodec.{Attempt, DecodeResult}
 import scodec.codecs._
 import scodec.bits.BitVector
-// import it.softfork.bitcoin4s.transaction.structure.ListCodec2
+import it.softfork.bitcoin4s.transaction.structure.ListCodec2
 
 // Credit: https://github.com/yzernik/bitcoin-scodec
 
@@ -30,7 +30,7 @@ case class TxWithoutLockTime(
 
 object Tx {
 
-  def codec(version: Int) = {
+  def codec(version: Int): Codec[Tx] = {
     def encode(tx: Tx) = {
       val txCodec: Codec[Tx] =
         if (tx.flag) codecWithWitness(version, tx.tx_in.length)
@@ -39,16 +39,19 @@ object Tx {
     }
 
     def decode(bits: BitVector) = {
-      //val (first, last@_) = bits.splitAt(bits.length - 32)
       for {
-        f <- decodeFlag(bits)
-        flag = f._1.value.isWitness
-        tx <- decodeWithFlag(bits, flag, f._2.value.length, version)
+        witnessFlag <- decodeWitnessFlag(bits)
+        isWitness = witnessFlag.value.isWitness
+        tx <- decodeWithFlag(bits, isWitness, version)
       } yield tx
     }
 
     Codec[Tx](encode _, decode _)
   }.as[Tx]
+
+//  def codec(version: Int): Codec[Tx] = {
+//    codecWithoutWitness(version)
+//  }
 
   def codecWithoutWitness(version: Int) = {
     ("version" | uint32L) ::
@@ -71,13 +74,13 @@ object Tx {
   }.as[TxWithoutLockTime]
 
   def codecWithWitness(version: Int, txInsCount: Int): Codec[Tx] = {
-    // val listWithLimit = new ListCodec2(VarList.varList(Codec[TxWitness]), Some(txInsCount))
+    val listWithLimit = new ListCodec2(VarList.varList(Codec[TxWitness]), Some(txInsCount))
 
     ("version" | uint32L) ::
     ("flag" | booleanFlagCodec) ::
     ("tx_in" | VarList.varList(Codec[TxIn])) ::
     ("tx_out" | VarList.varList(Codec[TxOut])) ::
-    ("tx_witness" | list(VarList.varList(Codec[TxWitness]))) ::
+    ("tx_witness" | listWithLimit) ::
     ("lock_time" | uint32L)
   }.as[Tx]
 
@@ -96,58 +99,36 @@ object Tx {
       false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1)))
   }.as[Boolean]
 
-  private def decodeFlag(bits: BitVector) = {
+  def decodeWitnessFlag(bits: BitVector) = {
+    for {
+      v <- uint32L.decode(bits)
+      witnessFlag <- Codec[WitnessFlag].decode(v.remainder)
+    } yield witnessFlag
+  }
+
+  def decodeTxInWithoutWitness(bits: BitVector): Attempt[DecodeResult[List[TxIn]]] = {
+    for {
+      v <- uint32L.decode(bits)
+      txIns <- VarList.varList(Codec[TxIn]).decode(v.remainder)
+    } yield txIns
+  }
+
+  def decodeTxInWithWitness(bits: BitVector): Attempt[DecodeResult[List[TxIn]]] = {
     for {
       v <- uint32L.decode(bits)
       witnessFlag <- Codec[WitnessFlag].decode(v.remainder)
       txIns <- VarList.varList(Codec[TxIn]).decode(witnessFlag.remainder)
-    } yield (witnessFlag, txIns)
+    } yield txIns
   }
 
-  private def decodeWithFlag(bits: BitVector, flag: Boolean, txInsCount: Int, version: Int): Attempt[DecodeResult[Tx]] = {
-    if (flag) {
-//      val (first, last) = bits.splitAt(bits.length - 32)
-//      for {
-//        txWithoutLockTime <- codecWithWitness2(version, txInsCount).decode(first)
-//        lockTime <- uint32L.decode(last)
-//      } yield {
-//        val tx2 = txWithoutLockTime.value
-//        val lockTime2 = lockTime.value
-//        Tx(
-//          tx2.version,
-//          tx2.flag,
-//          tx2.tx_in,
-//          tx2.tx_out,
-//          tx2.tx_witness,
-//          lockTime2
-//        )
-//      }
-//codecWithWitness(version, txInsCount).decode(bits)
-      foo(bits, txInsCount, version)
+  def decodeWithFlag(bits: BitVector, isWitness: Boolean, version: Int): Attempt[DecodeResult[Tx]] = {
+    if (isWitness) {
+      for {
+        txIn <- decodeTxInWithWitness(bits)
+        value <- codecWithWitness(version, txIn.value.length).decode(bits)
+      } yield value
     } else {
       codecWithoutWitness(version).decode(bits)
-    }
-  }
-
-  def foo(bits: BitVector, txInsCount: Int, version: Int): Attempt[DecodeResult[Tx]] = {
-    val (first, last) = bits.splitAt(bits.length - 32)
-    for {
-      txWithoutLockTime <- codecWithWitness2(version, txInsCount).decode(first)
-      lockTime <- uint32L.decode(last)
-    } yield {
-      val tx2 = txWithoutLockTime.value
-      val lockTime2 = lockTime.value
-      DecodeResult(
-        Tx(
-          tx2.version,
-          tx2.flag,
-          tx2.tx_in,
-          tx2.tx_out,
-          tx2.tx_witness,
-          lockTime2
-        ),
-        lockTime.remainder
-      )
     }
   }
 }
