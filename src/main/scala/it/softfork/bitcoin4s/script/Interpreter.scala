@@ -75,7 +75,7 @@ case class InterpreterState(
     transaction.tx_in(inputIndex)
   }
 
-  def scriptSignature: Seq[Byte] = transactionInput.sig_script.toSeq
+  def scriptSignature: Seq[Byte] = transactionInput.sig_script.value.toSeq
 
   object ScriptFlags {
 

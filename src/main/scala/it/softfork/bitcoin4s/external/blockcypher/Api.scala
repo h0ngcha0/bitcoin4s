@@ -16,8 +16,12 @@ import play.api.libs.json.{Format, JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
 import it.softfork.bitcoin4s.ApiModels.scriptElementFormat
 
+import scodec.bits._
+
 import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
+import scodec.Attempt
+import it.softfork.bitcoin4s.transaction.Script
 
 // https://www.blockcypher.com/dev/bitcoin/#transaction-api
 trait ApiInterface {
@@ -87,9 +91,9 @@ object Api {
       previous_output = OutPoint(prevTxHash, output_index),
       sig_script = script
         .map { s =>
-          ByteVector(Hash.fromHex(s))
+          Script(ByteVector(Hash.fromHex(s)))
         }
-        .getOrElse(ByteVector.empty),
+        .getOrElse(Script.empty),
       sequence = sequence
     )
 
@@ -117,7 +121,7 @@ object Api {
 
     def toTxOut = TxOut(
       value = value,
-      pk_script = ByteVector(Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(script))).flatMap(_.bytes))
+      pk_script = Script(ByteVector(Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(script))).flatMap(_.bytes)))
     )
 
     def withParsedScript() = {
@@ -135,6 +139,7 @@ object Api {
     block_height: Long,
     block_index: Int,
     hash: String,
+    hex: String,
     addresses: Seq[String],
     total: Long,
     fees: Long,
@@ -152,12 +157,33 @@ object Api {
     outputs: Seq[TransactionOutput]
   ) {
 
-    def toTx = Tx(
-      version = ver,
-      tx_in = inputs.map(_.toTxIn).toList,
-      tx_out = outputs.map(_.toTxOut).toList,
-      lock_time = lock_time
-    )
+    println(hex)
+
+//    val tx = Tx.codec(1).decodeValue(BitVector(Hash.fromHex(hex))) match {
+//      case Attempt.Successful(tx) =>
+//        println(tx.tx_witness)
+//      case Attempt.Failure(e) =>
+//        println(e)
+//    }
+    def toTx = {
+//      Tx(
+//        version = ver,
+//        flag = true,
+//        tx_in = inputs.map(_.toTxIn).toList,
+//        tx_out = outputs.map(_.toTxOut).toList,
+//        tx_witness = tx.tx_witness,
+//        lock_time = lock_time
+//      )
+      val tx = Tx.codec(1).decodeValue(BitVector(Hash.fromHex(hex))) match {
+        case Attempt.Successful(tx) =>
+          tx
+        case Attempt.Failure(e@_) =>
+          println(s"niux: $e")
+          throw new RuntimeException("niux")
+      }
+
+      tx
+    }
 
     def withParsedScript() = {
       val inputsWithParsedScript = inputs.map(_.withParsedScript())
@@ -165,13 +191,25 @@ object Api {
 
       copy(inputs = inputsWithParsedScript, outputs = outputsWithParsedScript)
     }
+
+    def withTransactionInputWitness() = {
+      val tx = toTx
+      println(s"input size not the same as witness size: ${inputs.size}")
+      assert(inputs.size == tx.tx_witness.size, "input size not the same as witness size")
+
+      val updatedInputs = inputs.zip(tx.tx_witness).map {
+        case (input, witnesses) =>
+          input.copy(witness = Some(witnesses.map(_.witness.value.toString)))
+      }
+      copy(inputs = updatedInputs)
+    }
   }
 
   object Transaction {
     implicit val format: Format[Transaction] = Json.using[Json.WithDefaultValues].format[Transaction]
   }
 
-  protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000")
+  protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000&includeHex=true")
 
   def parseTransaction(raw: String): Transaction = {
     Json.fromJson[Transaction](Json.parse(raw)) match {

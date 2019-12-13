@@ -87,10 +87,10 @@ object RichTransaction extends StrictLogging {
 
       val prevOutBytes = OutPoint.codec.encode(txIn.previous_output).toBytes
 
-      val encodedScriptBytes = {
-        val scriptBytes = pubKeyScript.flatMap(_.bytes).toArray
-        TxIn.scriptCodec.encode(ByteVector(scriptBytes)).toBytes
-      }
+//      val encodedScriptBytes = {
+//        val scriptBytes = pubKeyScript.flatMap(_.bytes).toArray
+//        TxIn.scriptCodec.encode(ByteVector(scriptBytes)).toBytes
+//      }
 
       val amountBytes = uInt64ToBytes(amount)
 
@@ -117,7 +117,7 @@ object RichTransaction extends StrictLogging {
           prevOutsHash ++
           sequencesHash ++
           prevOutBytes ++
-          encodedScriptBytes ++
+//          encodedScriptBytes ++
           amountBytes ++
           sequenceBytes ++
           outputHash ++
@@ -129,7 +129,7 @@ object RichTransaction extends StrictLogging {
 
     def removeSigScript(): Tx = {
       val txIns = tx.tx_in.map { txIn =>
-        txIn.copy(sig_script = ByteVector.empty)
+        txIn.copy(sig_script = Script.empty)
       }
 
       tx.copy(tx_in = txIns)
@@ -151,7 +151,7 @@ object RichTransaction extends StrictLogging {
       val updatedScriptTxIns = tx.tx_in.zipWithIndex.map {
         case (txIn, index) =>
           (index == inputIndex)
-            .option(txIn.copy(sig_script = ByteVector(updatedPubKeyScript.flatMap(_.bytes))))
+            .option(txIn.copy(sig_script = Script(ByteVector(updatedPubKeyScript.flatMap(_.bytes)))))
             .getOrElse(txIn)
       }
       tx.copy(tx_in = updatedScriptTxIns)
@@ -166,7 +166,7 @@ object RichTransaction extends StrictLogging {
         case (txIn, index) =>
           (index == inputIndex)
             .option(txIn)
-            .getOrElse(txIn.copy(value = -1, pk_script = ByteVector.empty))
+            .getOrElse(txIn.copy(value = -1, pk_script = Script.empty))
       }
 
       tx.copy(tx_out = updatedTxOut)
