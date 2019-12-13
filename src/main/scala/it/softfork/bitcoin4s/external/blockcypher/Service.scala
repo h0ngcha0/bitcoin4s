@@ -4,20 +4,18 @@ import akka.actor.Cancellable
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.crypto.Hash
 import it.softfork.bitcoin4s.external.blockcypher.Api.{Transaction, TransactionInput, TransactionOutput}
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 import it.softfork.bitcoin4s.script._
 import it.softfork.bitcoin4s.transaction.TxId
 import org.spongycastle.util.encoders.Hex
-
 import scala.util.control.Exception.allCatch
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import cats.implicits._
 import it.softfork.bitcoin4s.ApiModels.InterpreterResultOut.NoResult
-import it.softfork.bitcoin4s.ApiModels.{InterpreterOutcome, InterpreterResultOut, InterpreterStateOut, TransactionInputNotFound}
-
+import it.softfork.bitcoin4s.ApiModels._
+import it.softfork.bitcoin4s.Utils.hexToBytes
 import scala.collection.immutable.ArraySeq
 
 class Service(api: ApiInterface)(
@@ -67,11 +65,11 @@ class Service(api: ApiInterface)(
             maybeTxOutput.map { txOutout =>
               val scriptSig = txInput.script
                 .map { s =>
-                  Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(s)))
+                  Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(s)))
                 }
                 .getOrElse(Seq.empty)
 
-              val scriptPubKey = Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(txOutout.script)))
+              val scriptPubKey = Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(txOutout.script)))
 
               val witnessesStack = txInput.witness.map { rawWitnesses =>
                 rawWitnesses.reverse.flatMap { rawWitness =>

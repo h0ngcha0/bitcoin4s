@@ -12,8 +12,6 @@ import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 import it.softfork.bitcoin4s.transaction.structure.{Hash, OutPoint}
-import org.spongycastle.util.encoders.Hex
-
 import scala.reflect.ClassTag
 
 trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
@@ -288,13 +286,13 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     val maxSequence = 0xffffffff
     val txIn = TxIn(
       previous_output = emptyOutpoint,
-      sig_script = Script(ByteVector(Seq(OP_0, OP_0).flatMap(_.bytes))),
+      sig_script = Script(Seq(OP_0, OP_0).flatMap(_.bytes)),
       sequence = maxSequence
     )
 
     maybeAmount match {
       case Some(amount) =>
-        val txOut = TxOut(value = amount, pk_script = Script(ByteVector(scriptPubKey)))
+        val txOut = TxOut(value = amount, pk_script = Script(scriptPubKey))
         Tx(
           version = 1,
           flag = false,
@@ -304,7 +302,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
           lock_time = 0
         )
       case None =>
-        val txOut = TxOut(value = 0, pk_script = Script(ByteVector(scriptPubKey)))
+        val txOut = TxOut(value = 0, pk_script = Script(scriptPubKey))
         Tx(
           version = 1,
           flag = false,
@@ -324,7 +322,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     val prevId = Hash(ByteVector(Hash256(creditingTransaction.serialize().toArray)).reverse)
     val txIn = TxIn(
       previous_output = OutPoint(prevId, 0),
-      sig_script = Script(ByteVector(scriptSig)),
+      sig_script = Script(scriptSig),
       sequence = maxSequence
     )
 
@@ -335,7 +333,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
         val txOut = TxOut(value = amount, pk_script = Script.empty)
         val txWitnesses = witnessScript.toList.map { scriptConstant =>
           val scriptConstantInHex = scriptConstant.toHex.stripPrefix("0x")
-          TxWitness(Script(ByteVector(Hex.decode(scriptConstantInHex))))
+          TxWitness(Script(scriptConstantInHex))
         }
 
         Tx(

@@ -89,7 +89,7 @@ object RichTransaction extends StrictLogging {
 
       val encodedScriptBytes = {
         val scriptBytes = pubKeyScript.flatMap(_.bytes).toArray
-        Script.codec.encode(Script(ByteVector(scriptBytes))).toBytes
+        Script.codec.encode(Script(scriptBytes)).toBytes
       }
 
       val amountBytes = uInt64ToBytes(amount)
@@ -151,7 +151,7 @@ object RichTransaction extends StrictLogging {
       val updatedScriptTxIns = tx.tx_in.zipWithIndex.map {
         case (txIn, index) =>
           (index == inputIndex)
-            .option(txIn.copy(sig_script = Script(ByteVector(updatedPubKeyScript.flatMap(_.bytes)))))
+            .option(txIn.copy(sig_script = Script(updatedPubKeyScript.flatMap(_.bytes))))
             .getOrElse(txIn)
       }
       tx.copy(tx_in = updatedScriptTxIns)

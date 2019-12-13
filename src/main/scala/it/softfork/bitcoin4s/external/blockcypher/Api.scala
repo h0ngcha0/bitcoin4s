@@ -6,7 +6,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpRequest, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.Materializer
-import it.softfork.bitcoin4s.crypto.Hash
 import it.softfork.bitcoin4s.external.HttpSender
 import it.softfork.bitcoin4s.external.blockcypher.Api._
 import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
@@ -16,13 +15,12 @@ import play.api.libs.json.{Format, JsError, JsSuccess, Json}
 import it.softfork.bitcoin4s.transaction.TxWitness
 import scodec.bits.ByteVector
 import it.softfork.bitcoin4s.ApiModels.scriptElementFormat
-
-import scodec.bits._
-
 import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
 import scodec.Attempt
 import it.softfork.bitcoin4s.transaction.Script
+import it.softfork.bitcoin4s.Utils.hexToBytes
+import scodec.bits._
 
 // https://www.blockcypher.com/dev/bitcoin/#transaction-api
 trait ApiInterface {
@@ -86,14 +84,12 @@ object Api {
     age: Long,
     witness: Option[List[String]] = None
   ) {
-    val prevTxHash = ScodecHash(ByteVector(Hash.fromHex(prev_hash)))
+    val prevTxHash = ScodecHash(ByteVector(hexToBytes(prev_hash)))
 
     def toTxIn = TxIn(
       previous_output = OutPoint(prevTxHash, output_index),
       sig_script = script
-        .map { s =>
-          Script(ByteVector(Hash.fromHex(s)))
-        }
+        .map(Script(_))
         .getOrElse(Script.empty),
       sequence = sequence
     )
@@ -122,7 +118,7 @@ object Api {
 
     def toTxOut = TxOut(
       value = value,
-      pk_script = Script(ByteVector(Parser.parse(ArraySeq.unsafeWrapArray(Hash.fromHex(script))).flatMap(_.bytes)))
+      pk_script = Script(Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(script))).flatMap(_.bytes))
     )
 
     def withParsedScript() = {
@@ -161,7 +157,7 @@ object Api {
     val tx = {
       hex
         .map { h =>
-          Tx.codec(1).decodeValue(BitVector(Hash.fromHex(h))) match {
+          Tx.codec(1).decodeValue(BitVector(hexToBytes(h))) match {
             case Attempt.Successful(tx) =>
               tx
             case Attempt.Failure(err) =>

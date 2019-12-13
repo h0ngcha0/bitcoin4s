@@ -74,19 +74,19 @@ object Tx {
 
   private def decodeWitnessFlag(bits: BitVector) = {
     for {
-      v <- uint32L.decode(bits)
-      witnessFlag <- Codec[WitnessFlag].decode(v.remainder)
+      version <- uint32L.decode(bits)
+      witnessFlag <- Codec[WitnessFlag].decode(version.remainder)
     } yield witnessFlag
   }
 
   private def decodeTx(bits: BitVector, isWitness: Boolean, version: Int): Attempt[DecodeResult[Tx]] = {
     if (isWitness) {
       for {
-        v <- uint32L.decode(bits)
-        witnessFlag <- Codec[WitnessFlag].decode(v.remainder)
+        vsn <- uint32L.decode(bits)
+        witnessFlag <- Codec[WitnessFlag].decode(vsn.remainder)
         txIns <- VarList.varList(Codec[TxIn]).decode(witnessFlag.remainder)
-        value <- codecWithWitness(version, txIns.value.length).decode(bits)
-      } yield value
+        tx <- codecWithWitness(version, txIns.value.length).decode(bits)
+      } yield tx
     } else {
       codecWithoutWitness(version).decode(bits)
     }
