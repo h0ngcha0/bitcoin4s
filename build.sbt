@@ -7,7 +7,6 @@ organization := "it.softfork"
 version := "0.1.0"
 
 scalaVersion in ThisBuild := "2.13.1"
-crossScalaVersions in ThisBuild := Seq("2.12.9", "2.13.0")
 
 scalacOptions := Seq(
   "-unchecked",
