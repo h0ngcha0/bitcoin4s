@@ -125,8 +125,9 @@ export default class TransactionContainer extends React.Component {
 
           {
             this.state.loading ? null : (
-              <div style={ {marginTop: '52px', textAlign: 'center'} }>
-                <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+              <div style={ {marginTop: '36px', textAlign: 'center'} }>
+                <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+                <img src={ bitcoinQrCodeImage } className={`bitcoin-address-image-desktop img-responsive desktop`} alt="Bitcoin Playground"/>
                 <Typography color="textSecondary" variant="caption">
                   3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
                 </Typography>

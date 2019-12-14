@@ -104,7 +104,14 @@ a {
   margin-bottom: 10px;
 }
 
-.bitcoin-address-image {
+.bitcoin-address-image-mobile {
+  width: 25%;
+  margin-left: auto;
+  margin-right: auto;
+  height: auto;
+}
+
+.bitcoin-address-image-desktop {
   width: 8%;
   height: auto;
 }
