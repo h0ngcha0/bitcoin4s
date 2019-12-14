@@ -12,7 +12,7 @@ import LockIcon from '@material-ui/icons/Lock';
 import LockOpenIcon from '@material-ui/icons/LockOpen';
 import CodeIcon from '@material-ui/icons/BugReport';
 import ScriptOpCodeList from "./ScriptOpCodeList";
-import BitcoinIcon from "./BitcoinIcon";
+import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 
 class TransactionDetailsComponent extends React.Component {
   render() {

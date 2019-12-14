@@ -8,7 +8,9 @@ import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
 import {PurpleColorButton, BlueColorButton} from "../PurpleColorButton";
 import SearchBar from 'material-ui-search-bar';
-import BitcoinIcon from './BitcoinIcon';
+import BitcoinIcon from '../../assets/icons/BitcoinIcon';
+import BeerIcon from '../../assets/icons/BeerIcon';
+import BitcoinYellowIcon from '../../assets/icons/BitcoinIconYellow';
 import {Typography} from '@material-ui/core';
 
 export default class TransactionContainer extends React.Component {
@@ -131,7 +133,9 @@ export default class TransactionContainer extends React.Component {
                 <Typography color="textSecondary" variant="caption">
                   3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
                 </Typography>
-              </div>
+                <BitcoinYellowIcon />
+                <BeerIcon />
+               </div>
             )
            }
         </div>
