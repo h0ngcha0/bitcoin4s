@@ -104,6 +104,11 @@ a {
   margin-bottom: 10px;
 }
 
+.bitcoin-address-image {
+  width: 8%;
+  height: auto;
+}
+
 .ScriptOpCodeList {
   margin: 0;
   border-radius: 2px;

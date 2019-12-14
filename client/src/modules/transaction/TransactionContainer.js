@@ -2,13 +2,14 @@ import React from 'react';
 
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
-import {Button, Typography} from '@material-ui/core';
+import bitcoinQrCodeImage from '../../assets/images/bitcoin-address-qr-code.png';
 import {fetchTransaction} from '../../api';
 import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
 import {PurpleColorButton, BlueColorButton} from "../PurpleColorButton";
 import SearchBar from 'material-ui-search-bar';
 import BitcoinIcon from './BitcoinIcon';
+import {Typography} from '@material-ui/core';
 
 export default class TransactionContainer extends React.Component {
   componentWillMount() {
@@ -121,7 +122,19 @@ export default class TransactionContainer extends React.Component {
           {
             this.showTransactionDetails()
           }
+
+          {
+            this.state.loading ? null : (
+              <div style={ {marginTop: '52px', textAlign: 'center'} }>
+                <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+                <Typography color="textSecondary" variant="caption">
+                  3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
+                </Typography>
+              </div>
+            )
+           }
         </div>
+
       </div>
     );
   }

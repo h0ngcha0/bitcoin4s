@@ -2,7 +2,7 @@ import React from 'react';
 
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
-import {Grid, Typography, Divider} from '@material-ui/core';
+import {Grid, Typography} from '@material-ui/core';
 class SafelloContainer extends React.Component {
 
   componentDidMount() {
