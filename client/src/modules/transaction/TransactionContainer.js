@@ -12,6 +12,7 @@ import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 import BeerIcon from '../../assets/icons/BeerIcon';
 import BitcoinYellowIcon from '../../assets/icons/BitcoinIconYellow';
 import {Typography} from '@material-ui/core';
+import ScrollableTabs from "../ScrollableTabs";
 
 export default class TransactionContainer extends React.Component {
   componentWillMount() {
@@ -77,7 +78,20 @@ export default class TransactionContainer extends React.Component {
         return <div style={ {marginTop: '32px', textAlign: 'center'} }>{this.state.error.status},  {this.state.error.statusText}</div>;
       }
     } else if (this.state.transaction) {
-      return <TransactionDetailsComponent transaction={this.state.transaction} />;
+      return (
+          <span>
+            <TransactionDetailsComponent transaction={this.state.transaction} />
+            {/*<div style={ {marginTop: '36px', textAlign: 'center'} }>
+              <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+              <img src={ bitcoinQrCodeImage } className={`bitcoin-address-image-desktop img-responsive desktop`} alt="Bitcoin Playground"/>
+              <Typography color="textSecondary" variant="caption">
+                3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
+              </Typography>
+              <BitcoinYellowIcon />
+              <BeerIcon />
+            </div>*/}
+          </span>
+      );
     } else {
       return null;
     }
@@ -105,40 +119,34 @@ export default class TransactionContainer extends React.Component {
                 <Loading /> :
                 (
                   <span>
-                    <PurpleColorButton variant="outlined" size="small" disabled={ this.state.executingScript } onClick={ () =>
-                      this.loadTransaction(this.state.transactionId)
-                    }>
-                      Search
-                    </PurpleColorButton>
-                    <div className="button-divider"/>
-                    <BlueColorButton variant="contained" size="small" disabled={ this.state.executingScript } onClick={ () =>
-                      this.props.push("/safello")
-                    }>
-                      Buy BTC
-                    </BlueColorButton>
+                    <span>
+                      <PurpleColorButton variant="outlined" size="small" disabled={ this.state.executingScript } onClick={ () =>
+                          this.loadTransaction(this.state.transactionId)
+                      }>
+                        Search
+                      </PurpleColorButton>
+                      <div className="button-divider"/>
+                      <BlueColorButton variant="contained" size="small" disabled={ this.state.executingScript } onClick={ () =>
+                          this.props.push("/safello")
+                      }>
+                        Buy BTC
+                      </BlueColorButton>
+                    </span>
+
+                    <div style={ {maxWidth: '480px', textAlign: 'center', margin: '0 auto'} }>
+
+                      <ScrollableTabs tabs ={
+                        [
+                          {title: "Scripts", children: this.showTransactionDetails()},
+                          {title: "Raw Binary", children: "Item2"}
+                        ]
+                      } />
+                    </div>
                   </span>
                 )
-
             }
           </div>
-          {
-            this.showTransactionDetails()
-          }
-
-          {
-            this.state.loading ? null : (
-              <div style={ {marginTop: '36px', textAlign: 'center'} }>
-                <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
-                <img src={ bitcoinQrCodeImage } className={`bitcoin-address-image-desktop img-responsive desktop`} alt="Bitcoin Playground"/>
-                <Typography color="textSecondary" variant="caption">
-                  3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
-                </Typography>
-                <BitcoinYellowIcon />
-                <BeerIcon />
-               </div>
-            )
-           }
-        </div>
+       </div>
 
       </div>
     );
