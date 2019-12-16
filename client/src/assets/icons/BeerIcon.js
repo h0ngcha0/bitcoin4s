@@ -15,6 +15,6 @@ const BeerIcon = props =>
             </g>
         </g>
     </g>
-  </svg>
+  </svg>;
 
 export default BeerIcon;

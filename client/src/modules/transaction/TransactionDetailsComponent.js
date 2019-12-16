@@ -10,9 +10,10 @@ import Grid from "@material-ui/core/Grid/Grid";
 import HomeIcon from '@material-ui/icons/Home';
 import LockIcon from '@material-ui/icons/Lock';
 import LockOpenIcon from '@material-ui/icons/LockOpen';
-import CodeIcon from '@material-ui/icons/BugReport';
+import DebugIcon from '@material-ui/icons/BugReport';
 import ScriptOpCodeList from "./ScriptOpCodeList";
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
+import Typography from "@material-ui/core/Typography";
 
 class TransactionDetailsComponent extends React.Component {
   render() {
@@ -20,7 +21,7 @@ class TransactionDetailsComponent extends React.Component {
     const inputsLength = transaction.inputs.length;
 
     return (
-      <div style={ {maxWidth: '480px', textAlign: 'center', marginTop: '16px'} }>
+      <div style={ {maxWidth: '480px', textAlign: 'center', marginTop: '4px'} }>
         {
           inputsLength < 0 ?
             null :
@@ -29,7 +30,9 @@ class TransactionDetailsComponent extends React.Component {
                 <Table padding="none">
                   <TableHead>
                     <TableRow>
-                      <TableCell style={ { height: "60px" }}>Paying from</TableCell>
+                      <TableCell style={ { height: "48px" } }>
+                        <Typography color="textSecondary" variant="caption">Paying from</Typography>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
 
@@ -58,7 +61,7 @@ class TransactionDetailsComponent extends React.Component {
                                 <ScriptOpCodeList opCodes={input.parsed_script} />
                               </div>
                               <div style={{ paddingBottom: "10px"}}>
-                                <CodeIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
+                                <DebugIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
                                 <span> </span>
                                 <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}>Interpret</a> or
                                 <span> </span><a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?step=0`}>debug</a>
@@ -75,7 +78,9 @@ class TransactionDetailsComponent extends React.Component {
                 <Table padding="none">
                   <TableHead>
                     <TableRow>
-                      <TableCell style={ { height: "60px" }}>To</TableCell>
+                      <TableCell style={ { height: "48px" }}>
+                        <Typography color="textSecondary" variant="caption">To</Typography>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

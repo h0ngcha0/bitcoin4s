@@ -7,6 +7,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import _ from 'lodash';
 import ScriptOpCodeList from '../transaction/ScriptOpCodeList';
+import Typography from "@material-ui/core/Typography";
 
 class InterpreterComponent extends React.Component {
 
@@ -57,13 +58,15 @@ class InterpreterComponent extends React.Component {
         <Table padding="none">
           <TableHead>
             <TableRow>
-              <TableCell>Stack</TableCell>
+              <TableCell style={ { height: "48px" } }>
+                <Typography color="textSecondary" variant="caption">Stack</Typography>
+              </TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
             <TableRow>
-              <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px" }}>
+              <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px", height: "48px" }}>
                 <div style={ {marginTop: "5px"}}>
                   <ScriptOpCodeList opCodes={stack} />
                 </div>
@@ -74,13 +77,15 @@ class InterpreterComponent extends React.Component {
         <Table padding="none">
           <TableHead>
             <TableRow>
-              <TableCell>Script:</TableCell>
+              <TableCell style={ { height: "48px" } }>
+                <Typography color="textSecondary" variant="caption">Script</Typography>
+              </TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
             <TableRow>
-              <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px" }}>
+              <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px", height: "48px" }}>
                 <div style={ {marginTop: "5px"}}>
                   <ScriptOpCodeList opCodes={currentRemainingScript()} />
                 </div>

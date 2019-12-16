@@ -9,6 +9,8 @@ import Loading from "../Loading";
 import {PurpleColorButton, BlueColorButton} from "../PurpleColorButton";
 import SearchBar from 'material-ui-search-bar';
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
+import RawIcon from '../../assets/icons/RawIcon';
+import ScriptIcon from '../../assets/icons/ScriptIcon';
 import BeerIcon from '../../assets/icons/BeerIcon';
 import BitcoinYellowIcon from '../../assets/icons/BitcoinIconYellow';
 import {Typography} from '@material-ui/core';
@@ -81,15 +83,19 @@ export default class TransactionContainer extends React.Component {
       return (
           <span>
             <TransactionDetailsComponent transaction={this.state.transaction} />
-            {/*<div style={ {marginTop: '36px', textAlign: 'center'} }>
+            <div style={ {marginTop: '36px', textAlign: 'center'} }>
               <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
-              <img src={ bitcoinQrCodeImage } className={`bitcoin-address-image-desktop img-responsive desktop`} alt="Bitcoin Playground"/>
+              <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-desktop img-responsive desktop` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+            </div>
+            <span>
               <Typography color="textSecondary" variant="caption">
                 3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
               </Typography>
+            </span>
+            <div>
               <BitcoinYellowIcon />
               <BeerIcon />
-            </div>*/}
+            </div>
           </span>
       );
     } else {
@@ -133,12 +139,12 @@ export default class TransactionContainer extends React.Component {
                       </BlueColorButton>
                     </span>
 
-                    <div style={ {maxWidth: '480px', textAlign: 'center', margin: '0 auto'} }>
+                    <div style={ {maxWidth: '480px', textAlign: 'center', margin: 'auto', marginTop: '16px'} }>
 
                       <ScrollableTabs tabs ={
                         [
-                          {title: "Scripts", children: this.showTransactionDetails()},
-                          {title: "Raw Binary", children: "Item2"}
+                          {title: (<ScriptIcon />), children: this.showTransactionDetails()},
+                          {title: (<RawIcon />), children: ""}
                         ]
                       } />
                     </div>
