@@ -6,6 +6,7 @@ import scodec.{Attempt, DecodeResult}
 import scodec.codecs._
 import scodec.bits.BitVector
 import it.softfork.bitcoin4s.transaction.structure.ListCodec
+import it.softfork.bitcoin4s.Utils.hexToBytes
 
 // Credit: https://github.com/yzernik/bitcoin-scodec
 
@@ -40,6 +41,15 @@ object Tx {
 
     Codec[Tx](encode _, decode _)
   }.as[Tx]
+
+  def fromHex(hex: String): Tx = {
+    Tx.codec(1).decodeValue(BitVector(hexToBytes(hex))) match {
+      case Attempt.Successful(tx) =>
+        tx
+      case Attempt.Failure(err) =>
+        throw new RuntimeException(err.messageWithContext)
+    }
+  }
 
   // ==== private ====
 

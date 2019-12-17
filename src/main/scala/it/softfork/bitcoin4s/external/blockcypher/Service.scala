@@ -4,11 +4,11 @@ import akka.actor.Cancellable
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.external.blockcypher.Api.{Transaction, TransactionInput, TransactionOutput}
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
 import it.softfork.bitcoin4s.script._
 import it.softfork.bitcoin4s.transaction.TxId
 import org.spongycastle.util.encoders.Hex
+
 import scala.util.control.Exception.allCatch
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -16,6 +16,8 @@ import cats.implicits._
 import it.softfork.bitcoin4s.ApiModels.InterpreterResultOut.NoResult
 import it.softfork.bitcoin4s.ApiModels._
 import it.softfork.bitcoin4s.Utils.hexToBytes
+import it.softfork.bitcoin4s.external.ApiInterface
+
 import scala.collection.immutable.ArraySeq
 
 class Service(api: ApiInterface)(
@@ -26,7 +28,7 @@ class Service(api: ApiInterface)(
 
   def getTransaction(txId: TxId): Future[Option[Transaction]] = {
     logger.info(s"Fetching transaction $txId")
-    api.getTransaction(txId).map(_.map(_.withParsedScript().withWitness()))
+    api.getTransaction(txId)
   }
 
   def getTransactionInput(txId: TxId, inputIndex: Int): Future[Option[TransactionInput]] = {
@@ -58,8 +60,8 @@ class Service(api: ApiInterface)(
 
       maybeTxInput match {
         case Some(txInput) =>
-          val prevId = TxId(txInput.prevTxHash.toString)
-          val outputIndex = txInput.output_index
+          val prevId = TxId(txInput.prevHash.toString)
+          val outputIndex = txInput.outputIndex
 
           getTransactionOutput(prevId, outputIndex).map { maybeTxOutput =>
             maybeTxOutput.map { txOutout =>

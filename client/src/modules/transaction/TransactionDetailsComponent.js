@@ -48,17 +48,17 @@ class TransactionDetailsComponent extends React.Component {
                               </div>
                               <div className='btc-amount'>
                                 <BitcoinIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
-                                <span className='btc spent'> {input.output_value / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prev_hash}` }>Transaction</a>
+                                <span className='btc spent'> {input.outputValue / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prevHash}` }>Transaction</a>
                                 {
-                                  input.output_index ? <span> output {input.output_index} </span> : null
+                                  input.outputIndex ? <span> output {input.outputIndex} </span> : null
                                 }
                               </div>
                               <div>
                                 <LockOpenIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
-                                <span> ScriptSig</span> - <ScriptType scriptTypeRaw={input.script_type}/>
+                                <span> ScriptSig</span> - <ScriptType scriptTypeRaw={input.scriptType}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
-                                <ScriptOpCodeList opCodes={input.parsed_script} />
+                                <ScriptOpCodeList opCodes={input.parsedScript} />
                               </div>
                               <div style={{ paddingBottom: "10px"}}>
                                 <DebugIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
@@ -96,15 +96,15 @@ class TransactionDetailsComponent extends React.Component {
                               <div className='btc-amount'>
                                 <BitcoinIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
                                 <span className='btc to'> {output.value / 100000000} BTC</span> - {
-                                  output.spent_by ? <a href={ `/#/transaction/${output.spent_by}` }> Transaction </a> : 'not spent yet'
+                                  output.spentBy ? <a href={ `/#/transaction/${output.spentBy}` }> Transaction </a> : 'not spent yet'
                                 }
                               </div>
                               <div>
                                 <LockIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
-                                <span style={{verticalAlign: "middle"}}> ScriptPubKey</span> - <ScriptType scriptTypeRaw={output.script_type}/>
+                                <span style={{verticalAlign: "middle"}}> ScriptPubKey</span> - <ScriptType scriptTypeRaw={output.scriptType}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
-                                <ScriptOpCodeList opCodes={output.parsed_script} />
+                                <ScriptOpCodeList opCodes={output.parsedScript} />
                               </div>
                             </TableCell>
 

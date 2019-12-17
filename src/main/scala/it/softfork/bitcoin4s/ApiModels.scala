@@ -1,8 +1,11 @@
 package it.softfork.bitcoin4s
 
+import java.time.ZonedDateTime
+
 import it.softfork.bitcoin4s.script._
 import julienrf.json.derived.flat.owrites
 import it.softfork.bitcoin4s.Utils._
+import it.softfork.bitcoin4s.transaction.Tx
 import play.api.libs.json._
 
 object ApiModels {
@@ -89,4 +92,54 @@ object ApiModels {
   implicit val InterpreterStateWriter: Writes[InterpreterStateOut] = Json.writes[InterpreterStateOut]
 
   implicit val InterpretOutcome: Writes[InterpreterOutcome] = Json.writes[InterpreterOutcome]
+
+  case class TransactionInput(
+    prevHash: String,
+    outputIndex: Int,
+    script: Option[String],
+    parsedScript: Option[Seq[ScriptElement]],
+    outputValue: Long,
+    sequence: Long,
+    scriptType: String,
+    addresses: List[String],
+    witness: Option[List[String]] = None
+  )
+
+  object TransactionInput {
+    implicit val format: Format[TransactionInput] = Json.format[TransactionInput]
+  }
+
+  case class TransactionOutput(
+    value: Long,
+    script: String,
+    parsedScript: Option[Seq[ScriptElement]],
+    spentBy: Option[String],
+    addresses: List[String],
+    scriptType: String
+  )
+
+  object TransactionOutput {
+    implicit val format: Format[TransactionOutput] = Json.format[TransactionOutput]
+  }
+
+  case class Transaction(
+    hash: String,
+    hex: Option[String],
+    total: Long,
+    size: Long,
+    confirmed: ZonedDateTime,
+    version: Int,
+    lockTime: Long = 0,
+    inputs: Seq[TransactionInput],
+    outputs: Seq[TransactionOutput]
+  ) {
+
+    val tx = hex.map(Tx.fromHex).getOrElse {
+      throw new RuntimeException(s"Can not parse raw transaction $hash")
+    }
+  }
+
+  object Transaction {
+    implicit val format: Format[Transaction] = Json.format[Transaction]
+  }
 }
