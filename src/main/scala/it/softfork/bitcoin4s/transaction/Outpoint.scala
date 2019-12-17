@@ -21,9 +21,12 @@ object OutPoint {
   case class Raw(
     hash: String,
     index: String
-  )
+  ) {
+    val hex = s"$hash$index"
+  }
 
   object Raw {
+
     def apply(outpoint: OutPoint): Attempt[Raw] = {
       for {
         hashBitVector <- Codec[Hash].encode(outpoint.hash)

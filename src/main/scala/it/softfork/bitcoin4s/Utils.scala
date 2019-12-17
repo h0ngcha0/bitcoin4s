@@ -45,6 +45,7 @@ package object Utils {
   }
 
   object AttemptSeq {
+
     def apply[T](attempts: List[Attempt[T]]): Attempt[List[T]] = {
       attempts.foldLeft(Attempt.successful(List.empty[T])) {
         case (Attempt.Successful(accValue), newAttempt) => {

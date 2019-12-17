@@ -20,27 +20,36 @@ object TxIn {
       ("sig_script" | Codec[Script]) ::
       ("sequence" | uInt32WithNegValue)
   }.as[TxIn]
+}
 
-  case class Raw(
-    previous_output: OutpointRaw,
-    sig_script: String,
-    sequence: String
-  )
+case class TxInsRaw(
+  count: String,
+  txIns: List[TxInRaw]
+) {
+  val hex = s"$count${txIns.map(_.hex).mkString}"
+}
 
-  object Raw {
-    def apply(txIn: TxIn): Attempt[Raw] = {
-      for {
-        previousOutputRaw <- OutPoint.Raw(txIn.previous_output)
-        sigScriptBitVector <- Codec[Script].encode(txIn.sig_script)
-        sequenceBitVector <- uInt32WithNegValue.encode(txIn.sequence)
-      } yield {
-        Raw(
-          previous_output = previousOutputRaw,
-          sig_script = sigScriptBitVector.toHex,
-          sequence = sequenceBitVector.toHex
-        )
-      }
+case class TxInRaw(
+  previous_output: OutpointRaw,
+  sig_script: String,
+  sequence: String
+) {
+  val hex = s"${previous_output.hex}$sig_script$sequence"
+}
+
+object TxInRaw {
+
+  def apply(txIn: TxIn): Attempt[TxInRaw] = {
+    for {
+      previousOutputRaw <- OutPoint.Raw(txIn.previous_output)
+      sigScriptBitVector <- Codec[Script].encode(txIn.sig_script)
+      sequenceBitVector <- TxIn.uInt32WithNegValue.encode(txIn.sequence)
+    } yield {
+      TxInRaw(
+        previous_output = previousOutputRaw,
+        sig_script = sigScriptBitVector.toHex,
+        sequence = sequenceBitVector.toHex
+      )
     }
   }
-
 }

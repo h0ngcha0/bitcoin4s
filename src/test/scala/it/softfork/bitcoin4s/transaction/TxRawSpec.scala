@@ -4,9 +4,8 @@ import it.softfork.bitcoin4s.Spec
 
 import scala.io.Source
 
-class TxCodecSpec extends Spec {
-
-  "Tx encoder and decoder" should "be the inversion of each other" in {
+class TxRawSpec extends Spec {
+  "Tx raw encoder" should "be able to encode a transaction into its structured raw format" in {
     val nonWitnessTxHex =
       """
         |01000000010b37507539abc8eb903d39be9803efe09db5b02fb0cfe012
@@ -42,7 +41,7 @@ class TxCodecSpec extends Spec {
       .mkString
 
     Seq(nonWitnessTxHex, witnessTxHex, nonWitnessHugeHex).foreach { hex =>
-      Tx.toHex(Tx.fromHex(hex)) shouldEqual hex
+      TxRaw(Tx.fromHex(hex)).toOption.value.hex shouldEqual hex
     }
   }
 }

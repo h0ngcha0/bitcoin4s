@@ -8,12 +8,22 @@ object TxWitness {
   implicit val codec: Codec[TxWitness] =
     Codec[Script].as[TxWitness]
 
-  case class Raw(witness: String)
+  case class TxWitnessesRaw(
+    count: String,
+    txWitnesses: List[TxWitnessRaw]
+  ) {
+    val hex = s"$count${txWitnesses.map(_.hex).mkString}"
+  }
 
-  object Raw {
-    def apply(txWitness: TxWitness): Attempt[Raw] = {
+  case class TxWitnessRaw(witness: String) {
+    val hex = witness
+  }
+
+  object TxWitnessRaw {
+
+    def apply(txWitness: TxWitness): Attempt[TxWitnessRaw] = {
       codec.encode(txWitness).map { sequenceBitVector =>
-        Raw(sequenceBitVector.toHex)
+        TxWitnessRaw(sequenceBitVector.toHex)
       }
     }
   }

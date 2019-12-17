@@ -13,23 +13,33 @@ object TxOut {
     ("value" | int64L) ::
       ("pk_script" | Codec[Script])
   }.as[TxOut]
+}
 
-  case class Raw(
-    value: String,
-    pk_script: String
-  )
+case class TxOutsRaw(
+  count: String,
+  txOuts: List[TxOutRaw]
+) {
+  val hex = s"$count${txOuts.map(_.hex).mkString}"
+}
 
-  object Raw {
-    def apply(txIn: TxOut): Attempt[Raw] = {
-      for {
-        valueBitVector <- int64L.encode(txIn.value)
-        pkScriptBitVector <- Codec[Script].encode(txIn.pk_script)
-      } yield {
-        Raw(
-          value = valueBitVector.toHex,
-          pk_script = pkScriptBitVector.toHex
-        )
-      }
+case class TxOutRaw(
+  value: String,
+  pk_script: String
+) {
+  val hex = s"$value$pk_script"
+}
+
+object TxOutRaw {
+
+  def apply(txIn: TxOut): Attempt[TxOutRaw] = {
+    for {
+      valueBitVector <- int64L.encode(txIn.value)
+      pkScriptBitVector <- Codec[Script].encode(txIn.pk_script)
+    } yield {
+      TxOutRaw(
+        value = valueBitVector.toHex,
+        pk_script = pkScriptBitVector.toHex
+      )
     }
   }
 }
