@@ -1,5 +1,6 @@
 package it.softfork.bitcoin4s.transaction
 
+import play.api.libs.json.Json
 import scodec.{Attempt, Codec}
 import scodec.codecs._
 
@@ -15,21 +16,15 @@ object TxOut {
   }.as[TxOut]
 }
 
-case class TxOutsRaw(
-  count: String,
-  txOuts: List[TxOutRaw]
-) {
-  val hex = s"$count${txOuts.map(_.hex).mkString}"
-}
-
 case class TxOutRaw(
   value: String,
-  pk_script: String
+  pkScript: String
 ) {
-  val hex = s"$value$pk_script"
+  val hex = s"$value$pkScript"
 }
 
 object TxOutRaw {
+  implicit val format = Json.format[TxOutRaw]
 
   def apply(txIn: TxOut): Attempt[TxOutRaw] = {
     for {
@@ -38,8 +33,19 @@ object TxOutRaw {
     } yield {
       TxOutRaw(
         value = valueBitVector.toHex,
-        pk_script = pkScriptBitVector.toHex
+        pkScript = pkScriptBitVector.toHex
       )
     }
   }
+}
+
+case class TxOutsRaw(
+  count: String,
+  txOuts: List[TxOutRaw]
+) {
+  val hex = s"$count${txOuts.map(_.hex).mkString}"
+}
+
+object TxOutsRaw {
+  implicit val format = Json.format[TxOutsRaw]
 }

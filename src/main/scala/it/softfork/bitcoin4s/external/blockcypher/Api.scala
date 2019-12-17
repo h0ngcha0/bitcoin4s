@@ -10,16 +10,10 @@ import it.softfork.bitcoin4s.external.{ApiInterface, HttpSender, TransactionCach
 import it.softfork.bitcoin4s.external.blockcypher.Api.{rawTxUrl, transactionUnmarshaller}
 import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
 import it.softfork.bitcoin4s.transaction.structure.{Hash => ScodecHash}
-import it.softfork.bitcoin4s.transaction.{Tx, TxId}
+import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxRaw, TxWitness}
 import play.api.libs.json.{Format, JsError, JsSuccess, Json}
-import it.softfork.bitcoin4s.transaction.TxWitness
 import scodec.bits.ByteVector
-import it.softfork.bitcoin4s.ApiModels.{
-  Transaction => ApiTransaction,
-  TransactionInput => ApiTransactionInput,
-  TransactionOutput => ApiTransactionOutput,
-  scriptElementFormat
-}
+import it.softfork.bitcoin4s.ApiModels.{scriptElementFormat, Transaction => ApiTransaction, TransactionInput => ApiTransactionInput, TransactionOutput => ApiTransactionOutput}
 
 import scala.concurrent.{ExecutionContext, Future}
 import it.softfork.bitcoin4s.Utils.hexToBytes
@@ -191,6 +185,7 @@ object Api {
       ApiTransaction(
         hash = hash,
         hex = hex,
+        txRaw = TxRaw(tx).toOption,
         total = total,
         size = size,
         confirmed = confirmed,

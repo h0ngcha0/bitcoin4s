@@ -1,7 +1,7 @@
 package it.softfork.bitcoin4s.transaction
 
 import it.softfork.bitcoin4s.transaction.structure.LongCodecWithNegValue
-import OutPoint.{Raw => OutpointRaw}
+import play.api.libs.json.Json
 import scodec.{Attempt, Codec}
 import scodec.bits.ByteOrdering
 import scodec.codecs._
@@ -22,6 +22,32 @@ object TxIn {
   }.as[TxIn]
 }
 
+case class TxInRaw(
+  previousOutput: OutPointRaw,
+  sigScript: String,
+  sequence: String
+) {
+  val hex = s"${previousOutput.hex}$sigScript$sequence"
+}
+
+object TxInRaw {
+  implicit val format = Json.format[TxInRaw]
+
+  def apply(txIn: TxIn): Attempt[TxInRaw] = {
+    for {
+      previousOutputRaw <- OutPointRaw(txIn.previous_output)
+      sigScriptBitVector <- Codec[Script].encode(txIn.sig_script)
+      sequenceBitVector <- TxIn.uInt32WithNegValue.encode(txIn.sequence)
+    } yield {
+      TxInRaw(
+        previousOutput = previousOutputRaw,
+        sigScript = sigScriptBitVector.toHex,
+        sequence = sequenceBitVector.toHex
+      )
+    }
+  }
+}
+
 case class TxInsRaw(
   count: String,
   txIns: List[TxInRaw]
@@ -29,27 +55,6 @@ case class TxInsRaw(
   val hex = s"$count${txIns.map(_.hex).mkString}"
 }
 
-case class TxInRaw(
-  previous_output: OutpointRaw,
-  sig_script: String,
-  sequence: String
-) {
-  val hex = s"${previous_output.hex}$sig_script$sequence"
-}
-
-object TxInRaw {
-
-  def apply(txIn: TxIn): Attempt[TxInRaw] = {
-    for {
-      previousOutputRaw <- OutPoint.Raw(txIn.previous_output)
-      sigScriptBitVector <- Codec[Script].encode(txIn.sig_script)
-      sequenceBitVector <- TxIn.uInt32WithNegValue.encode(txIn.sequence)
-    } yield {
-      TxInRaw(
-        previous_output = previousOutputRaw,
-        sig_script = sigScriptBitVector.toHex,
-        sequence = sequenceBitVector.toHex
-      )
-    }
-  }
+object TxInsRaw {
+  implicit val format = Json.format[TxInsRaw]
 }

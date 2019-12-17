@@ -5,7 +5,7 @@ import java.time.ZonedDateTime
 import it.softfork.bitcoin4s.script._
 import julienrf.json.derived.flat.owrites
 import it.softfork.bitcoin4s.Utils._
-import it.softfork.bitcoin4s.transaction.Tx
+import it.softfork.bitcoin4s.transaction.{Tx, TxRaw}
 import play.api.libs.json._
 
 object ApiModels {
@@ -125,6 +125,7 @@ object ApiModels {
   case class Transaction(
     hash: String,
     hex: String,
+    txRaw: Option[TxRaw],
     total: Long,
     size: Long,
     confirmed: ZonedDateTime,
@@ -133,7 +134,6 @@ object ApiModels {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
-
     val tx = Tx.fromHex(hex)
   }
 

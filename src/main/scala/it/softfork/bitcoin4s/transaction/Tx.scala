@@ -5,9 +5,9 @@ import scodec.Codec
 import scodec.{Attempt, DecodeResult}
 import scodec.codecs._
 import scodec.bits.BitVector
-import it.softfork.bitcoin4s.Utils.{hexToBytes, AttemptSeq}
-import it.softfork.bitcoin4s.transaction.TxWitness.TxWitnessesRaw
+import it.softfork.bitcoin4s.Utils.{AttemptSeq, hexToBytes}
 import Tx.WitnessFlag
+import play.api.libs.json.Json
 
 // Credit: https://github.com/yzernik/bitcoin-scodec
 
@@ -133,6 +133,7 @@ case class TxRaw(
 }
 
 object TxRaw {
+  implicit val format = Json.format[TxRaw]
 
   def apply(tx: Tx): Attempt[TxRaw] = {
     val txInsRawAttempt = for {
@@ -152,7 +153,7 @@ object TxRaw {
         tx.tx_witness.map { witnesses =>
           for {
             count <- VarList.countCodec.encode(witnesses.size).map(_.toHex)
-            rawWitnesses <- AttemptSeq.apply(witnesses.map(TxWitness.TxWitnessRaw.apply))
+            rawWitnesses <- AttemptSeq.apply(witnesses.map(TxWitnessRaw.apply))
           } yield {
             TxWitnessesRaw(count, rawWitnesses)
           }
