@@ -44,6 +44,24 @@ package object Utils {
     }
   }
 
+  object AttemptSeq {
+    def apply[T](attempts: List[Attempt[T]]): Attempt[List[T]] = {
+      attempts.foldLeft(Attempt.successful(List.empty[T])) {
+        case (Attempt.Successful(accValue), newAttempt) => {
+          newAttempt match {
+            case Attempt.Successful(t) =>
+              Attempt.successful(accValue.appendedAll(List(t)))
+
+            case result @ Attempt.Failure(_) =>
+              result
+          }
+        }
+        case (accFailure @ Attempt.Failure(_), _) =>
+          accFailure
+      }
+    }
+  }
+
   implicit class RichSeq[T](seq: Seq[T]) {
 
     def forceTake(n: Int): Seq[T] = {

@@ -6,7 +6,7 @@ import scodec.{Attempt, DecodeResult}
 import scodec.codecs._
 import scodec.bits.BitVector
 import it.softfork.bitcoin4s.transaction.structure.ListCodec
-import it.softfork.bitcoin4s.Utils.hexToBytes
+import it.softfork.bitcoin4s.Utils.{AttemptSeq, hexToBytes}
 
 // Credit: https://github.com/yzernik/bitcoin-scodec
 
@@ -59,6 +59,52 @@ object Tx {
         throw new RuntimeException(err.messageWithContext)
     }
   }
+
+  case class Raw(
+    version: String,
+    flag: Option[String],
+    tx_in: List[TxIn.Raw],
+    tx_out: List[TxOut.Raw],
+    tx_witness: List[List[TxWitness.Raw]],
+    lock_time: String
+  )
+
+  object Raw {
+    def apply(tx: Tx): Attempt[Raw] = {
+      if (tx.flag) {
+        for {
+          versionBitVector <- uint32L.encode(tx.version)
+          flagBitVector <- mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1)).encode(tx.flag)
+          txInRaw <- AttemptSeq.apply(tx.tx_in.map(TxIn.Raw.apply))
+          txOutRaw <- AttemptSeq.apply(tx.tx_out.map(TxOut.Raw.apply))
+          txWitnessRaw <- AttemptSeq.apply(tx.tx_witness.map(_.map(TxWitness.Raw.apply)).map(AttemptSeq.apply))
+          locktimeBitVector <- uint32L.encode(tx.lock_time)
+        } yield Raw(
+          version = versionBitVector.toHex,
+          flag = Some(flagBitVector.toHex),
+          tx_in = txInRaw,
+          tx_out = txOutRaw,
+          tx_witness = txWitnessRaw,
+          lock_time = locktimeBitVector.toHex
+        )
+      } else {
+        for {
+          versionBitVector <- uint32L.encode(tx.version)
+          txInRaw <- AttemptSeq.apply(tx.tx_in.map(TxIn.Raw.apply))
+          txOutRaw <- AttemptSeq.apply(tx.tx_out.map(TxOut.Raw.apply))
+          locktimeBitVector <- uint32L.encode(tx.lock_time)
+        } yield Raw(
+          version = versionBitVector.toHex,
+          flag = None,
+          tx_in = txInRaw,
+          tx_out = txOutRaw,
+          tx_witness = List.empty,
+          lock_time = locktimeBitVector.toHex
+        )
+      }
+    }
+  }
+
 
   // ==== private ====
 

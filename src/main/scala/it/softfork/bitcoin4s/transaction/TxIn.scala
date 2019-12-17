@@ -1,7 +1,8 @@
 package it.softfork.bitcoin4s.transaction
 
-import it.softfork.bitcoin4s.transaction.structure.{LongCodecWithNegValue}
-import scodec.Codec
+import it.softfork.bitcoin4s.transaction.structure.LongCodecWithNegValue
+import OutPoint.{Raw => OutpointRaw}
+import scodec.{Attempt, Codec}
 import scodec.bits.ByteOrdering
 import scodec.codecs._
 
@@ -19,5 +20,27 @@ object TxIn {
       ("sig_script" | Codec[Script]) ::
       ("sequence" | uInt32WithNegValue)
   }.as[TxIn]
+
+  case class Raw(
+    previous_output: OutpointRaw,
+    sig_script: String,
+    sequence: String
+  )
+
+  object Raw {
+    def apply(txIn: TxIn): Attempt[Raw] = {
+      for {
+        previousOutputRaw <- OutPoint.Raw(txIn.previous_output)
+        sigScriptBitVector <- Codec[Script].encode(txIn.sig_script)
+        sequenceBitVector <- uInt32WithNegValue.encode(txIn.sequence)
+      } yield {
+        Raw(
+          previous_output = previousOutputRaw,
+          sig_script = sigScriptBitVector.toHex,
+          sequence = sequenceBitVector.toHex
+        )
+      }
+    }
+  }
 
 }
