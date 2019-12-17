@@ -36,9 +36,6 @@ class Routes(blockcypherService: BlockCypherService)(implicit ec: ExecutionConte
           complete(blockcypherService.getTransaction(txId))
         }
       } ~
-        path("raw") {
-          complete(blockcypherService.getTransaction(txId).map(_.map(_.hex)))
-        } ~
         pathPrefix("input") {
           pathPrefix(IntNumber) { inputIndex =>
             pathEndOrSingleSlash {

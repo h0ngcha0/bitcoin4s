@@ -15,6 +15,7 @@ import BeerIcon from '../../assets/icons/BeerIcon';
 import BitcoinYellowIcon from '../../assets/icons/BitcoinIconYellow';
 import {Typography} from '@material-ui/core';
 import ScrollableTabs from "../ScrollableTabs";
+import TransactionRawComponent from "./TransactionRawComponent";
 
 export default class TransactionContainer extends React.Component {
   componentWillMount() {
@@ -86,11 +87,7 @@ export default class TransactionContainer extends React.Component {
 
   showRawTransaction = () => {
     return this.executeAfterFetchTransaction(this.state, () => (
-        <div style={ {maxWidth: '480px', textAlign: 'left', marginTop: '20px', wordWrap: "break-word"} }>
-          <Typography color="textSecondary" variant="caption">
-            { this.state.transaction.hex }
-          </Typography>
-        </div>
+        <TransactionRawComponent transaction={this.state.transaction}/>
     ));
   };
 
