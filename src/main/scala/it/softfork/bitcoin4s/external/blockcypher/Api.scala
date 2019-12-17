@@ -142,7 +142,7 @@ object Api {
     block_height: Long,
     block_index: Int,
     hash: String,
-    hex: Option[String],
+    hex: String,
     addresses: Seq[String],
     total: Long,
     fees: Long,
@@ -159,10 +159,7 @@ object Api {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
-
-    val tx = hex.map(Tx.fromHex).getOrElse {
-      throw new RuntimeException(s"Can not parse raw transaction $hash")
-    }
+    val tx = Tx.fromHex(hex)
 
     def withParsedScript() = {
       val inputsWithParsedScript = inputs.map(_.withParsedScript())

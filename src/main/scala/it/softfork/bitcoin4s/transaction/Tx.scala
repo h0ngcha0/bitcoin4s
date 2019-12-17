@@ -51,6 +51,15 @@ object Tx {
     }
   }
 
+  def toHex(tx: Tx): String = {
+    Tx.codec(1).encode(tx) match {
+      case Attempt.Successful(tx) =>
+        tx.toHex
+      case Attempt.Failure(err) =>
+        throw new RuntimeException(err.messageWithContext)
+    }
+  }
+
   // ==== private ====
 
   private[Tx] case class WitnessFlag(flag1: Int, flag2: Int) {
