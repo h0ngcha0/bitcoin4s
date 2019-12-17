@@ -70,37 +70,49 @@ export default class TransactionContainer extends React.Component {
       });
   };
 
-  showTransactionDetails = () => {
-    if (this.state.error) {
-      if (this.state.error.status === 404) {
+  executeAfterFetchTransaction = (state, func) => {
+    if (state.error) {
+      if (state.error.status === 404) {
         return (
-          <div style={ {marginTop: '32px', textAlign: 'center'} }> 404, <BitcoinIcon style={{verticalAlign: "middle", fontSize: "200px"}}/> transaction not found </div>
+            <div style={ {marginTop: '32px', textAlign: 'center'} }> 404, <BitcoinIcon style={{verticalAlign: "middle", fontSize: "200px"}}/> transaction not found </div>
         );
       } else {
-        return <div style={ {marginTop: '32px', textAlign: 'center'} }>{this.state.error.status},  {this.state.error.statusText}</div>;
+        return <div style={ {marginTop: '32px', textAlign: 'center'} }>{state.error.status},  {state.error.statusText}</div>;
       }
-    } else if (this.state.transaction) {
-      return (
-          <span>
-            <TransactionDetailsComponent transaction={this.state.transaction} />
-            <div style={ {marginTop: '36px', textAlign: 'center'} }>
-              <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
-              <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-desktop img-responsive desktop` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
-            </div>
-            <span>
-              <Typography color="textSecondary" variant="caption">
-                3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
-              </Typography>
-            </span>
-            <div>
-              <BitcoinYellowIcon />
-              <BeerIcon />
-            </div>
-          </span>
-      );
-    } else {
-      return null;
+    } else if (state.transaction) {
+      return func();
     }
+  };
+
+  showRawTransaction = () => {
+    return this.executeAfterFetchTransaction(this.state, () => (
+        <div style={ {maxWidth: '480px', textAlign: 'left', marginTop: '20px', wordWrap: "break-word"} }>
+          <Typography color="textSecondary" variant="caption">
+            { this.state.transaction.hex }
+          </Typography>
+        </div>
+    ));
+  };
+
+  showTransactionDetails = () => {
+    return this.executeAfterFetchTransaction(this.state, () => (
+        <span>
+          <TransactionDetailsComponent transaction={this.state.transaction} />
+          <div style={ {marginTop: '36px', textAlign: 'center'} }>
+            <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+            <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-desktop img-responsive desktop` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+          </div>
+          <span>
+            <Typography color="textSecondary" variant="caption">
+              3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
+            </Typography>
+          </span>
+          <div>
+            <BitcoinYellowIcon />
+            <BeerIcon />
+          </div>
+        </span>
+    ));
   };
 
   render() {
@@ -144,7 +156,7 @@ export default class TransactionContainer extends React.Component {
                       <ScrollableTabs tabs ={
                         [
                           {title: (<ScriptIcon />), children: this.showTransactionDetails()},
-                          {title: (<RawIcon />), children: ""}
+                          {title: (<RawIcon />), children: this.showRawTransaction()}
                         ]
                       } />
                     </div>

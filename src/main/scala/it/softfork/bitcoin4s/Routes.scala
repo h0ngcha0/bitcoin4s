@@ -34,6 +34,9 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
           complete(blockcypherService.getTransaction(txId))
         }
       } ~
+        path("raw") {
+          complete(blockcypherService.getTransaction(txId).map(_.map(_.hex)))
+        } ~
         pathPrefix("input") {
           pathPrefix(IntNumber) { inputIndex =>
             pathEndOrSingleSlash {
