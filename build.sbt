@@ -23,7 +23,7 @@ scalacOptions := Seq(
   "-Ymacro-annotations"
 )
 
-val akkaHttpVersion = "10.1.10"
+val akkaHttpVersion = "10.1.11"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
@@ -33,14 +33,14 @@ libraryDependencies ++= Seq(
   "com.madgag.spongycastle" % "core" % "1.58.0.0",
   "org.scodec" %% "scodec-core" % "1.11.4",
   "com.iheart" %% "ficus" % "1.4.7",
-  "org.typelevel" %% "cats-core" % "2.1.0-RC1",
+  "org.typelevel" %% "cats-core" % "2.1.0-RC3",
   "com.github.mpilquist" %% "simulacrum" % "0.19.0",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
-  "com.typesafe.play" %% "play-json" % "2.7.4",
-  "com.typesafe.play" %% "play-functional" % "2.7.4",
-  "de.heikoseeberger" %% "akka-http-play-json" % "1.29.1",
+  "org.scalatest" %% "scalatest" % "3.1.0" % "test",
+  "com.typesafe.play" %% "play-json" % "2.8.1",
+  "com.typesafe.play" %% "play-functional" % "2.8.1",
+  "de.heikoseeberger" %% "akka-http-play-json" % "1.30.0",
   "org.julienrf" %% "play-json-derived-codecs" % "6.0.0",
   "com.lihaoyi" %% "pprint" % "0.5.6"
 )

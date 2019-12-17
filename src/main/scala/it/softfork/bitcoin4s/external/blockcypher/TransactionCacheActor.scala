@@ -53,7 +53,8 @@ class TransactionCacheActor() extends Actor with StrictLogging {
   var transactions: HashMap[TxId, TransactionWithCreationTime] = HashMap.empty
 
   def scheduleInvalidateExpired(): Unit = {
-    context.system.scheduler.schedule(initialDelay = 10.seconds, interval = 2.minutes, receiver = self, message = InvalidateExpired)
+    context.system.scheduler
+      .scheduleAtFixedRate(initialDelay = 10.seconds, interval = 2.minutes, receiver = self, message = InvalidateExpired)
     ()
   }
 

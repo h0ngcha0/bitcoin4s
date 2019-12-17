@@ -1,6 +1,8 @@
 package it.softfork.bitcoin4s
 
-import org.scalatest.{FlatSpecLike, Matchers, OptionValues}
+import org.scalatest.OptionValues
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.concurrent.ScalaFutures
 
-trait Spec extends FlatSpecLike with ScalaFutures with OptionValues with Matchers
+trait Spec extends AnyFlatSpecLike with ScalaFutures with OptionValues with Matchers
