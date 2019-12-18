@@ -1,4 +1,4 @@
-package it.softfork.bitcoin4s.external.blockcypher
+package it.softfork.bitcoin4s.external
 
 import java.time.ZonedDateTime
 
@@ -6,13 +6,13 @@ import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.external.blockcypher.Api.Transaction
-import it.softfork.bitcoin4s.external.blockcypher.TransactionCacheActor._
+import it.softfork.bitcoin4s.ApiModels.Transaction
+import it.softfork.bitcoin4s.external.TransactionCacheActor.{Get, InvalidateExpired, Set}
 import it.softfork.bitcoin4s.transaction.TxId
 
 import scala.collection.immutable.HashMap
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 object TransactionCacheActor {
 
@@ -53,7 +53,8 @@ class TransactionCacheActor() extends Actor with StrictLogging {
   var transactions: HashMap[TxId, TransactionWithCreationTime] = HashMap.empty
 
   def scheduleInvalidateExpired(): Unit = {
-    context.system.scheduler.schedule(initialDelay = 10.seconds, interval = 2.minutes, receiver = self, message = InvalidateExpired)
+    context.system.scheduler
+      .scheduleAtFixedRate(initialDelay = 10.seconds, interval = 2.minutes, receiver = self, message = InvalidateExpired)
     ()
   }
 

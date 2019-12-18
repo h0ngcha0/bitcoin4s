@@ -8,8 +8,14 @@ import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
 import {PurpleColorButton, BlueColorButton} from "../PurpleColorButton";
 import SearchBar from 'material-ui-search-bar';
-import BitcoinIcon from './BitcoinIcon';
+import BitcoinIcon from '../../assets/icons/BitcoinIcon';
+import RawIcon from '../../assets/icons/RawIcon';
+import ScriptIcon from '../../assets/icons/ScriptIcon';
+import BeerIcon from '../../assets/icons/BeerIcon';
+import BitcoinYellowIcon from '../../assets/icons/BitcoinIconYellow';
 import {Typography} from '@material-ui/core';
+import ScrollableTabs from "../ScrollableTabs";
+import TransactionRawComponent from "./TransactionRawComponent";
 
 export default class TransactionContainer extends React.Component {
   componentWillMount() {
@@ -65,20 +71,45 @@ export default class TransactionContainer extends React.Component {
       });
   };
 
-  showTransactionDetails = () => {
-    if (this.state.error) {
-      if (this.state.error.status === 404) {
+  executeAfterFetchTransaction = (state, func) => {
+    if (state.error) {
+      if (state.error.status === 404) {
         return (
-          <div style={ {marginTop: '32px', textAlign: 'center'} }> 404, <BitcoinIcon style={{verticalAlign: "middle", fontSize: "200px"}}/> transaction not found </div>
+            <div style={ {marginTop: '32px', textAlign: 'center'} }> 404, <BitcoinIcon style={{verticalAlign: "middle", fontSize: "200px"}}/> transaction not found </div>
         );
       } else {
-        return <div style={ {marginTop: '32px', textAlign: 'center'} }>{this.state.error.status},  {this.state.error.statusText}</div>;
+        return <div style={ {marginTop: '32px', textAlign: 'center'} }>{state.error.status},  {state.error.statusText}</div>;
       }
-    } else if (this.state.transaction) {
-      return <TransactionDetailsComponent transaction={this.state.transaction} />;
-    } else {
-      return null;
+    } else if (state.transaction) {
+      return func();
     }
+  };
+
+  showRawTransaction = () => {
+    return this.executeAfterFetchTransaction(this.state, () => (
+        <TransactionRawComponent transaction={this.state.transaction}/>
+    ));
+  };
+
+  showTransactionDetails = () => {
+    return this.executeAfterFetchTransaction(this.state, () => (
+        <span>
+          <TransactionDetailsComponent transaction={this.state.transaction} />
+          <div style={ {marginTop: '36px', textAlign: 'center'} }>
+            <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+            <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-desktop img-responsive desktop` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
+          </div>
+          <span>
+            <Typography color="textSecondary" variant="caption">
+              3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
+            </Typography>
+          </span>
+          <div>
+            <BitcoinYellowIcon />
+            <BeerIcon />
+          </div>
+        </span>
+    ));
   };
 
   render() {
@@ -103,37 +134,34 @@ export default class TransactionContainer extends React.Component {
                 <Loading /> :
                 (
                   <span>
-                    <PurpleColorButton variant="outlined" size="small" disabled={ this.state.executingScript } onClick={ () =>
-                      this.loadTransaction(this.state.transactionId)
-                    }>
-                      Search
-                    </PurpleColorButton>
-                    <div className="button-divider"/>
-                    <BlueColorButton variant="contained" size="small" disabled={ this.state.executingScript } onClick={ () =>
-                      this.props.push("/safello")
-                    }>
-                      Buy BTC
-                    </BlueColorButton>
+                    <span>
+                      <PurpleColorButton variant="outlined" size="small" disabled={ this.state.executingScript } onClick={ () =>
+                          this.loadTransaction(this.state.transactionId)
+                      }>
+                        Search
+                      </PurpleColorButton>
+                      <div className="button-divider"/>
+                      <BlueColorButton variant="contained" size="small" disabled={ this.state.executingScript } onClick={ () =>
+                          this.props.push("/safello")
+                      }>
+                        Buy BTC
+                      </BlueColorButton>
+                    </span>
+
+                    <div style={ {maxWidth: '480px', textAlign: 'center', margin: 'auto', marginTop: '16px'} }>
+
+                      <ScrollableTabs tabs ={
+                        [
+                          {title: (<ScriptIcon />), children: this.showTransactionDetails()},
+                          {title: (<RawIcon />), children: this.showRawTransaction()}
+                        ]
+                      } />
+                    </div>
                   </span>
                 )
-
             }
           </div>
-          {
-            this.showTransactionDetails()
-          }
-
-          {
-            this.state.loading ? null : (
-              <div style={ {marginTop: '52px', textAlign: 'center'} }>
-                <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
-                <Typography color="textSecondary" variant="caption">
-                  3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
-                </Typography>
-              </div>
-            )
-           }
-        </div>
+       </div>
 
       </div>
     );

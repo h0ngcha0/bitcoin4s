@@ -104,8 +104,16 @@ a {
   margin-bottom: 10px;
 }
 
-.bitcoin-address-image {
-  width: 8%;
+.bitcoin-address-image-mobile {
+  width: 25%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 2px;
+  height: auto;
+}
+
+.bitcoin-address-image-desktop {
+  width: 16%;
   height: auto;
 }
 
@@ -197,4 +205,64 @@ a {
   width: 8px;
   height: auto;
   display: inline-block;
+}
+
+.TxVersion {
+  color: white;
+  background: green;
+}
+
+.TxFlag {
+  color: white;
+  background: darkred;
+}
+
+.TxListCount {
+  color: white;
+  background: darkorange;
+}
+
+.TxInputPreviousTxId {
+  color: white;
+  background: darkblue;
+}
+
+.TxInputPreviousTxOutput {
+  color: white;
+  background: darkcyan;
+}
+
+.TxInputUnLockingScript {
+  color: white;
+  background: darkmagenta;
+}
+
+.TxInputSequence {
+  color: blue;
+  background: cyan;
+}
+
+.TxOutputValue {
+  color: white;
+  background: green;
+}
+
+.TxOutputLockingScript {
+  color: white;
+  background: red;
+}
+
+.TxWitness0 {
+  color: black;
+  background: yellow;
+}
+
+.TxWitness1 {
+  color: white;
+  background: black;
+}
+
+.TxLockTime {
+  color: white;
+  background: darkred;
 }

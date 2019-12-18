@@ -10,9 +10,10 @@ import Grid from "@material-ui/core/Grid/Grid";
 import HomeIcon from '@material-ui/icons/Home';
 import LockIcon from '@material-ui/icons/Lock';
 import LockOpenIcon from '@material-ui/icons/LockOpen';
-import CodeIcon from '@material-ui/icons/BugReport';
+import DebugIcon from '@material-ui/icons/BugReport';
 import ScriptOpCodeList from "./ScriptOpCodeList";
-import BitcoinIcon from "./BitcoinIcon";
+import BitcoinIcon from '../../assets/icons/BitcoinIcon';
+import Typography from "@material-ui/core/Typography";
 
 class TransactionDetailsComponent extends React.Component {
   render() {
@@ -20,7 +21,7 @@ class TransactionDetailsComponent extends React.Component {
     const inputsLength = transaction.inputs.length;
 
     return (
-      <div style={ {maxWidth: '480px', textAlign: 'center', margin: '0 auto'} }>
+      <div style={ {maxWidth: '480px', textAlign: 'center', marginTop: '4px'} }>
         {
           inputsLength < 0 ?
             null :
@@ -29,7 +30,9 @@ class TransactionDetailsComponent extends React.Component {
                 <Table padding="none">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Paying from</TableCell>
+                      <TableCell style={ { height: "48px" } }>
+                        <Typography color="textSecondary" variant="caption">Paying from</Typography>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
 
@@ -40,25 +43,25 @@ class TransactionDetailsComponent extends React.Component {
                           <TableRow key={index}>
                             <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px" }}>
                               <div className='btc-address'>
-                                <HomeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <HomeIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
                                 <span style={{verticalAlign: "middle"}}> {_.head(input.addresses)} </span>
                               </div>
                               <div className='btc-amount'>
-                                <BitcoinIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span className='btc spent'> {input.output_value / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prev_hash}` }>Transaction</a>
+                                <BitcoinIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
+                                <span className='btc spent'> {input.outputValue / 100000000} BTC</span> - <a href={ `/#/transaction/${input.prevHash}` }>Transaction</a>
                                 {
-                                  input.output_index ? <span> output {input.output_index} </span> : null
+                                  input.outputIndex ? <span> output {input.outputIndex} </span> : null
                                 }
                               </div>
                               <div>
-                                <LockOpenIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span> ScriptSig</span> - <ScriptType scriptTypeRaw={input.script_type}/>
+                                <LockOpenIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
+                                <span> ScriptSig</span> - <ScriptType scriptTypeRaw={input.scriptType}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
-                                <ScriptOpCodeList opCodes={input.parsed_script} />
+                                <ScriptOpCodeList opCodes={input.parsedScript} />
                               </div>
                               <div style={{ paddingBottom: "10px"}}>
-                                <CodeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <DebugIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
                                 <span> </span>
                                 <a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?automatic=true`}>Interpret</a> or
                                 <span> </span><a className="block-link" href={ `/#/transaction/${transaction.hash}/input/${index}/interpret?step=0`}>debug</a>
@@ -75,7 +78,9 @@ class TransactionDetailsComponent extends React.Component {
                 <Table padding="none">
                   <TableHead>
                     <TableRow>
-                      <TableCell>To</TableCell>
+                      <TableCell style={ { height: "48px" }}>
+                        <Typography color="textSecondary" variant="caption">To</Typography>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -85,21 +90,21 @@ class TransactionDetailsComponent extends React.Component {
                           <TableRow key={index}>
                             <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px"}}>
                               <div className='btc-address'>
-                                <HomeIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <HomeIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
                                 <span style={{verticalAlign: "middle"}}>{_.head(output.addresses)}</span>
                               </div>
                               <div className='btc-amount'>
-                                <BitcoinIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
+                                <BitcoinIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
                                 <span className='btc to'> {output.value / 100000000} BTC</span> - {
-                                  output.spent_by ? <a href={ `/#/transaction/${output.spent_by}` }> Transaction </a> : 'not spent yet'
+                                  output.spentBy ? <a href={ `/#/transaction/${output.spentBy}` }> Transaction </a> : 'not spent yet'
                                 }
                               </div>
                               <div>
-                                <LockIcon style={{verticalAlign: "middle", fontSize: "16px"}}/>
-                                <span style={{verticalAlign: "middle"}}> ScriptPubKey</span> - <ScriptType scriptTypeRaw={output.script_type}/>
+                                <LockIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
+                                <span style={{verticalAlign: "middle"}}> ScriptPubKey</span> - <ScriptType scriptTypeRaw={output.scriptType}/>
                               </div>
                               <div style={ {marginTop: "5px"}}>
-                                <ScriptOpCodeList opCodes={output.parsed_script} />
+                                <ScriptOpCodeList opCodes={output.parsedScript} />
                               </div>
                             </TableCell>
 

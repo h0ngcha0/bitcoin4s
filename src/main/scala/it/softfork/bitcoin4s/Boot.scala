@@ -1,7 +1,7 @@
 package it.softfork.bitcoin4s
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer}
+import akka.stream.Materializer
 import com.typesafe.scalalogging.StrictLogging
 import it.softfork.bitcoin4s.external.HttpSender
 import it.softfork.bitcoin4s.external.blockcypher.{Api, CachedApi, Service}
@@ -9,7 +9,7 @@ import it.softfork.bitcoin4s.external.blockcypher.{Api, CachedApi, Service}
 trait Boot extends StrictLogging {
   implicit val system: ActorSystem = ActorSystem("bitcoin4s")
 
-  implicit val materializer: Materializer = ActorMaterializer(ActorMaterializerSettings(system))
+  implicit val materializer: Materializer = Materializer(system)
 
   import system.dispatcher
 

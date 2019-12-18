@@ -10,7 +10,9 @@ import it.softfork.bitcoin4s.external.blockcypher.{Service => BlockCypherService
 import it.softfork.bitcoin4s.transaction.TxId
 import play.api.libs.json.{Json, Writes}
 
-class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
+import scala.concurrent.ExecutionContext
+
+class Routes(blockcypherService: BlockCypherService)(implicit ec: ExecutionContext) extends PlayJsonSupport {
 
   val clientRoute = {
     pathSingleSlash {

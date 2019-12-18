@@ -6,36 +6,28 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpRequest, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.Materializer
-import it.softfork.bitcoin4s.external.HttpSender
-import it.softfork.bitcoin4s.external.blockcypher.Api._
+import it.softfork.bitcoin4s.external.{ApiInterface, HttpSender, TransactionCacheActor}
+import it.softfork.bitcoin4s.external.blockcypher.Api.{rawTxUrl, transactionUnmarshaller}
 import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
 import it.softfork.bitcoin4s.transaction.structure.{Hash => ScodecHash}
-import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxIn, TxOut, OutPoint}
+import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxRaw, TxWitness}
 import play.api.libs.json.{Format, JsError, JsSuccess, Json}
-import it.softfork.bitcoin4s.transaction.TxWitness
 import scodec.bits.ByteVector
-import it.softfork.bitcoin4s.ApiModels.scriptElementFormat
-import scala.collection.immutable.ArraySeq
+import it.softfork.bitcoin4s.ApiModels.{scriptElementFormat, Transaction => ApiTransaction, TransactionInput => ApiTransactionInput, TransactionOutput => ApiTransactionOutput}
+
 import scala.concurrent.{ExecutionContext, Future}
-import scodec.Attempt
-import it.softfork.bitcoin4s.transaction.Script
 import it.softfork.bitcoin4s.Utils.hexToBytes
 import scodec.bits._
-
-// https://www.blockcypher.com/dev/bitcoin/#transaction-api
-trait ApiInterface {
-  def getTransaction(txId: TxId): Future[Option[Transaction]]
-}
 
 class Api(httpSender: HttpSender)(
   implicit
   ec: ExecutionContext,
   materializer: Materializer
 ) extends ApiInterface {
-  override def getTransaction(txId: TxId): Future[Option[Transaction]] = {
+  override def getTransaction(txId: TxId): Future[Option[ApiTransaction]] = {
     httpSender(HttpRequest(uri = rawTxUrl(txId))).flatMap { response =>
       if (response.status.isSuccess()) {
-        transactionUnmarshaller(response.entity).map(Option.apply _)
+        transactionUnmarshaller(response.entity).map(_.toApiModel()).map(Option.apply _)
       } else {
         Future.successful(None)
       }
@@ -50,22 +42,18 @@ class CachedApi(api: Api)(
 ) extends ApiInterface {
   implicit val transactionCacheActor = system.actorOf(TransactionCacheActor.props())
 
-  override def getTransaction(txId: TxId): Future[Option[Transaction]] = {
-    TransactionCacheActor.getTransaction(txId).flatMap { cachedTx =>
-      cachedTx match {
-        case None =>
-          api.getTransaction(txId).map { maybeFreshTx =>
-            maybeFreshTx match {
-              case Some(freshTx) =>
-                TransactionCacheActor.setTransaction(txId, freshTx)
-                Some(freshTx)
-              case None =>
-                None
-            }
-          }
-        case Some(tx) =>
-          Future.successful(Some(tx))
-      }
+  override def getTransaction(txId: TxId): Future[Option[ApiTransaction]] = {
+    TransactionCacheActor.getTransaction(txId).flatMap {
+      case None =>
+        api.getTransaction(txId).map {
+          case Some(freshTx) =>
+            TransactionCacheActor.setTransaction(txId, freshTx)
+            Some(freshTx)
+          case None =>
+            None
+        }
+      case Some(tx) =>
+        Future.successful(Some(tx))
     }
   }
 }
@@ -86,20 +74,26 @@ object Api {
   ) {
     val prevTxHash = ScodecHash(ByteVector(hexToBytes(prev_hash)))
 
-    def toTxIn = TxIn(
-      previous_output = OutPoint(prevTxHash, output_index),
-      sig_script = script
-        .map(Script(_))
-        .getOrElse(Script.empty),
-      sequence = sequence
-    )
-
     def withParsedScript() = {
       val parsedScript = script.map { scriptStr =>
         Parser.parse("0x" + scriptStr)
       }
 
       copy(parsed_script = parsedScript)
+    }
+
+    def toApiModel(): ApiTransactionInput = {
+      ApiTransactionInput(
+        prevHash = prev_hash,
+        outputIndex = output_index,
+        script = script,
+        parsedScript = parsed_script,
+        outputValue = output_value,
+        sequence = sequence,
+        scriptType = script_type,
+        addresses = addresses,
+        witness = witness
+      )
     }
   }
 
@@ -116,14 +110,20 @@ object Api {
     script_type: String
   ) {
 
-    def toTxOut = TxOut(
-      value = value,
-      pk_script = Script(Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(script))).flatMap(_.bytes))
-    )
-
     def withParsedScript() = {
       val parsedScript = Parser.parse("0x" + script)
       copy(parsed_script = Some(parsedScript))
+    }
+
+    def toApiModel(): ApiTransactionOutput = {
+      ApiTransactionOutput(
+        value = value,
+        script = script,
+        parsedScript = parsed_script,
+        spentBy = spent_by,
+        addresses = addresses,
+        scriptType = script_type
+      )
     }
   }
 
@@ -136,7 +136,7 @@ object Api {
     block_height: Long,
     block_index: Int,
     hash: String,
-    hex: Option[String],
+    hex: String,
     addresses: Seq[String],
     total: Long,
     fees: Long,
@@ -153,28 +153,7 @@ object Api {
     inputs: Seq[TransactionInput],
     outputs: Seq[TransactionOutput]
   ) {
-
-    val tx = {
-      hex
-        .map { h =>
-          Tx.codec(1).decodeValue(BitVector(hexToBytes(h))) match {
-            case Attempt.Successful(tx) =>
-              tx
-            case Attempt.Failure(err) =>
-              throw new RuntimeException(err.messageWithContext)
-          }
-        }
-        .getOrElse {
-          Tx(
-            version = ver,
-            flag = false,
-            tx_in = inputs.map(_.toTxIn).toList,
-            tx_out = outputs.map(_.toTxOut).toList,
-            tx_witness = List.empty,
-            lock_time = lock_time
-          )
-        }
-    }
+    val tx = Tx.fromHex(hex)
 
     def withParsedScript() = {
       val inputsWithParsedScript = inputs.map(_.withParsedScript())
@@ -185,7 +164,7 @@ object Api {
 
     def withWitness() = {
       val paddedWitness = tx.tx_witness
-        .map(Option.apply _)
+        .map(Option.apply)
         .padTo(inputs.length, Option.empty[List[TxWitness]])
 
       val updatedInputs = inputs.zip(paddedWitness).map {
@@ -198,6 +177,23 @@ object Api {
       }
 
       copy(inputs = updatedInputs)
+    }
+
+    def toApiModel(): ApiTransaction = {
+      val updatedTransaction = this.withParsedScript().withWitness()
+
+      ApiTransaction(
+        hash = hash,
+        hex = hex,
+        txRaw = TxRaw(tx).toOption,
+        total = total,
+        size = size,
+        confirmed = confirmed,
+        version = ver,
+        lockTime = lock_time,
+        inputs = updatedTransaction.inputs.map(_.toApiModel()),
+        outputs = updatedTransaction.outputs.map(_.toApiModel())
+      )
     }
   }
 
