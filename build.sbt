@@ -34,7 +34,7 @@ libraryDependencies ++= Seq(
   "org.scodec" %% "scodec-core" % "1.11.4",
   "com.iheart" %% "ficus" % "1.4.7",
   "org.typelevel" %% "cats-core" % "2.1.0-RC3",
-  "com.github.mpilquist" %% "simulacrum" % "0.19.0",
+  "org.typelevel" %% "simulacrum" % "1.0.0",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.scalatest" %% "scalatest" % "3.1.0" % "test",
