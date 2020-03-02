@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
   "com.madgag.spongycastle" % "core" % "1.58.0.0",
-  "org.scodec" %% "scodec-core" % "1.11.4",
+  "org.scodec" %% "scodec-core" % "1.11.5",
   "com.iheart" %% "ficus" % "1.4.7",
   "org.typelevel" %% "cats-core" % "2.1.1",
   "com.github.mpilquist" %% "simulacrum" % "0.19.0",
