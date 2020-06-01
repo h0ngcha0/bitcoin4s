@@ -91,7 +91,7 @@ class TransactionDetailsComponent extends React.Component {
                             <TableCell style={ { whiteSpace: "normal", wordWrap: "break-word", maxWidth: "120px"}}>
                               <div className='btc-address'>
                                 <HomeIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
-                                <span style={{verticalAlign: "middle"}}>{_.head(output.addresses)}</span>
+                                <span style={{verticalAlign: "middle"}}>{_.head(output.addresses) || 'No address'}</span>
                               </div>
                               <div className='btc-amount'>
                                 <BitcoinIcon style={{verticalAlign: "middle", fontSize: "18px"}}/>
@@ -130,6 +130,10 @@ const ScriptType = ({scriptTypeRaw}) => {
   } if(scriptTypeRaw === "pay-to-script-hash") {
     return (
       <a href="https://en.bitcoinwiki.org/wiki/Pay-to-Script_Hash"> P2SH </a>
+    );
+  } if(scriptTypeRaw === 'null-data') {
+    return (
+      <a href="https://btcinformation.org/en/glossary/null-data-transaction"> NULL DATA </a>
     );
   } else if (scriptTypeRaw){
     return (<span> {scriptTypeRaw} </span>);
