@@ -106,7 +106,7 @@ object Api {
     script: String,
     parsed_script: Option[Seq[ScriptElement]],
     spent_by: Option[String],
-    addresses: List[String],
+    addresses: Option[List[String]],
     script_type: String
   ) {
 
@@ -121,7 +121,7 @@ object Api {
         script = script,
         parsedScript = parsed_script,
         spentBy = spent_by,
-        addresses = addresses,
+        addresses = addresses.getOrElse(List.empty[String]),
         scriptType = script_type
       )
     }
