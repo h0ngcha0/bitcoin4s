@@ -32,7 +32,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
   "com.madgag.spongycastle" % "core" % "1.58.0.0",
   "org.scodec" %% "scodec-core" % "1.11.7",
-  "com.iheart" %% "ficus" % "1.4.7",
+  "com.iheart" %% "ficus" % "1.5.0",
   "org.typelevel" %% "cats-core" % "2.1.1",
   "org.typelevel" %% "simulacrum" % "1.0.0",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
