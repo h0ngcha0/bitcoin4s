@@ -38,8 +38,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.scalatest" %% "scalatest" % "3.1.2" % "test",
-  "com.typesafe.play" %% "play-json" % "2.9.0",
-  "com.typesafe.play" %% "play-functional" % "2.9.0",
+  "com.typesafe.play" %% "play-json" % "2.9.1",
+  "com.typesafe.play" %% "play-functional" % "2.9.1",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.32.0",
   "org.julienrf" %% "play-json-derived-codecs" % "7.0.0",
   "com.lihaoyi" %% "pprint" % "0.5.9"
