@@ -120,7 +120,7 @@ object ScriptNum {
       val isNegative = !bytesReversed.headOption.exists(significantBitNotSet)
       val positiveBytes = isNegative.option(setPositive(bytesReversed)).getOrElse(bytesReversed)
       val isFirstByteZero = positiveBytes.headOption.exists(equalToZero)
-      val noLeadingZeroBytes = (isFirstByteZero).option(positiveBytes.tail).getOrElse(positiveBytes)
+      val noLeadingZeroBytes = isFirstByteZero.option(positiveBytes.tail).getOrElse(positiveBytes)
       val positiveValue = parseLong(noLeadingZeroBytes)
 
       isNegative.option(-positiveValue).getOrElse(positiveValue)
@@ -130,7 +130,7 @@ object ScriptNum {
   private def setPositive(bytes: Seq[Byte]): Seq[Byte] = {
     bytes match {
       case head +: tail =>
-        (head & 0x7F).toByte +: tail
+        (head & 0x7f).toByte +: tail
       case Nil =>
         Nil
     }

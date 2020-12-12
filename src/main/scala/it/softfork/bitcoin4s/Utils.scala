@@ -6,6 +6,7 @@ import scodec.bits.BitVector
 import org.spongycastle.util.encoders.Hex
 
 package object Utils {
+
   implicit class Rich[T](value: T) {
     def toHex: String = "%02x".format(value)
   }
@@ -102,17 +103,17 @@ package object Utils {
   }
 
   def bytesToUInt8(bytes: Seq[Byte]): Int = {
-    bytes.head.toShort & 0xFF
+    bytes.head.toShort & 0xff
   }
 
   def bytesToUInt16(bytes: Seq[Byte]): Int = {
     val byteBuffer = ByteBuffer.wrap(bytes.toArray).order(ByteOrder.LITTLE_ENDIAN)
-    byteBuffer.getShort & 0xFFFF
+    byteBuffer.getShort & 0xffff
   }
 
   def bytesToUInt32(bytes: Seq[Byte]): Int = {
     val byteBuffer = ByteBuffer.wrap(bytes.toArray).order(ByteOrder.LITTLE_ENDIAN)
-    byteBuffer.getInt & 0xFFFFFFFF
+    byteBuffer.getInt & 0xffffffff
   }
 
   def uint32ToBytes(input: Long): Array[Byte] = uint32ToBytes(input, ByteOrder.LITTLE_ENDIAN)

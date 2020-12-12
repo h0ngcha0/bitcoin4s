@@ -11,6 +11,7 @@ import it.softfork.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptPubKey
 import it.softfork.bitcoin4s.script.StackOp.OP_DEPTH
 
 class StepExecutionSpec extends Spec {
+
   implicit class InterpreterResultExtractor(
     interpreterResult: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
   ) {
