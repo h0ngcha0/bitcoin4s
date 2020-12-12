@@ -10,6 +10,7 @@ case class TxOut(
 )
 
 object TxOut {
+
   implicit val codec: Codec[TxOut] = {
     ("value" | int64L) ::
       ("pk_script" | Codec[Script])

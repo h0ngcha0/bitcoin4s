@@ -13,17 +13,22 @@ import it.softfork.bitcoin4s.transaction.structure.{Hash => ScodecHash}
 import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxRaw, TxWitness}
 import play.api.libs.json.{Format, JsError, JsSuccess, Json}
 import scodec.bits.ByteVector
-import it.softfork.bitcoin4s.ApiModels.{scriptElementFormat, Transaction => ApiTransaction, TransactionInput => ApiTransactionInput, TransactionOutput => ApiTransactionOutput}
+import it.softfork.bitcoin4s.ApiModels.{
+  scriptElementFormat,
+  Transaction => ApiTransaction,
+  TransactionInput => ApiTransactionInput,
+  TransactionOutput => ApiTransactionOutput
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 import it.softfork.bitcoin4s.Utils.hexToBytes
 import scodec.bits._
 
-class Api(httpSender: HttpSender)(
-  implicit
+class Api(httpSender: HttpSender)(implicit
   ec: ExecutionContext,
   materializer: Materializer
 ) extends ApiInterface {
+
   override def getTransaction(txId: TxId): Future[Option[ApiTransaction]] = {
     httpSender(HttpRequest(uri = rawTxUrl(txId))).flatMap { response =>
       if (response.status.isSuccess()) {
@@ -35,8 +40,7 @@ class Api(httpSender: HttpSender)(
   }
 }
 
-class CachedApi(api: Api)(
-  implicit
+class CachedApi(api: Api)(implicit
   system: ActorSystem,
   ec: ExecutionContext
 ) extends ApiInterface {
