@@ -6,7 +6,7 @@ name := "bitcoin4s"
 organization := "it.softfork"
 version := "0.1.0"
 
-scalaVersion in ThisBuild := "2.13.4"
+scalaVersion in ThisBuild := "2.13.2"
 
 scalacOptions := Seq(
   "-unchecked",
@@ -23,9 +23,12 @@ scalacOptions := Seq(
   "-Ymacro-annotations"
 )
 
-val akkaHttpVersion = "10.1.12"
+val akkaHttpVersion = "10.2.2"
+val akkaVersion = "2.6.10"
 
 libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion,

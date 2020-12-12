@@ -93,14 +93,20 @@ object ArithmeticOp {
           oneOperant(opCode, (number: ScriptNum) => ScriptNum(Math.abs(number.value)))
 
         case OP_NOT =>
-          oneOperant(opCode, (number: ScriptNum) => {
-            (number.value == 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          oneOperant(
+            opCode,
+            (number: ScriptNum) => {
+              (number.value == 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_0NOTEQUAL =>
-          oneOperant(opCode, (number: ScriptNum) => {
-            (number.value == 0).option(ScriptNum(0)).getOrElse(ScriptNum(1))
-          })
+          oneOperant(
+            opCode,
+            (number: ScriptNum) => {
+              (number.value == 0).option(ScriptNum(0)).getOrElse(ScriptNum(1))
+            }
+          )
 
         case OP_ADD =>
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => first + second)
@@ -109,64 +115,97 @@ object ArithmeticOp {
           twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => second - first)
 
         case OP_BOOLAND =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (first.value =!= 0 && second.value =!= 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (first.value =!= 0 && second.value =!= 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_BOOLOR =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (first.value =!= 0 || second.value =!= 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (first.value =!= 0 || second.value =!= 0).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_NUMEQUAL =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_NUMEQUALVERIFY =>
           // OP_NUMEQUAL + OP_VERIFY
           for {
-            result <- twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-              (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-            })
+            result <- twoOperants(
+              opCode,
+              (first: ScriptNum, second: ScriptNum) => {
+                (first.value === second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+              }
+            )
             state <- getState
             _ <- setState(state.copy(currentScript = OP_VERIFY +: state.currentScript))
           } yield result
 
         case OP_NUMNOTEQUAL =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (first.value =!= second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (first.value =!= second.value).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_LESSTHAN =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (second < first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (second < first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_GREATERTHAN =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (second > first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (second > first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_GREATERTHANOREQUAL =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (second >= first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (second >= first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_LESSTHANOREQUAL =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            (second <= first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              (second <= first).option(ScriptNum(1)).getOrElse(ScriptNum(0))
+            }
+          )
 
         case OP_MIN =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            ScriptNum(Math.min(first.value, second.value))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              ScriptNum(Math.min(first.value, second.value))
+            }
+          )
 
         case OP_MAX =>
-          twoOperants(opCode, (first: ScriptNum, second: ScriptNum) => {
-            ScriptNum(Math.max(first.value, second.value))
-          })
+          twoOperants(
+            opCode,
+            (first: ScriptNum, second: ScriptNum) => {
+              ScriptNum(Math.max(first.value, second.value))
+            }
+          )
 
         case OP_WITHIN =>
           getState.flatMap { state =>
@@ -180,7 +219,7 @@ object ArithmeticOp {
                   )
                 } match {
                   case Success((firstNumber, secondNumber, thirdNumber)) =>
-                    val isWithin = (thirdNumber < firstNumber && thirdNumber >= secondNumber)
+                    val isWithin = thirdNumber < firstNumber && thirdNumber >= secondNumber
                     val newState = state.copy(
                       currentScript = state.currentScript,
                       stack = isWithin.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: rest,
