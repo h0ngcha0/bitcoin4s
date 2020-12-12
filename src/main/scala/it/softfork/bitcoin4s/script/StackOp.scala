@@ -155,7 +155,7 @@ object StackOp {
 
         case OP_IFDUP =>
           onStackOp(OP_IFDUP) {
-            case (number: ScriptConstant) :: rest if (ScriptNum.toLong(number.bytes) != 0) =>
+            case (number: ScriptConstant) :: rest if ScriptNum.toLong(number.bytes) != 0 =>
               number :: number :: rest
             case first :: rest =>
               first :: rest
