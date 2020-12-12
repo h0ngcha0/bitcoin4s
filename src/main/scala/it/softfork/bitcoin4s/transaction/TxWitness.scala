@@ -6,6 +6,7 @@ import scodec.{Attempt, Codec}
 case class TxWitness(witness: Script)
 
 object TxWitness {
+
   implicit val codec: Codec[TxWitness] =
     Codec[Script].as[TxWitness]
 }
