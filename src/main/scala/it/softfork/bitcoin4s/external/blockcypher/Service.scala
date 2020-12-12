@@ -20,8 +20,7 @@ import it.softfork.bitcoin4s.external.ApiInterface
 
 import scala.collection.immutable.ArraySeq
 
-class Service(api: ApiInterface)(
-  implicit
+class Service(api: ApiInterface)(implicit
   ec: ExecutionContext,
   materializer: Materializer
 ) extends StrictLogging {

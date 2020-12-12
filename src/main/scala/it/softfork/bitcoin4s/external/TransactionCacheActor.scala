@@ -28,16 +28,14 @@ object TransactionCacheActor {
 
   implicit val timeout: Timeout = Timeout(5.seconds)
 
-  def getTransaction(txId: TxId)(
-    implicit
+  def getTransaction(txId: TxId)(implicit
     ec: ExecutionContext,
     transactionCacheActor: ActorRef
   ): Future[Option[Transaction]] = {
     (transactionCacheActor ? Get(txId)).mapTo[Option[Transaction]]
   }
 
-  def setTransaction(txId: TxId, tx: Transaction)(
-    implicit
+  def setTransaction(txId: TxId, tx: Transaction)(implicit
     ec: ExecutionContext,
     transactionCacheActor: ActorRef
   ): Unit = {

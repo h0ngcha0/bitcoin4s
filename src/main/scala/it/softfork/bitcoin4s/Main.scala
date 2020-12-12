@@ -7,11 +7,7 @@ object Main extends App with Boot {
 
   import system.dispatcher
 
-  val serverFuture = Http().bindAndHandle(
-    handler = routes(),
-    interface = "0.0.0.0",
-    port = 8888
-  )
+  val serverFuture = Http().newServerAt("0.0.0.0", 8888).bind(routes())
 
   serverFuture.onComplete {
     case Success(Http.ServerBinding(address)) =>

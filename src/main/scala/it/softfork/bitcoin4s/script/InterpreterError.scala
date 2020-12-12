@@ -9,6 +9,7 @@ sealed trait InterpreterError extends RuntimeException with Product {
 }
 
 object InterpreterError {
+
   case class BadOpCode(opCode: ScriptOpCode, state: InterpreterState, descriptionIn: String) extends InterpreterError {
     override def description = descriptionIn
   }

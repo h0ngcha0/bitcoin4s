@@ -35,7 +35,7 @@ object Base58Check {
   }
 
   case object P2PKHTestnetVersionPrefix extends VersionPrefix {
-    val value = 0x6F.toByte
+    val value = 0x6f.toByte
   }
 
   case object PrivateKeyWIFVersionPrefix extends VersionPrefix {
@@ -47,6 +47,6 @@ object Base58Check {
   }
 
   case object BIP32ExtendedPublicKeyVersionPrefix extends VersionPrefix {
-    val value = 0x0488B21E.toByte
+    val value = 0x0488b21e.toByte
   }
 }

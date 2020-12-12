@@ -56,7 +56,7 @@ class Routes(blockcypherService: BlockCypherService)(implicit ec: ExecutionConte
                   }
               } ~
               path("stream-interpret") {
-                extractUpgradeToWebSocket { upgrade =>
+                extractWebSocketUpgrade { upgrade =>
                   complete {
                     val interpretSource = blockcypherService
                       .interpretStream(txId, inputIndex)

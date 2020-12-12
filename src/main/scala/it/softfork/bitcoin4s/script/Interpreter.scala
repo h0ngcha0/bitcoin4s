@@ -185,6 +185,7 @@ object Interpreter {
   }
 
   import scala.language.existentials
+
   private def interpretOneOp(state: InterpreterState, verbose: Boolean, steps: Option[Int]) = {
     val result = state.currentScript match {
       case opCode :: tail =>
@@ -461,7 +462,7 @@ object Interpreter {
         witnessHash.bytes.length match {
           case 20 =>
             // P2WPKH
-            val witnessProgramMatch = (Hash.Hash160(head.bytes.toArray).toSeq == witnessHash.bytes)
+            val witnessProgramMatch = Hash.Hash160(head.bytes.toArray).toSeq == witnessHash.bytes
             if (witnessProgramMatch) {
               val witnessProgram = OP_DUP :: OP_HASH160 :: OP_PUSHDATA(20) :: witnessHash :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil
               Right((witnessProgram, witnessStack))
@@ -470,7 +471,7 @@ object Interpreter {
             }
 
           case 32 =>
-            val witnessProgramMatch = (Hash.Sha256(head.bytes.toArray).toSeq == witnessHash.bytes)
+            val witnessProgramMatch = Hash.Sha256(head.bytes.toArray).toSeq == witnessHash.bytes
             if (witnessProgramMatch) {
               val witnessProgram = Parser.parse(head.bytes)
               Right((witnessProgram, removePushOps(tail)))

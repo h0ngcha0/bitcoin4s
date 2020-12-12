@@ -16,6 +16,7 @@ import it.softfork.bitcoin4s.transaction.OutPoint
 import scala.reflect.ClassTag
 
 trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
+
   sealed trait ExpectedResult extends Product {
     val name = productPrefix
     override def toString: String = name
