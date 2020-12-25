@@ -5,7 +5,7 @@ import scodec.Codec
 import scodec.{Attempt, DecodeResult}
 import scodec.codecs._
 import scodec.bits.BitVector
-import it.softfork.bitcoin4s.Utils.{AttemptSeq, hexToBytes}
+import it.softfork.bitcoin4s.Utils.{hexToBytes, AttemptSeq}
 import Tx.WitnessFlag
 import play.api.libs.json.Json
 
@@ -66,6 +66,7 @@ object Tx {
   }
 
   object WitnessFlag {
+
     implicit def codec: Codec[WitnessFlag] = {
       ("flag1" | uint8L) ::
         ("flag2" | uint8L)
