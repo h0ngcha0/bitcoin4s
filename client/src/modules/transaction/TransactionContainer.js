@@ -11,6 +11,7 @@ import SearchBar from 'material-ui-search-bar';
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 import RawIcon from '../../assets/icons/RawIcon';
 import ScriptIcon from '../../assets/icons/ScriptIcon';
+import {Typography} from '@material-ui/core';
 import ScrollableTabs from "../ScrollableTabs";
 import TransactionRawComponent from "./TransactionRawComponent";
 
@@ -100,6 +101,11 @@ export default class TransactionContainer extends React.Component {
               </img>
             </a>
           </div>
+          <span>
+            <Typography color="textSecondary" variant="caption">
+              BTC RPC EXPLORER
+            </Typography>
+          </span>
         </span>
     ));
   };
