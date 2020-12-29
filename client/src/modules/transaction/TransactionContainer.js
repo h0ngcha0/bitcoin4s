@@ -2,7 +2,7 @@ import React from 'react';
 
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
-import bitcoinQrCodeImage from '../../assets/images/bitcoin-address-qr-code.png';
+import btcRpcExplorerImage from '../../assets/images/btc-rpc-explorer.jpg';
 import {fetchTransaction} from '../../api';
 import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
@@ -11,9 +11,6 @@ import SearchBar from 'material-ui-search-bar';
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 import RawIcon from '../../assets/icons/RawIcon';
 import ScriptIcon from '../../assets/icons/ScriptIcon';
-import BeerIcon from '../../assets/icons/BeerIcon';
-import BitcoinYellowIcon from '../../assets/icons/BitcoinIconYellow';
-import {Typography} from '@material-ui/core';
 import ScrollableTabs from "../ScrollableTabs";
 import TransactionRawComponent from "./TransactionRawComponent";
 
@@ -96,17 +93,12 @@ export default class TransactionContainer extends React.Component {
         <span>
           <TransactionDetailsComponent transaction={this.state.transaction} />
           <div style={ {marginTop: '36px', textAlign: 'center'} }>
-            <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-mobile img-responsive mobile` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
-            <img src={ bitcoinQrCodeImage } className={ `bitcoin-address-image-desktop img-responsive desktop` } alt="3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc"/>
-          </div>
-          <span>
-            <Typography color="textSecondary" variant="caption">
-              3BNf5BQMt3ZyFKoA3mwUiGgrhT7UaWvZMc
-            </Typography>
-          </span>
-          <div>
-            <BitcoinYellowIcon />
-            <BeerIcon />
+            <a className="image" href="https://explorer.nioctib.tech">
+              <img src={ btcRpcExplorerImage } className={ `explorer-image-mobile img-responsive mobile` } alt="Bitcoin RPC Explorer">
+              </img>
+              <img src={ btcRpcExplorerImage } className={ `explorer-image-desktop img-responsive desktop` } alt="Bitcoin RPC Explorer">
+              </img>
+            </a>
           </div>
         </span>
     ));
@@ -140,12 +132,6 @@ export default class TransactionContainer extends React.Component {
                       }>
                         Search
                       </PurpleColorButton>
-                      <div className="button-divider"/>
-                      <BlueColorButton variant="contained" size="small" disabled={ this.state.executingScript } onClick={ () =>
-                          this.props.push("/safello")
-                      }>
-                        Buy BTC
-                      </BlueColorButton>
                     </span>
 
                     <div style={ {maxWidth: '480px', textAlign: 'center', margin: 'auto', marginTop: '16px'} }>
