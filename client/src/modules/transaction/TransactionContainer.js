@@ -6,7 +6,7 @@ import btcRpcExplorerImage from '../../assets/images/btc-rpc-explorer.jpg';
 import {fetchTransaction} from '../../api';
 import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
-import {PurpleColorButton, BlueColorButton} from "../PurpleColorButton";
+import {PurpleColorButton} from "../PurpleColorButton";
 import SearchBar from 'material-ui-search-bar';
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 import RawIcon from '../../assets/icons/RawIcon';
