@@ -23,7 +23,7 @@ scalacOptions := Seq(
   "-Ymacro-annotations"
 )
 
-val akkaHttpVersion = "10.2.2"
+val akkaHttpVersion = "10.2.4"
 val akkaVersion = "2.6.10"
 
 libraryDependencies ++= Seq(
