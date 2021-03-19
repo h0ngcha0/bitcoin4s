@@ -29,6 +29,17 @@ class Routes(blockcypherService: BlockCypherService)(implicit ec: ExecutionConte
     }
   }
 
+  val headerRoute = {
+    (path("headers") & get) {
+      extractRequest { request =>
+        val headers = request.headers.map { header =>
+          (header.name, header.value())
+        }
+        complete(headers)
+      }
+    }
+  }
+
   val transactionRoute = pathPrefix("transaction") {
     pathPrefix(Segment.map(TxId.apply)) { txId =>
       pathEndOrSingleSlash {
@@ -86,7 +97,8 @@ class Routes(blockcypherService: BlockCypherService)(implicit ec: ExecutionConte
     clientRoute ~
       pathPrefix("api") {
         transactionRoute ~
-          healthRoute
+          healthRoute ~
+          headerRoute
       }
   }
 
