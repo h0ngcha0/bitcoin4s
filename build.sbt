@@ -6,7 +6,7 @@ name := "bitcoin4s"
 organization := "it.softfork"
 version := "0.1.0"
 
-scalaVersion in ThisBuild := "2.13.2"
+scalaVersion in ThisBuild := "2.13.5"
 
 scalacOptions := Seq(
   "-unchecked",
