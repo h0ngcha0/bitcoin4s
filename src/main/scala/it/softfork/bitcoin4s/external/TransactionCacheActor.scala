@@ -69,7 +69,7 @@ class TransactionCacheActor() extends Actor with StrictLogging {
       }
 
     case Get(txId: TxId) => {
-      sender ! transactions.get(txId).map(_.tx)
+      sender() ! transactions.get(txId).map(_.tx)
     }
 
     case Set(txId: TxId, transaction: Transaction) => {

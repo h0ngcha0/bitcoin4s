@@ -28,9 +28,6 @@ object SpliceOp {
     def interpret(opCode: SpliceOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         opCode match {
-          case opc if disabled.contains(opc) =>
-            abort(OpcodeDisabled(opc, state))
-
           case OP_SIZE =>
             state.stack match {
               case head :: _ =>
@@ -43,6 +40,14 @@ object SpliceOp {
                 setStateAndContinue(newState)
               case Nil =>
                 abort(InvalidStackOperation(OP_SIZE, state))
+            }
+
+          case opc if disabled.contains(opc) =>
+            abort(OpcodeDisabled(opc, state))
+
+          case opc =>
+            getState.flatMap { state =>
+              abort(GeneralError(opc, state))
             }
         }
       }
