@@ -75,11 +75,6 @@ object ArithmeticOp {
 
     def interpret(opCode: ArithmeticOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
-        case opc if disabled.contains(opc) =>
-          getState.flatMap { state =>
-            abort(OpcodeDisabled(opc, state))
-          }
-
         case OP_1ADD =>
           oneOperant(opCode, (number: ScriptNum) => number + 1)
 
@@ -213,9 +208,9 @@ object ArithmeticOp {
               case (first: ScriptConstant) :: (second: ScriptConstant) :: (third: ScriptConstant) :: rest =>
                 Try {
                   (
-                    ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding),
-                    ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding),
-                    ScriptNum(third.bytes, state.ScriptFlags.requireMinimalEncoding)
+                    ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding()),
+                    ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding()),
+                    ScriptNum(third.bytes, state.ScriptFlags.requireMinimalEncoding())
                   )
                 } match {
                   case Success((firstNumber, secondNumber, thirdNumber)) =>
@@ -238,6 +233,16 @@ object ArithmeticOp {
                 abort(InvalidStackOperation(opCode, state))
             }
           }
+
+        case opc if disabled.contains(opc) =>
+          getState.flatMap { state =>
+            abort(OpcodeDisabled(opc, state))
+          }
+
+        case opc =>
+          getState.flatMap { state =>
+            abort(GeneralError(opc, state))
+          }
       }
     }
 
@@ -246,7 +251,7 @@ object ArithmeticOp {
         state.stack match {
           case (first: ScriptConstant) :: rest =>
             Try {
-              ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
+              ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding())
             } match {
               case Success(firstNumber) =>
                 val newState = state.copy(
@@ -276,8 +281,8 @@ object ArithmeticOp {
           case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>
             Try {
               (
-                ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding),
-                ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding)
+                ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding()),
+                ScriptNum(second.bytes, state.ScriptFlags.requireMinimalEncoding())
               )
             } match {
               case Success((firstNumber, secondNumber)) =>

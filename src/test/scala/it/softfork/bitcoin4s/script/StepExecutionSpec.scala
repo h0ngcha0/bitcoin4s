@@ -16,27 +16,27 @@ class StepExecutionSpec extends Spec {
     interpreterResult: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
   ) {
 
-    def currentScript() = {
-      getInterpreterState().currentScript
+    def currentScript = {
+      getInterpreterState.currentScript
     }
 
-    def stack() = {
-      getInterpreterState().stack
+    def stack = {
+      getInterpreterState.stack
     }
 
-    def altStack() = {
-      getInterpreterState().altStack
+    def altStack = {
+      getInterpreterState.altStack
     }
 
-    def executionStage() = {
-      getInterpreterState().scriptExecutionStage
+    def executionStage = {
+      getInterpreterState.scriptExecutionStage
     }
 
-    def getInterpreterState(): InterpreterState = {
+    def getInterpreterState: InterpreterState = {
       interpreterResult.toOption.value._1
     }
 
-    def result(): Option[Boolean] = {
+    def result: Option[Boolean] = {
       interpreterResult.toOption.value._2
     }
   }

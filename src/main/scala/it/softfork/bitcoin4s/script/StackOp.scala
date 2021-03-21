@@ -178,7 +178,7 @@ object StackOp {
             state.stack match {
               case (constant: ScriptConstant) :: rest =>
                 Try {
-                  ScriptNum(constant.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                  ScriptNum(constant.bytes, state.ScriptFlags.requireMinimalEncoding()).value.toInt
                 } match {
                   case Success(nth) =>
                     if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
@@ -206,7 +206,7 @@ object StackOp {
             stack match {
               case (constant: ScriptConstant) :: rest =>
                 Try {
-                  ScriptNum(constant.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                  ScriptNum(constant.bytes, state.ScriptFlags.requireMinimalEncoding()).value.toInt
                 } match {
                   case Success(nth) =>
                     if (rest.nonEmpty && nth >= 0 && (rest.length >= (nth + 1))) {
