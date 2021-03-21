@@ -103,7 +103,7 @@ object CryptoOp {
 
                       case _ =>
                         if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
-                          PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding) match {
+                          PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding()) match {
                             case DecodeResult.Ok(decodedPublicKey) =>
                               val notCompressed = !decodedPublicKey.compressed
                               val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
@@ -169,7 +169,7 @@ object CryptoOp {
               (ms, rest0) = v1
               numberOfPubKeys <- ms.headEither(NotEnoughElements).flatMap { m =>
                 Try {
-                  ScriptNum(m.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                  ScriptNum(m.bytes, state.ScriptFlags.requireMinimalEncoding()).value.toInt
                 } match {
                   case Success(numOfPubKeys) =>
                     (numOfPubKeys >= 0 && numOfPubKeys <= 20)
@@ -186,7 +186,7 @@ object CryptoOp {
               (ns, rest2) = v3
               numberOfSignatures <- ns.headEither(NotEnoughElements).flatMap { n =>
                 Try {
-                  ScriptNum(n.bytes, state.ScriptFlags.requireMinimalEncoding).value.toInt
+                  ScriptNum(n.bytes, state.ScriptFlags.requireMinimalEncoding()).value.toInt
                 } match {
                   case Success(numOfSignatures) =>
                     (numOfSignatures >= 0 && numOfSignatures <= numberOfPubKeys)

@@ -3,7 +3,6 @@ package it.softfork.bitcoin4s.script
 import cats.data.StateT
 import com.typesafe.scalalogging.StrictLogging
 import it.softfork.bitcoin4s.script.Interpreter.{InterpreterContext, InterpreterErrorHandler}
-import scala.language.implicitConversions
 import simulacrum._
 import cats.implicits._
 
