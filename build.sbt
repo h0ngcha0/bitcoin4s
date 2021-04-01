@@ -45,7 +45,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-functional" % "2.9.2",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.35.3",
   "org.julienrf" %% "play-json-derived-codecs" % "9.0.0",
-  "com.lihaoyi" %% "pprint" % "0.6.2"
+  "com.lihaoyi" %% "pprint" % "0.6.4"
 )
 
 resolvers ++= Seq(
