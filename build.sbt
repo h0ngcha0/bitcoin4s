@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "simulacrum" % "1.0.1",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "org.scalatest" %% "scalatest" % "3.2.6" % "test",
+  "org.scalatest" %% "scalatest" % "3.2.7" % "test",
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "com.typesafe.play" %% "play-functional" % "2.9.2",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.35.3",
