@@ -90,7 +90,7 @@ object Signature {
     bytesIn match {
       case head +: tail =>
         if ((head & 0x80) == 0) {
-          Some((head, tail))
+          Some((head.toInt, tail))
         } else {
           val lengthBytesNumber: Int = head - 0x80
 

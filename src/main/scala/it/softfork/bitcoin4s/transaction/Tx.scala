@@ -24,11 +24,11 @@ case class Tx(
 
 object Tx {
 
-  def codec(version: Int): Codec[Tx] = {
+  def codec(): Codec[Tx] = {
     def encode(tx: Tx): Attempt[BitVector] = {
       val txCodec: Codec[Tx] =
-        if (tx.flag) codecWithWitness(version, tx.tx_in.length)
-        else codecWithoutWitness(version)
+        if (tx.flag) codecWithWitness(tx.tx_in.length)
+        else codecWithoutWitness()
       txCodec.encode(tx)
     }
 
@@ -36,7 +36,7 @@ object Tx {
       for {
         witnessFlag <- decodeWitnessFlag(bits)
         isWitness = witnessFlag.value.isWitness
-        tx <- decodeTx(bits, isWitness, version)
+        tx <- decodeTx(bits, isWitness)
       } yield tx
     }
 
@@ -44,7 +44,7 @@ object Tx {
   }.as[Tx]
 
   def fromHex(hex: String): Tx = {
-    Tx.codec(1).decodeValue(BitVector(hexToBytes(hex))) match {
+    Tx.codec().decodeValue(BitVector(hexToBytes(hex))) match {
       case Attempt.Successful(tx) =>
         tx
       case Attempt.Failure(err) =>
@@ -53,7 +53,7 @@ object Tx {
   }
 
   def toHex(tx: Tx): String = {
-    Tx.codec(1).encode(tx) match {
+    Tx.codec().encode(tx) match {
       case Attempt.Successful(tx) =>
         tx.toHex
       case Attempt.Failure(err) =>
@@ -75,7 +75,7 @@ object Tx {
 
   // ==== private ====
 
-  private def codecWithoutWitness(version: Int) = {
+  private def codecWithoutWitness() = {
     ("version" | uint32L) ::
       ("flag" | provide(false)) ::
       ("tx_in" | VarList.varList(Codec[TxIn])) ::
@@ -84,7 +84,7 @@ object Tx {
       ("lock_time" | uint32L)
   }.as[Tx]
 
-  private def codecWithWitness(version: Int, txInsCount: Int): Codec[Tx] = {
+  private def codecWithWitness(txInsCount: Int): Codec[Tx] = {
     ("version" | uint32L) ::
       ("flag" | mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1))) ::
       ("tx_in" | VarList.varList(Codec[TxIn])) ::
@@ -100,16 +100,16 @@ object Tx {
     } yield witnessFlag
   }
 
-  private def decodeTx(bits: BitVector, isWitness: Boolean, version: Int): Attempt[DecodeResult[Tx]] = {
+  private def decodeTx(bits: BitVector, isWitness: Boolean): Attempt[DecodeResult[Tx]] = {
     if (isWitness) {
       for {
         vsn <- uint32L.decode(bits)
         witnessFlag <- Codec[WitnessFlag].decode(vsn.remainder)
         txIns <- VarList.varList(Codec[TxIn]).decode(witnessFlag.remainder)
-        tx <- codecWithWitness(version, txIns.value.length).decode(bits)
+        tx <- codecWithWitness(txIns.value.length).decode(bits)
       } yield tx
     } else {
-      codecWithoutWitness(version).decode(bits)
+      codecWithoutWitness().decode(bits)
     }
   }
 }

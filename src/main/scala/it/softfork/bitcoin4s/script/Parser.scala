@@ -121,7 +121,7 @@ object Parser {
   }
 
   private def bytesAndLength(dataBytes: Seq[Byte]): Seq[Byte] = {
-    val dataBytesLength = dataBytes.length
+    val dataBytesLength = dataBytes.length.toLong
 
     val lengthBytes: Seq[Byte] = if (dataBytesLength <= 75) {
       OP_PUSHDATA(dataBytesLength).bytes

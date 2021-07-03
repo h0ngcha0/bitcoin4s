@@ -37,6 +37,8 @@ object InterpreterState {
     amount: Long,
     sigVersion: SigVersion
   ): InterpreterState = {
+    println(s"sigVersion: $sigVersion")
+
     InterpreterState(
       scriptPubKey = scriptPubKey,
       scriptSig = scriptSig,

@@ -163,7 +163,7 @@ object StackOp {
 
         case OP_DEPTH =>
           getState.flatMap { state =>
-            val newStack = ScriptNum(state.stack.length) +: state.stack
+            val newStack = ScriptNum(state.stack.length.toLong) +: state.stack
             setStateAndContinue(state.copy(stack = newStack, opCount = state.opCount + 1))
           }
 

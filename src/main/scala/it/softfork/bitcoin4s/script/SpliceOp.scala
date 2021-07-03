@@ -36,7 +36,7 @@ object SpliceOp {
               case head :: _ =>
                 val newState = state.copy(
                   currentScript = state.currentScript,
-                  stack = ScriptNum(head.bytes.length) +: state.stack,
+                  stack = ScriptNum(head.bytes.length.toLong) +: state.stack,
                   opCount = state.opCount + 1
                 )
 

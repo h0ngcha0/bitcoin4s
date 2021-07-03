@@ -14,7 +14,7 @@ object RichTransaction extends StrictLogging {
   implicit class RichTx(tx: Tx) {
 
     def serialize(): ByteVector = {
-      Tx.codec(transactionVersion).encode(tx).toEither match {
+      Tx.codec().encode(tx).toEither match {
         case Left(error) =>
           throw new RuntimeException(error.messageWithContext)
         case Right(v) =>
@@ -51,14 +51,14 @@ object RichTransaction extends StrictLogging {
         )
         .getOrElse(updatedTx1)
 
-      val serialisedTx = Tx.codec(transactionVersion).compact.encode(updatedTx).toEither match {
+      val serialisedTx = Tx.codec().compact.encode(updatedTx).toEither match {
         case Left(error) =>
           throw new RuntimeException(error.messageWithContext)
         case Right(v) =>
           v.toByteArray
       }
 
-      val transactionPreImage: Array[Byte] = serialisedTx ++ uint32ToBytes(sigHashType.value)
+      val transactionPreImage: Array[Byte] = serialisedTx ++ uint32ToBytes(sigHashType.value.toLong)
       Hash.Hash256(transactionPreImage)
     }
 
@@ -110,7 +110,7 @@ object RichTransaction extends StrictLogging {
       val versionBytes = uint32ToBytes(tx.version)
 
       val locktimeBytes = uint32ToBytes(tx.lock_time)
-      val sigHashTypeBytes = uint32ToBytes(sigHashType.value)
+      val sigHashTypeBytes = uint32ToBytes(sigHashType.value.toLong)
 
       val preImage: Array[Byte] =
         versionBytes ++

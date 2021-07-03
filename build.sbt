@@ -8,19 +8,46 @@ version := "0.1.0"
 
 ThisBuild / scalaVersion := "2.13.6"
 
-scalacOptions := Seq(
-  "-unchecked",
-  "-feature",
+ThisBuild / scalacOptions := Seq(
   "-deprecation",
+  "-encoding",
+  "utf-8",
+  "-explaintypes",
+  "-feature",
+  "-unchecked",
+  "-Xsource:3",
+  "-Xlint:adapted-args",
+  "-Xlint:constant",
+  "-Xlint:delayedinit-select",
+  "-Xlint:doc-detached",
+  "-Xlint:inaccessible",
+  "-Xlint:infer-any",
+  "-Xlint:missing-interpolator",
+  "-Xlint:nullary-unit",
+  "-Xlint:option-implicit",
+  "-Xlint:package-object-classes",
+  "-Xlint:poly-implicit-overload",
+  "-Xlint:private-shadow",
+  "-Xlint:stars-align",
+  "-Xlint:type-parameter-shadow",
+  "-Xlint:nonlocal-return",
+  "-Xfatal-warnings",
   "-Ywarn-dead-code",
   "-Ywarn-extra-implicit",
-  "-Xfatal-warnings",
-  "-Ywarn-extra-implicit",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-unused:implicits",
+  "-Ywarn-unused:imports",
   "-Ywarn-unused:locals",
+  "-Ywarn-unused:params",
   "-Ywarn-unused:patvars",
   "-Ywarn-unused:privates",
-  "-Ywarn-unused:imports",
+  "-Ywarn-value-discard",
   "-Ymacro-annotations"
+)
+
+Compile / console / scalacOptions --= Seq(
+  "-Ywarn-unused:imports",
+  "-Xfatal-warnings"
 )
 
 val akkaHttpVersion = "10.2.4"

@@ -49,6 +49,6 @@ class MnemonicCodes(config: MnemonicCodesConfig) {
   }
 
   private def byteToPaddedBinaryString(byte: Byte): String = {
-    f"${byte.toBinaryString}8s".replace(' ', '0')
+    f"${byte.toInt.toBinaryString}8s".replace(' ', '0')
   }
 }

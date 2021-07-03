@@ -12,7 +12,7 @@ import it.softfork.bitcoin4s.transaction.TxId
 
 import scala.collection.immutable.HashMap
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 object TransactionCacheActor {
 
@@ -29,14 +29,12 @@ object TransactionCacheActor {
   implicit val timeout: Timeout = Timeout(5.seconds)
 
   def getTransaction(txId: TxId)(implicit
-    ec: ExecutionContext,
     transactionCacheActor: ActorRef
   ): Future[Option[Transaction]] = {
     (transactionCacheActor ? Get(txId)).mapTo[Option[Transaction]]
   }
 
   def setTransaction(txId: TxId, tx: Transaction)(implicit
-    ec: ExecutionContext,
     transactionCacheActor: ActorRef
   ): Unit = {
     transactionCacheActor ! Set(txId, tx)

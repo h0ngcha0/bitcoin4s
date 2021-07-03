@@ -1,7 +1,6 @@
 package it.softfork.bitcoin4s.external.blockcypher
 
 import akka.actor.Cancellable
-import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import com.typesafe.scalalogging.StrictLogging
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
@@ -21,8 +20,7 @@ import it.softfork.bitcoin4s.external.ApiInterface
 import scala.collection.immutable.ArraySeq
 
 class Service(api: ApiInterface)(implicit
-  ec: ExecutionContext,
-  materializer: Materializer
+  ec: ExecutionContext
 ) extends StrictLogging {
 
   def getTransaction(txId: TxId): Future[Option[Transaction]] = {

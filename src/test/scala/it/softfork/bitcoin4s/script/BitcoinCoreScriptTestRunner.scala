@@ -284,7 +284,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
   def creditingTransaction(scriptPubKey: Seq[Byte], maybeAmount: Option[Long]) = {
     // val emptyTxId = Array.fill[Byte](32)(0)
     val emptyOutpoint = OutPoint(Hash.NULL, -1)
-    val maxSequence = 0xffffffff
+    val maxSequence: Long = 0xffffffff
     val txIn = TxIn(
       previous_output = emptyOutpoint,
       sig_script = Script(Seq(OP_0, OP_0).flatMap(_.bytes)),
@@ -316,7 +316,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
   }
 
   def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
-    val maxSequence = 0xffffffff
+    val maxSequence: Long = 0xffffffff
 
     import scodec.bits._
 

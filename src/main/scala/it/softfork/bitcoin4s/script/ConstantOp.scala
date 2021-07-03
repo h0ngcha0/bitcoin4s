@@ -38,7 +38,7 @@ object ConstantOp {
   case class OP_PUSHDATA(val value: Long) extends ConstantOp {
     override def toString: String = s"OP_PUSHDATA($value)"
   }
-  val ops_pushdata = for (i <- 1 to 75) yield OP_PUSHDATA(i)
+  val ops_pushdata = for (i <- 1 to 75) yield OP_PUSHDATA(i.toLong)
 
   val all = Seq(
     OP_0,
@@ -146,7 +146,7 @@ object ConstantOp {
       case 1 if constant.bytes(0) >= 1 && constant.bytes(0) <= 16 =>
         all.find(_.value == (OP_1.value + constant.bytes(0) - 1)).exists(_ == opCode)
       case s if s <= 75 =>
-        opCode == OP_PUSHDATA(s)
+        opCode == OP_PUSHDATA(s.toLong)
       case s if s <= 255 =>
         opCode == OP_PUSHDATA1
       case s if s <= 65535 =>
