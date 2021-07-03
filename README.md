@@ -9,6 +9,8 @@ Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/
 
 The code in repository runs the https://nioctib.tech website.
 
+<img src="images/nioctib.gif" width="60%" height="60%"/>
+
 Table of Content
 ----------------
 
