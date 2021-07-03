@@ -238,6 +238,16 @@ object ArithmeticOp {
                 abort(InvalidStackOperation(opCode, state))
             }
           }
+
+        case opc if disabled.contains(opc) =>
+          getState.flatMap { state =>
+            abort(OpcodeDisabled(opc, state))
+          }
+
+        case opc =>
+          getState.flatMap { state =>
+            abort(GeneralError(opc, state))
+          }
       }
     }
 

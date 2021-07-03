@@ -3,7 +3,6 @@ import React from 'react';
 import InterpreterContainer from '../modules/interpreter/InterpreterContainer';
 import TransactionContainer from '../modules/transaction/TransactionContainer';
 import qs from 'qs';
-import SafelloContainer from "../modules/safello/SafelloContainer";
 
 const AppRouter = () => {
   return (
@@ -23,7 +22,6 @@ const AppRouter = () => {
         } />
         <Route exact path="/transaction" render={() => (<TransactionContainer />)} />
         <Route exact path="/interpreter" render={() => (<InterpreterContainer />)} />
-        <Route exact path="/safello" render={() => (<SafelloContainer />)} />
         <Redirect exact from='/' to='/transaction/f2f398dace996dab12e0cfb02fb0b59de0ef0398be393d90ebc8ab397550370b' />
       </Switch>
     </HashRouter>

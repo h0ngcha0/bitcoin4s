@@ -44,6 +44,14 @@ object SpliceOp {
               case Nil =>
                 abort(InvalidStackOperation(OP_SIZE, state))
             }
+
+          case opc if disabled.contains(opc) =>
+            abort(OpcodeDisabled(opc, state))
+
+          case opc =>
+            getState.flatMap { state =>
+              abort(GeneralError(opc, state))
+            }
         }
       }
     }

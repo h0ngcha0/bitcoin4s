@@ -21,6 +21,10 @@ a {
   border-bottom: rgb(219, 56, 111) dashed 1px;
 }
 
+a.image {
+  border: none;
+}
+
 .not-active {
   pointer-events: none;
   cursor: default;
@@ -104,7 +108,7 @@ a {
   margin-bottom: 10px;
 }
 
-.bitcoin-address-image-mobile {
+.explorer-image-mobile {
   width: 25%;
   margin-left: auto;
   margin-right: auto;
@@ -112,7 +116,7 @@ a {
   height: auto;
 }
 
-.bitcoin-address-image-desktop {
+.explorer-image-desktop {
   width: 16%;
   height: auto;
 }

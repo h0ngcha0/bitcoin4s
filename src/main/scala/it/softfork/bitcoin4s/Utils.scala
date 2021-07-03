@@ -35,7 +35,7 @@ package object Utils {
 
   implicit class RichAttemptByteVector(attemptByteVector: Attempt[BitVector]) {
 
-    def toBytes(): Array[Byte] = {
+    def toBytes: Array[Byte] = {
       attemptByteVector.toEither match {
         case Left(error) =>
           throw new RuntimeException(error.messageWithContext)

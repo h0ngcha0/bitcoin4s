@@ -127,6 +127,11 @@ object ConstantOp {
                   abort(NotEnoughElementsInStack(opCode, state))
               }
             }
+
+        case opc =>
+          getState.flatMap { state =>
+            abort(GeneralError(opc, state))
+          }
       }
     }
   }

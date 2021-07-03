@@ -43,6 +43,14 @@ object BitwiseLogicOp {
             state <- getState
             _ <- setState(state.copy(currentScript = OP_VERIFY +: state.currentScript))
           } yield result
+
+        case opc if disabled.contains(opc) =>
+          getState.flatMap(state => abort(OpcodeDisabled(opc, state)))
+
+        case opc =>
+          getState.flatMap { state =>
+            abort(GeneralError(opc, state))
+          }
       }
     }
 

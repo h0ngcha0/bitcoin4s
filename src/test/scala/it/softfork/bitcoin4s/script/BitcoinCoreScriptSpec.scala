@@ -16,7 +16,7 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
 
   implicit class RichConfigValue(configValue: ConfigValue) {
 
-    def toList: List[ConfigValue] = {
+    def toList(): List[ConfigValue] = {
       configValue.asInstanceOf[ConfigList].iterator().asScala.toList
     }
   }
@@ -31,8 +31,8 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
   "Interpreter" should "pass script_test.json in bitcoin reference client code base" in {
     val scriptTestsConfig: List[List[ConfigValue]] = testConfig
       .getList("bitcoin4s.script_tests")
-      .toList
-      .map(_.toList)
+      .toList()
+      .map(_.toList())
 
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
@@ -40,7 +40,7 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
     lazy val scriptTests = rawScriptTests.collect {
       case elements @ (head :: tail) =>
         if (head.isInstanceOf[ConfigList]) {
-          val witnessElement = head.toList.map(_.render)
+          val witnessElement = head.toList().map(_.render)
           val amount = (BigDecimal(witnessElement.last) * 100000000).toLong
           val stringTail = tail.map(stripDoubleQuotes)
           val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
