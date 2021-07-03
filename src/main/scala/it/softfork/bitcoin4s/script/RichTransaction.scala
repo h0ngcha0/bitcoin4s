@@ -67,7 +67,7 @@ object RichTransaction extends StrictLogging {
     def signingHashSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, amount: Long, sigHashType: SignatureHashType): Array[Byte] = {
       val prevOutsHash: Array[Byte] = if (!sigHashType.SIGHASH_ANYONECANPAY()) {
         val prevOut = tx.tx_in.toArray.flatMap { txIn =>
-          OutPoint.codec.encode(txIn.previous_output).toBytes
+          OutPoint.codec.encode(txIn.previous_output).toBytes()
         }
         Hash.Hash256(prevOut)
       } else {
@@ -85,11 +85,11 @@ object RichTransaction extends StrictLogging {
         Hash.zeros
       }
 
-      val prevOutBytes = OutPoint.codec.encode(txIn.previous_output).toBytes
+      val prevOutBytes = OutPoint.codec.encode(txIn.previous_output).toBytes()
 
       val encodedScriptBytes = {
         val scriptBytes = pubKeyScript.flatMap(_.bytes).toArray
-        Script.codec.encode(Script(scriptBytes)).toBytes
+        Script.codec.encode(Script(scriptBytes)).toBytes()
       }
 
       val amountBytes = uInt64ToBytes(amount)
@@ -97,11 +97,11 @@ object RichTransaction extends StrictLogging {
       val sequenceBytes = uint32ToBytes(txIn.sequence)
 
       val outputHash = if (!sigHashType.SIGHASH_SINGLE() && !sigHashType.SIGHASH_NONE()) {
-        val outputBytes: Array[Byte] = tx.tx_out.toArray.flatMap(TxOut.codec.encode(_).toBytes)
+        val outputBytes: Array[Byte] = tx.tx_out.toArray.flatMap(TxOut.codec.encode(_).toBytes())
         Hash.Hash256(outputBytes)
       } else if (sigHashType.SIGHASH_SINGLE() && inputIndex < tx.tx_out.length) {
         val txOut = tx.tx_out(inputIndex)
-        val outputBytes = TxOut.codec.encode(txOut).toBytes
+        val outputBytes = TxOut.codec.encode(txOut).toBytes()
         Hash.Hash256(outputBytes)
       } else {
         Hash.zeros

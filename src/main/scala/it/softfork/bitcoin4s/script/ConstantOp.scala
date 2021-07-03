@@ -72,7 +72,7 @@ object ConstantOp {
   implicit val interpreter = new InterpretableOp[ConstantOp] {
 
     override def interpret(opCode: ConstantOp): InterpreterContext[Option[Boolean]] = {
-      opCode match {
+      (opCode: @unchecked) match {
         case opc if opc.value >= 79 && opc.value <= 96 => // From OP_1NEGATE to OP_16
           getState
             .flatMap { state =>

@@ -49,7 +49,7 @@ object FlowControlOp {
               case Success(ConditionalBranchSplitResult(branches, rest)) =>
                 state.stack match {
                   case first :: tail =>
-                    val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding)
+                    val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding())
                     val positiveBranches = branches.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
                     val negativeBranches = branches.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
 
@@ -100,7 +100,7 @@ object FlowControlOp {
           case OP_VERIFY =>
             state.stack match {
               case first :: tail =>
-                val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding, first.bytes.size)
+                val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding(), first.bytes.size)
                 if (firstNumber == 0) {
                   abort(VerificationFailed(OP_VERIFY, state))
                 } else {

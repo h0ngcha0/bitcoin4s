@@ -27,7 +27,7 @@ object SpliceOp {
 
     def interpret(opCode: SpliceOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
-        opCode match {
+        (opCode: @unchecked) match {
           case opc if disabled.contains(opc) =>
             abort(OpcodeDisabled(opc, state))
 

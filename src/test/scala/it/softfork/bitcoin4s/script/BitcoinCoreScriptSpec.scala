@@ -16,7 +16,7 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
 
   implicit class RichConfigValue(configValue: ConfigValue) {
 
-    def toList(): List[ConfigValue] = {
+    def toList: List[ConfigValue] = {
       configValue.asInstanceOf[ConfigList].iterator().asScala.toList
     }
   }

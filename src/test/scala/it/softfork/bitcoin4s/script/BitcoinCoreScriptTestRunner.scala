@@ -3,7 +3,6 @@ package it.softfork.bitcoin4s.script
 import it.softfork.bitcoin4s.transaction._
 import it.softfork.bitcoin4s.crypto.Hash.Hash256
 import it.softfork.bitcoin4s.script.ConstantOp.OP_0
-import scodec.bits.ByteVector
 import it.softfork.bitcoin4s.script.RichTransaction._
 import it.softfork.bitcoin4s.Spec
 import cats.implicits._

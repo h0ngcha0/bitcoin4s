@@ -22,7 +22,6 @@ import it.softfork.bitcoin4s.ApiModels.{
 
 import scala.concurrent.{ExecutionContext, Future}
 import it.softfork.bitcoin4s.Utils.hexToBytes
-import scodec.bits._
 
 class Api(httpSender: HttpSender)(implicit
   ec: ExecutionContext,

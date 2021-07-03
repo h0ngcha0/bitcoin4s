@@ -6,7 +6,7 @@ name := "bitcoin4s"
 organization := "it.softfork"
 version := "0.1.0"
 
-scalaVersion in ThisBuild := "2.13.2"
+ThisBuild / scalaVersion := "2.13.6"
 
 scalacOptions := Seq(
   "-unchecked",
@@ -23,8 +23,8 @@ scalacOptions := Seq(
   "-Ymacro-annotations"
 )
 
-val akkaHttpVersion = "10.2.2"
-val akkaVersion = "2.6.10"
+val akkaHttpVersion = "10.2.4"
+val akkaVersion = "2.6.15"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -34,29 +34,27 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
   "com.madgag.spongycastle" % "core" % "1.58.0.0",
-  "org.scodec" %% "scodec-core" % "1.11.7",
+  "org.scodec" %% "scodec-core" % "1.11.8",
   "com.iheart" %% "ficus" % "1.5.0",
-  "org.typelevel" %% "cats-core" % "2.1.1",
+  "org.typelevel" %% "cats-core" % "2.6.1",
   "org.typelevel" %% "simulacrum" % "1.0.1",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "org.scalatest" %% "scalatest" % "3.2.3" % "test",
-  "com.typesafe.play" %% "play-json" % "2.9.1",
-  "com.typesafe.play" %% "play-functional" % "2.9.1",
-  "de.heikoseeberger" %% "akka-http-play-json" % "1.35.2",
+  "org.scalatest" %% "scalatest" % "3.2.9" % "test",
+  "com.typesafe.play" %% "play-json" % "2.9.2",
+  "com.typesafe.play" %% "play-functional" % "2.9.2",
+  "de.heikoseeberger" %% "akka-http-play-json" % "1.36.0",
   "org.julienrf" %% "play-json-derived-codecs" % "7.0.0",
-  "com.lihaoyi" %% "pprint" % "0.6.0"
+  "com.lihaoyi" %% "pprint" % "0.6.6"
 )
 
 resolvers ++= Seq(
-  Resolver.jcenterRepo,
-  Resolver.bintrayRepo("minna-technologies", "maven"),
-  Resolver.bintrayRepo("minna-technologies", "others-maven")
+  Resolver.jcenterRepo
 )
 
 enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
 
-dockerfile in docker := {
+docker / dockerfile := {
   val appSource = stage.value
   val appTarget = "/app"
   val logsDir = appTarget + "/logs"
@@ -74,7 +72,7 @@ dockerfile in docker := {
 }
 
 val baseImageName = "liuhongchao/bitcoin4s"
-imageNames in docker := {
+docker / imageNames := {
   val branchNameOption = sys.env.get("CI_COMMIT_REF_NAME").orElse(Option(git.gitCurrentBranch.value))
   Seq(
     branchNameOption.filter(_ == "master").map { _ =>
@@ -101,8 +99,8 @@ stage := {
   stage.dependsOn(buildFrontend).value
 }
 
-resourceGenerators in Compile += Def.task {
-  val resourceBase = (resourceManaged in Compile).value / "client"
+Compile / resourceGenerators += Def.task {
+  val resourceBase = (Compile / resourceManaged).value / "client"
   val sourceBase = file("client") / "build"
   IO.delete(resourceBase)
 
