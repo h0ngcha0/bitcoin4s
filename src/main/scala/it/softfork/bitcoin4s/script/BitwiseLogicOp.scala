@@ -30,7 +30,10 @@ object BitwiseLogicOp {
   implicit val interpreter = new InterpretableOp[BitwiseLogicOp] {
 
     override def interpret(opCode: BitwiseLogicOp): InterpreterContext[Option[Boolean]] = {
-      opCode match {
+      (opCode: @unchecked) match {
+        case opc if disabled.contains(opc) =>
+          getState.flatMap(state => abort(OpcodeDisabled(opc, state)))
+
         case OP_EQUAL =>
           onOpEqual()
 

@@ -74,7 +74,12 @@ object ArithmeticOp {
   implicit val interpreter = new InterpretableOp[ArithmeticOp] {
 
     def interpret(opCode: ArithmeticOp): InterpreterContext[Option[Boolean]] = {
-      opCode match {
+      (opCode: @unchecked) match {
+        case opc if disabled.contains(opc) =>
+          getState.flatMap { state =>
+            abort(OpcodeDisabled(opc, state))
+          }
+
         case OP_1ADD =>
           oneOperant(opCode, (number: ScriptNum) => number + 1)
 

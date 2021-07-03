@@ -17,22 +17,22 @@ class StepExecutionSpec extends Spec {
   ) {
 
     def currentScript = {
-      getInterpreterState.currentScript
+      getInterpreterState().currentScript
     }
 
     def stack = {
-      getInterpreterState.stack
+      getInterpreterState().stack
     }
 
     def altStack = {
-      getInterpreterState.altStack
+      getInterpreterState().altStack
     }
 
     def executionStage = {
-      getInterpreterState.scriptExecutionStage
+      getInterpreterState().scriptExecutionStage
     }
 
-    def getInterpreterState: InterpreterState = {
+    def getInterpreterState(): InterpreterState = {
       interpreterResult.toOption.value._1
     }
 
