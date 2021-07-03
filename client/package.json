@@ -6,26 +6,26 @@
     "react-scripts": "^1.0.14"
   },
   "dependencies": {
-    "@material-ui/core": "^4.11.2",
+    "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
-    "axios": "^0.18.1",
+    "axios": "^0.21.1",
     "bytes": "^3.0.0",
-    "classnames": "^2.2.5",
+    "classnames": "^2.3.1",
     "flexboxgrid": "^6.3.1",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "material-ui-search-bar": "^1.0.0",
     "moment": "^2.29.1",
     "prop-types": "^15.6.0",
-    "qs": "^6.9.4",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
-    "react-error-overlay": "^3.0.0",
-    "react-helmet": "^5.2.0",
-    "react-router": "^4.3.1",
-    "react-router-dom": "^4.3.1",
-    "recompose": "^0.26.0",
-    "urijs": "^1.19.4",
-    "ws": "^4.0.0"
+    "qs": "^6.10.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-error-overlay": "^6.0.9",
+    "react-helmet": "^6.1.0",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "recompose": "^0.30.0",
+    "urijs": "^1.19.6",
+    "ws": "^7.5.1"
   },
   "scripts": {
     "start": "./node_modules/.bin/react-scripts start",
@@ -38,5 +38,17 @@
       "target": "http://localhost:8888",
       "ws": true
     }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

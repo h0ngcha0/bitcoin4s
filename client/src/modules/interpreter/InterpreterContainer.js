@@ -99,14 +99,14 @@ class InterpreterContainer extends React.Component {
   prevNextButtons = () => {
     const calculatePrevStep = () => {
       return this.state.currentStep > 0 ?
-        `/#/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/interpret?step=${parseInt(this.props.step) - 1}` : null;
+        `/#/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/interpret?step=${parseInt(this.props.step, 10) - 1}` : null;
     };
 
     const calculateNextStep = () => {
       const result = this.state.interpretResult ? this.state.interpretResult.result.value : false;
       const step = this.props.step ? this.props.step : 0;
       return (result !== true) ?
-        `/#/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/interpret?step=${parseInt(step) + 1}` : null;
+        `/#/transaction/${this.state.transactionId}/input/${this.state.inputIndex}/interpret?step=${parseInt(step, 10) + 1}` : null;
     };
 
     if (!this.state.automatic) {
