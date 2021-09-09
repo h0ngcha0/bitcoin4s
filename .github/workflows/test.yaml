@@ -14,14 +14,12 @@ jobs:
       - uses: olafurpg/setup-scala@v10
         with:
           java-version: ${{ matrix.java }}
-      - run: |
+      - name: Run test
+        run: |
           sbt clean coverage test coverageReport && sbt coverageAggregate
-        shell: bash
-  upload_report:
-    runs-on: ubuntu-latest
-    needs: [test]
-    steps:
-      - run: |
-          bash <(curl -s https://codecov.io/bash)
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          name: codecov-${{ matrix.os }}-${{ matrix.java }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
