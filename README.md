@@ -1,5 +1,6 @@
 bitcoin4s
 =========
+[![codecov](https://codecov.io/gh/liuhongchao/bitcoin4s/branch/master/graph/badge.svg?token=QMR5NS4W4R)](https://codecov.io/gh/liuhongchao/bitcoin4s)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Scala library for experimenting with Bitcoin scripts. Provides a step by step debugger through REST API.
