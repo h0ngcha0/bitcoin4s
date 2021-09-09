@@ -1,0 +1,28 @@
+name: Unit-Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        java: [ '1.8', '11' ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: olafurpg/setup-scala@v10
+        with:
+          java-version: ${{ matrix.java }}
+      - run: |
+          sbt clean coverage test coverageReport && sbt coverageAggregate
+        shell: bash
+  upload_report:
+    steps:
+      - run: |
+          bash <(curl -s https://codecov.io/bash)
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
