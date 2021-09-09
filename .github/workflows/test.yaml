@@ -1,0 +1,25 @@
+name: Unit-Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        java: [ '1.8', '11' ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: olafurpg/setup-scala@v10
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Run test
+        run: |
+          sbt clean coverage test coverageReport && sbt coverageAggregate
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          name: codecov-${{ matrix.os }}-${{ matrix.java }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true

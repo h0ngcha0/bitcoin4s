@@ -1,15 +1,12 @@
 bitcoin4s
 =========
-[![Build Status](https://travis-ci.com/liuhongchao/bitcoin4s.svg?branch=master)](https://travis-ci.org/liuhongchao/bitcoin4s)
-[![Coverage Status](https://coveralls.io/repos/github/liuhongchao/bitcoin4s/badge.svg?branch=master)](https://coveralls.io/github/liuhongchao/bitcoin4s?branch=master)
+[![codecov](https://codecov.io/gh/liuhongchao/bitcoin4s/branch/master/graph/badge.svg?token=QMR5NS4W4R)](https://codecov.io/gh/liuhongchao/bitcoin4s)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Scala library for experimenting with Bitcoin scripts. Provides a step by step debugger through REST API.
 Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json) from bitcoin core.
 
 The code in repository runs the https://nioctib.tech website.
-
-<img src="images/nioctib.gif" width="60%" height="60%"/>
 
 Table of Content
 ----------------
