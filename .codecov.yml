@@ -1,0 +1,6 @@
+ignore:
+  - "*.sbt"
+  - "*.yaml"
+  - "*.yml"
+  - "*.md"
+  - ".json"
