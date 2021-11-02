@@ -50,7 +50,7 @@ Compile / console / scalacOptions --= Seq(
   "-Xfatal-warnings"
 )
 
-val akkaHttpVersion = "10.2.4"
+val akkaHttpVersion = "10.2.7"
 val akkaVersion = "2.6.15"
 
 libraryDependencies ++= Seq(
