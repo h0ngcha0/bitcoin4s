@@ -66,7 +66,7 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "2.6.1",
   "org.typelevel" %% "simulacrum" % "1.0.1",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "ch.qos.logback" % "logback-classic" % "1.2.9",
   "org.scalatest" %% "scalatest" % "3.2.9" % "test",
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "com.typesafe.play" %% "play-functional" % "2.9.2",
