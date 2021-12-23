@@ -70,7 +70,7 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.9" % "test",
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "com.typesafe.play" %% "play-functional" % "2.9.2",
-  "de.heikoseeberger" %% "akka-http-play-json" % "1.37.0",
+  "de.heikoseeberger" %% "akka-http-play-json" % "1.39.2",
   "org.julienrf" %% "play-json-derived-codecs" % "7.0.0",
   "com.lihaoyi" %% "pprint" % "0.6.6"
 )
