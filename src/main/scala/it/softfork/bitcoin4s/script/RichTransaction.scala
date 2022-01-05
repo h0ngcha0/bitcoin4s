@@ -137,22 +137,20 @@ object RichTransaction extends StrictLogging {
 
     // All other inputs aside from the current input in txCopy have their nSequence index set to zero
     def resetSequence(inputIndex: Int): Tx = {
-      val newTxIn = tx.tx_in.zipWithIndex.map {
-        case (txIn, index) =>
-          (index == inputIndex)
-            .option(txIn)
-            .getOrElse(txIn.copy(sequence = 0))
+      val newTxIn = tx.tx_in.zipWithIndex.map { case (txIn, index) =>
+        (index == inputIndex)
+          .option(txIn)
+          .getOrElse(txIn.copy(sequence = 0))
       }
       tx.copy(tx_in = newTxIn)
     }
 
     def updateTxInWithPubKeyScript(pubKeyScript: Seq[ScriptElement], inputIndex: Int): Tx = {
       val updatedPubKeyScript = pubKeyScript.filter(_ != OP_CODESEPARATOR)
-      val updatedScriptTxIns = tx.tx_in.zipWithIndex.map {
-        case (txIn, index) =>
-          (index == inputIndex)
-            .option(txIn.copy(sig_script = Script(updatedPubKeyScript.flatMap(_.bytes))))
-            .getOrElse(txIn)
+      val updatedScriptTxIns = tx.tx_in.zipWithIndex.map { case (txIn, index) =>
+        (index == inputIndex)
+          .option(txIn.copy(sig_script = Script(updatedPubKeyScript.flatMap(_.bytes))))
+          .getOrElse(txIn)
       }
       tx.copy(tx_in = updatedScriptTxIns)
     }
@@ -162,11 +160,10 @@ object RichTransaction extends StrictLogging {
     }
 
     def setAllTxOutputExceptOne(inputIndex: Int): Tx = {
-      val updatedTxOut = tx.tx_out.take(inputIndex).zipWithIndex.map {
-        case (txIn, index) =>
-          (index == inputIndex)
-            .option(txIn)
-            .getOrElse(txIn.copy(value = -1, pk_script = Script.empty))
+      val updatedTxOut = tx.tx_out.take(inputIndex).zipWithIndex.map { case (txIn, index) =>
+        (index == inputIndex)
+          .option(txIn)
+          .getOrElse(txIn.copy(value = -1, pk_script = Script.empty))
       }
 
       tx.copy(tx_out = updatedTxOut)

@@ -6,7 +6,7 @@ name := "bitcoin4s"
 organization := "it.softfork"
 version := "0.1.0"
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.7"
 
 ThisBuild / scalacOptions := Seq(
   "-deprecation",
@@ -50,8 +50,8 @@ Compile / console / scalacOptions --= Seq(
   "-Xfatal-warnings"
 )
 
-val akkaHttpVersion = "10.2.4"
-val akkaVersion = "2.6.15"
+val akkaHttpVersion = "10.2.7"
+val akkaVersion = "2.6.18"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -61,18 +61,18 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
   "com.madgag.spongycastle" % "core" % "1.58.0.0",
-  "org.scodec" %% "scodec-core" % "1.11.8",
-  "com.iheart" %% "ficus" % "1.5.0",
-  "org.typelevel" %% "cats-core" % "2.6.1",
+  "org.scodec" %% "scodec-core" % "1.11.9",
+  "com.iheart" %% "ficus" % "1.5.1",
+  "org.typelevel" %% "cats-core" % "2.7.0",
   "org.typelevel" %% "simulacrum" % "1.0.1",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "org.scalatest" %% "scalatest" % "3.2.9" % "test",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
+  "ch.qos.logback" % "logback-classic" % "1.2.10",
+  "org.scalatest" %% "scalatest" % "3.2.10" % "test",
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "com.typesafe.play" %% "play-functional" % "2.9.2",
-  "de.heikoseeberger" %% "akka-http-play-json" % "1.37.0",
-  "org.julienrf" %% "play-json-derived-codecs" % "7.0.0",
-  "com.lihaoyi" %% "pprint" % "0.6.6"
+  "de.heikoseeberger" %% "akka-http-play-json" % "1.39.2",
+  "org.julienrf" %% "play-json-derived-codecs" % "10.0.2",
+  "com.lihaoyi" %% "pprint" % "0.7.1"
 )
 
 resolvers ++= Seq(

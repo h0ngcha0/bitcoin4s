@@ -170,13 +170,12 @@ object Api {
         .map(Option.apply)
         .padTo(inputs.length, Option.empty[List[TxWitness]])
 
-      val updatedInputs = inputs.zip(paddedWitness).map {
-        case (input, witnessMaybe) =>
-          witnessMaybe
-            .map { witness =>
-              input.copy(witness = Some(witness.map(_.witness.hex)))
-            }
-            .getOrElse(input)
+      val updatedInputs = inputs.zip(paddedWitness).map { case (input, witnessMaybe) =>
+        witnessMaybe
+          .map { witness =>
+            input.copy(witness = Some(witness.map(_.witness.hex)))
+          }
+          .getOrElse(input)
       }
 
       copy(inputs = updatedInputs)

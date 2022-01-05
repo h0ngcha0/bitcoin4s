@@ -94,13 +94,12 @@ object Signature {
         } else {
           val lengthBytesNumber: Int = head - 0x80
 
-          tail.splitAtOpt(lengthBytesNumber).map {
-            case (lengthBytes, restOfBytes) =>
-              val length = lengthBytes.foldLeft(0) {
-                case (acc, byte) => (acc << 8) + byte
-              }
+          tail.splitAtOpt(lengthBytesNumber).map { case (lengthBytes, restOfBytes) =>
+            val length = lengthBytes.foldLeft(0) { case (acc, byte) =>
+              (acc << 8) + byte
+            }
 
-              (length, restOfBytes)
+            (length, restOfBytes)
           }
         }
       case Nil =>

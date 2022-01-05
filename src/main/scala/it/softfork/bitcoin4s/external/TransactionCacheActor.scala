@@ -61,9 +61,8 @@ class TransactionCacheActor() extends Actor with StrictLogging {
 
   override def receive: Receive = {
     case InvalidateExpired =>
-      transactions = transactions.filterNot {
-        case (txId @ _, TransactionWithCreationTime(tx @ _, createdAt)) =>
-          ZonedDateTime.now.isAfter(createdAt.plusMinutes(2))
+      transactions = transactions.filterNot { case (txId @ _, TransactionWithCreationTime(tx @ _, createdAt)) =>
+        ZonedDateTime.now.isAfter(createdAt.plusMinutes(2))
       }
 
     case Get(txId: TxId) => {

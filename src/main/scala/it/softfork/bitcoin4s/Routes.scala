@@ -59,9 +59,8 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
                     val interpretSource = blockcypherService
                       .interpretStream(txId, inputIndex)
                       .map(toJsonTextMessage[InterpreterOutcome])
-                      .recover {
-                        case TransactionInputNotFound =>
-                          TextMessage(Json.obj("error" -> "TransactionInputNotFound").toString)
+                      .recover { case TransactionInputNotFound =>
+                        TextMessage(Json.obj("error" -> "TransactionInputNotFound").toString)
                       }
 
                     upgrade.handleMessagesWith(Sink.ignore, interpretSource)

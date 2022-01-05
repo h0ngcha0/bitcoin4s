@@ -94,13 +94,12 @@ class Service(api: ApiInterface)(implicit
 
               logger.info(s"Interpreter finished with $outcome")
 
-              outcome.map {
-                case (finalState @ _, interpretedResult) =>
-                  InterpreterOutcome(
-                    result = InterpreterResultOut.fromInterpreterResult(interpretedResult),
-                    state = InterpreterStateOut.fromInterpreterState(finalState),
-                    step = maybeStep
-                  )
+              outcome.map { case (finalState @ _, interpretedResult) =>
+                InterpreterOutcome(
+                  result = InterpreterResultOut.fromInterpreterResult(interpretedResult),
+                  state = InterpreterStateOut.fromInterpreterState(finalState),
+                  step = maybeStep
+                )
               } match {
                 case Left(e) =>
                   throw e
@@ -122,9 +121,8 @@ class Service(api: ApiInterface)(implicit
     Source
       .tick(1.second, 2.seconds, Tick)
       .zipWithIndex
-      .mapAsync(1) {
-        case (_, step) =>
-          interpret(txId, inputIndex, Some(step.toInt))
+      .mapAsync(1) { case (_, step) =>
+        interpret(txId, inputIndex, Some(step.toInt))
       }
       .map { maybeInterpreterOutcome =>
         maybeInterpreterOutcome.getOrElse {

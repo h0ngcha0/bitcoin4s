@@ -56,9 +56,8 @@ object StackOp {
     def interpret(opCode: StackOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_DUP =>
-          onStackOp(OP_DUP) {
-            case head :: rest =>
-              head :: head :: rest
+          onStackOp(OP_DUP) { case head :: rest =>
+            head :: head :: rest
           }
 
         case OP_TOALTSTACK =>
@@ -94,63 +93,53 @@ object StackOp {
           }
 
         case OP_DROP =>
-          onStackOp(OP_2DROP) {
-            case _ :: rest =>
-              rest
+          onStackOp(OP_2DROP) { case _ :: rest =>
+            rest
           }
 
         case OP_2DROP =>
-          onStackOp(OP_2DROP) {
-            case _ :: _ :: rest =>
-              rest
+          onStackOp(OP_2DROP) { case _ :: _ :: rest =>
+            rest
           }
 
         case OP_2DUP =>
-          onStackOp(OP_2DUP) {
-            case first :: second :: rest =>
-              first :: second :: first :: second :: rest
+          onStackOp(OP_2DUP) { case first :: second :: rest =>
+            first :: second :: first :: second :: rest
           }
 
         case OP_3DUP =>
-          onStackOp(OP_3DUP) {
-            case first :: second :: third :: rest =>
-              first :: second :: third :: first :: second :: third :: rest
+          onStackOp(OP_3DUP) { case first :: second :: third :: rest =>
+            first :: second :: third :: first :: second :: third :: rest
           }
 
         case OP_OVER =>
-          onStackOp(OP_OVER) {
-            case first :: second :: rest =>
-              second :: first :: second :: rest
+          onStackOp(OP_OVER) { case first :: second :: rest =>
+            second :: first :: second :: rest
           }
 
         case OP_2OVER =>
-          onStackOp(OP_2OVER) {
-            case first :: second :: third :: fourth :: rest =>
-              third :: fourth :: first :: second :: third :: fourth :: rest
+          onStackOp(OP_2OVER) { case first :: second :: third :: fourth :: rest =>
+            third :: fourth :: first :: second :: third :: fourth :: rest
           }
 
         case OP_ROT =>
-          onStackOp(OP_ROT) {
-            case first :: second :: third :: rest =>
-              third :: first :: second :: rest
+          onStackOp(OP_ROT) { case first :: second :: third :: rest =>
+            third :: first :: second :: rest
           }
 
         case OP_2ROT =>
-          onStackOp(OP_2ROT) {
-            case first :: second :: third :: fourth :: fifth :: sixth :: rest =>
-              fifth :: sixth :: first :: second :: third :: fourth :: rest
+          onStackOp(OP_2ROT) { case first :: second :: third :: fourth :: fifth :: sixth :: rest =>
+            fifth :: sixth :: first :: second :: third :: fourth :: rest
           }
 
         case OP_SWAP =>
-          onStackOp(OP_SWAP) {
-            case first :: second :: rest =>
-              second :: first :: rest
+          onStackOp(OP_SWAP) { case first :: second :: rest =>
+            second :: first :: rest
           }
 
         case OP_2SWAP =>
-          onStackOp(OP_2SWAP) {
-            case first :: second :: third :: fourth :: rest =>
-              third :: fourth :: first :: second :: rest
+          onStackOp(OP_2SWAP) { case first :: second :: third :: fourth :: rest =>
+            third :: fourth :: first :: second :: rest
           }
 
         case OP_IFDUP =>
@@ -168,9 +157,8 @@ object StackOp {
           }
 
         case OP_NIP =>
-          onStackOp(OP_NIP) {
-            case first :: (second @ _) :: rest =>
-              first :: rest
+          onStackOp(OP_NIP) { case first :: (second @ _) :: rest =>
+            first :: rest
           }
 
         case OP_PICK =>
@@ -229,9 +217,8 @@ object StackOp {
           }
 
         case OP_TUCK =>
-          onStackOp(OP_TUCK) {
-            case first :: second :: rest =>
-              first :: second :: first :: rest
+          onStackOp(OP_TUCK) { case first :: second :: rest =>
+            first :: second :: first :: rest
           }
       }
     }
