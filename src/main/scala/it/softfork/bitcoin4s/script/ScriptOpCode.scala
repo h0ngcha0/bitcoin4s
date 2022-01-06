@@ -1,18 +1,20 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.Utils._
-import org.spongycastle.util.encoders.Hex
-
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable.ArrayBuffer
+
+import org.spongycastle.util.encoders.Hex
+
+import it.softfork.bitcoin4s.utils._
 
 // Reference: https://en.bitcoin.it/wiki/Script
 
 sealed trait ScriptElement {
   def bytes: Seq[Byte]
-  def toHex = s"0x${bytes.toHex}"
+  def toHex: String = s"0x${bytes.toHex}"
 }
 
+//scalastyle:off covariant.equals
 trait ScriptConstant extends ScriptElement {
   override def toString: String = s"ScriptConstant: $toHex"
 
@@ -24,28 +26,32 @@ trait ScriptConstant extends ScriptElement {
     }
   }
 }
+//scalastyle:on covariant.equals
 
 object ScriptConstant {
-  def apply(bytesIn: Array[Byte]): ScriptConstant = new ScriptConstant { override val bytes = ArraySeq.unsafeWrapArray(bytesIn) }
+  def apply(bytesIn: Array[Byte]): ScriptConstant = new ScriptConstant {
+    override val bytes = ArraySeq.unsafeWrapArray(bytesIn)
+  }
 }
 
 // Reference: https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L205
+//scalastyle:off covariant.equals
 trait ScriptNum extends ScriptConstant {
   val value: Long
 
-  def ==(that: ScriptNum) = value == that.value
-  def ==(that: Long) = value == that
-  def !=(that: Long) = value != that
-  def !=(that: ScriptNum) = value != that.value
-  def <=(that: ScriptNum) = value <= that.value
-  def <(that: ScriptNum) = value < that.value
-  def >=(that: ScriptNum) = value >= that.value
-  def >(that: ScriptNum) = value > that.value
+  def ==(that: ScriptNum): Boolean = value == that.value
+  def ==(that: Long): Boolean = value == that
+  def !=(that: Long): Boolean = value != that
+  def !=(that: ScriptNum): Boolean = value != that.value
+  def <=(that: ScriptNum): Boolean = value <= that.value
+  def <(that: ScriptNum): Boolean = value < that.value
+  def >=(that: ScriptNum): Boolean = value >= that.value
+  def >(that: ScriptNum): Boolean = value > that.value
 
-  def +(that: ScriptNum) = ScriptNum(value + that.value)
-  def +(that: Long) = ScriptNum(value + that)
-  def -(that: ScriptNum) = ScriptNum(value - that.value)
-  def -(that: Long) = ScriptNum(value - that)
+  def +(that: ScriptNum): ScriptNum = ScriptNum(value + that.value)
+  def +(that: Long): ScriptNum = ScriptNum(value + that)
+  def -(that: ScriptNum): ScriptNum = ScriptNum(value - that.value)
+  def -(that: Long): ScriptNum = ScriptNum(value - that)
 
   override def toString: String = s"ScriptNum($value)"
 
@@ -57,17 +63,22 @@ trait ScriptNum extends ScriptConstant {
     }
   }
 }
+//scalastyle:on covariant.equals
 
 object ScriptNum {
   val DefaultMaxNumSize = 4
 
-  def apply(valueIn: Long) = new ScriptNum {
+  def apply(valueIn: Long): ScriptNum = new ScriptNum {
     override val value: Long = valueIn
     override val bytes = encode(valueIn)
   }
 
   // Does not accept byte array with more than 4 bytes
-  def apply(bytesIn: Seq[Byte], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
+  def apply(
+    bytesIn: Seq[Byte],
+    fRequireMinimal: Boolean,
+    maxNumSize: Int = DefaultMaxNumSize
+  ): ScriptNum = {
     require(bytesIn.length <= maxNumSize, s"bytes length exceeds maxNumSize $maxNumSize")
     val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytesIn)
     require(!violateMinimalEncoding, "non-minimally encoded script number")
@@ -113,6 +124,7 @@ object ScriptNum {
     }
   }
 
+  //scalastyle:off magic.number
   def toLong(bytes: Seq[Byte]): Long = {
     val bytesReversed = bytes.reverse
 
@@ -126,6 +138,7 @@ object ScriptNum {
       isNegative.option(-positiveValue).getOrElse(positiveValue)
     }
   }
+  //scalastyle:on magic.number
 
   private def setPositive(bytes: Seq[Byte]): Seq[Byte] = {
     bytes match {
@@ -167,7 +180,7 @@ trait ScriptOpCode extends ScriptElement with Product {
   val value: Long
   def hex: String = value.toHex
   val name: String = productPrefix
-  override def bytes = Hex.decode(hex.stripPrefix("0x")).toList
+  override def bytes: Seq[Byte] = Hex.decode(hex.stripPrefix("0x")).toList
 }
 
 object OpCodes {

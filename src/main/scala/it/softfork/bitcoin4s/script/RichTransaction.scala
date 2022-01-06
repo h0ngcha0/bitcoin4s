@@ -1,12 +1,12 @@
 package it.softfork.bitcoin4s.script
 
 import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.transaction._
-import it.softfork.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
 import scodec.bits.ByteVector
-import it.softfork.bitcoin4s.Utils._
+
 import it.softfork.bitcoin4s.crypto.Hash
-import it.softfork.bitcoin4s.transaction.OutPoint
+import it.softfork.bitcoin4s.script.CryptoOp.OP_CODESEPARATOR
+import it.softfork.bitcoin4s.transaction._
+import it.softfork.bitcoin4s.utils._
 
 object RichTransaction extends StrictLogging {
   val transactionVersion = 1
@@ -22,7 +22,11 @@ object RichTransaction extends StrictLogging {
       }
     }
 
-    def signingHashPreSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, sigHashType: SignatureHashType): Array[Byte] = {
+    def signingHashPreSegwit(
+      pubKeyScript: Seq[ScriptElement],
+      inputIndex: Int,
+      sigHashType: SignatureHashType
+    ): Array[Byte] = {
       val updatedTx0 = tx
         .removeSigScript()
         .updateTxInWithPubKeyScript(pubKeyScript, inputIndex)
@@ -64,7 +68,13 @@ object RichTransaction extends StrictLogging {
 
     // https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
     // https://github.com/bitcoin/bitcoin/blob/f8528134fc188abc5c7175a19680206964a8fade/src/script/interpreter.cpp#L1113
-    def signingHashSegwit(pubKeyScript: Seq[ScriptElement], inputIndex: Int, amount: Long, sigHashType: SignatureHashType): Array[Byte] = {
+    //scalastyle:off method.length
+    def signingHashSegwit(
+      pubKeyScript: Seq[ScriptElement],
+      inputIndex: Int,
+      amount: Long,
+      sigHashType: SignatureHashType
+    ): Array[Byte] = {
       val prevOutsHash: Array[Byte] = if (!sigHashType.SIGHASH_ANYONECANPAY()) {
         val prevOut = tx.tx_in.toArray.flatMap { txIn =>
           OutPoint.codec.encode(txIn.previous_output).toBytes
@@ -76,14 +86,18 @@ object RichTransaction extends StrictLogging {
 
       val txIn = tx.tx_in(inputIndex)
 
-      val sequencesHash = if (!sigHashType.SIGHASH_ANYONECANPAY() && !sigHashType.SIGHASH_NONE() && !sigHashType.SIGHASH_SINGLE()) {
-        val sequenceBytes = tx.tx_in.toArray.flatMap { txIn =>
-          uint32ToBytes(txIn.sequence)
+      val sequencesHash =
+        if (
+          !sigHashType.SIGHASH_ANYONECANPAY() && !sigHashType.SIGHASH_NONE() && !sigHashType
+            .SIGHASH_SINGLE()
+        ) {
+          val sequenceBytes = tx.tx_in.toArray.flatMap { txIn =>
+            uint32ToBytes(txIn.sequence)
+          }
+          Hash.Hash256(sequenceBytes)
+        } else {
+          Hash.zeros
         }
-        Hash.Hash256(sequenceBytes)
-      } else {
-        Hash.zeros
-      }
 
       val prevOutBytes = OutPoint.codec.encode(txIn.previous_output).toBytes
 
@@ -126,6 +140,7 @@ object RichTransaction extends StrictLogging {
 
       Hash.Hash256(preImage)
     }
+    //scalastyle:on method.length
 
     def removeSigScript(): Tx = {
       val txIns = tx.tx_in.map { txIn =>

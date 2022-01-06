@@ -1,8 +1,8 @@
 package it.softfork.bitcoin4s.transaction
 
-import it.softfork.bitcoin4s.Spec
-
 import scala.io.Source
+
+import it.softfork.bitcoin4s.Spec
 
 class TxRawSpec extends Spec {
   "Tx raw encoder" should "be able to encode a transaction into its structured raw format" in {
@@ -37,7 +37,13 @@ class TxRawSpec extends Spec {
 
     // This hex is too big that it exceeds the compiler limits.
     val nonWitnessHugeHex = Source
-      .fromURI(getClass.getResource(s"/transaction/d519b6cb8d696585f2107b6d3cc464fad995f91c1619b66bc5254de7e6c43398.hex").toURI)
+      .fromURI(
+        getClass
+          .getResource(
+            s"/transaction/d519b6cb8d696585f2107b6d3cc464fad995f91c1619b66bc5254de7e6c43398.hex"
+          )
+          .toURI
+      )
       .mkString
 
     Seq(nonWitnessTxHex, witnessTxHex, nonWitnessHugeHex).foreach { hex =>

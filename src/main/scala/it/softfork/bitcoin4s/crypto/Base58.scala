@@ -2,6 +2,7 @@ package it.softfork.bitcoin4s.crypto
 
 import scala.annotation.tailrec
 
+//scalastyle:off magic.number
 object Base58 {
   val Alphabets = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
   val AlphabetsWithIndex = Alphabets.zipWithIndex.toMap
@@ -42,3 +43,4 @@ object Base58 {
     }
   }
 }
+//scalastyle:off magic.number

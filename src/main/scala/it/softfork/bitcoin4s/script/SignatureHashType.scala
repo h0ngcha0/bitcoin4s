@@ -1,6 +1,6 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.Utils._
+import it.softfork.bitcoin4s.utils._
 
 case class SignatureHashType(value: Int) {
 

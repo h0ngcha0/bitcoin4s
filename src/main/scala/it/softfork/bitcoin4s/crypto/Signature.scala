@@ -1,7 +1,8 @@
 package it.softfork.bitcoin4s.crypto
 
-import it.softfork.bitcoin4s.Utils._
 import java.math.BigInteger
+
+import it.softfork.bitcoin4s.utils._
 
 object Signature {
   case class ECDSASignature(r: BigInteger, s: BigInteger) extends Signature
@@ -32,7 +33,10 @@ object Signature {
           _ <- checkPositive(sLength)
           (s, restOfBytesAfterS) <- restOfBytesAfterSLength.splitAtOpt(sLength)
         } yield {
-          (ECDSASignature(new BigInteger(1, r.toArray), new BigInteger(1, s.toArray)), restOfBytesAfterS)
+          (
+            ECDSASignature(new BigInteger(1, r.toArray), new BigInteger(1, s.toArray)),
+            restOfBytesAfterS
+          )
         }
       case _ =>
         None

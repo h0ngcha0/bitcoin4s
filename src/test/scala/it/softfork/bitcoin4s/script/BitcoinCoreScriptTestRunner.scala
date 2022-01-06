@@ -1,19 +1,22 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.transaction._
-import it.softfork.bitcoin4s.crypto.Hash.Hash256
-import it.softfork.bitcoin4s.script.ConstantOp.OP_0
-import it.softfork.bitcoin4s.script.RichTransaction._
-import it.softfork.bitcoin4s.Spec
-import cats.implicits._
-import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
-import it.softfork.bitcoin4s.script.InterpreterError._
-import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
-import it.softfork.bitcoin4s.transaction.structure.Hash
-import it.softfork.bitcoin4s.transaction.OutPoint
 import scala.reflect.ClassTag
 
+import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
+
+import it.softfork.bitcoin4s.Spec
+import it.softfork.bitcoin4s.crypto.Hash.Hash256
+import it.softfork.bitcoin4s.script.ConstantOp.OP_0
+import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
+import it.softfork.bitcoin4s.script.InterpreterError._
+import it.softfork.bitcoin4s.script.RichTransaction._
+import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
+import it.softfork.bitcoin4s.transaction._
+import it.softfork.bitcoin4s.transaction.OutPoint
+import it.softfork.bitcoin4s.transaction.structure.Hash
+
+//scalastyle:off number.of.types
 trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
   sealed trait ExpectedResult extends Product {
@@ -21,6 +24,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     override def toString: String = name
   }
 
+  //scalastyle:off number.of.methods
   object ExpectedResult {
     case object OK extends ExpectedResult
     case object EVAL_FALSE extends ExpectedResult
@@ -59,7 +63,8 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     case object WITNESS_PUBKEYTYPE extends ExpectedResult
     case object NEGATIVE_LOCKTIME extends ExpectedResult
     case object UNSATISFIED_LOCKTIME extends ExpectedResult
-    case object MINIMALIF extends ExpectedResult // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2016-August/013014.html
+    case object MINIMALIF
+        extends ExpectedResult // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2016-August/013014.html
 
     val all = Seq(
       OK,
@@ -104,6 +109,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
     def fromString(str: String) = all.find(_.name == str)
   }
+  //scalastyle:on number.of.methods
 
   case class TestCase(
     scriptSig: Seq[ScriptElement],
@@ -115,12 +121,14 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     raw: String
   )
 
+  //scalastyle:off cyclomatic.complexity method.length
   def run(test: TestCase, testNumber: Int) = {
     logger.info(s"\n\nTest $testNumber: $test\n\n")
 
     val amount = test.witness.map(_._2)
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), amount)
-    val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes), test.witness.map(_._1))
+    val spendingTx =
+      spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes), test.witness.map(_._1))
     val sigVersion = if (test.witness.isDefined) SIGVERSION_BASE else SIGVERSION_WITNESS_V0
 
     val initialState = InterpreterState(
@@ -269,6 +277,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
       }
     }
   }
+  //scalastyle:on cyclomatic.complexity method.length
 
   private def checkError[T: ClassTag](
     result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
@@ -315,7 +324,11 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     }
   }
 
-  def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
+  def spendingTransaction(
+    creditingTransaction: Tx,
+    scriptSig: Seq[Byte],
+    maybeWitnessScript: Option[Seq[ScriptConstant]]
+  ) = {
     val maxSequence: Long = 0xffffffff
 
     import scodec.bits._
@@ -359,3 +372,4 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
   }
 }
+//scalastyle:on number.of.types

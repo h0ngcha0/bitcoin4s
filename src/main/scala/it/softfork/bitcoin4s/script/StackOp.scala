@@ -1,10 +1,11 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.script.Interpreter._
-import it.softfork.bitcoin4s.script.InterpreterError._
+import scala.util.{Failure, Success, Try}
+
 import cats.implicits._
 
-import scala.util.{Failure, Success, Try}
+import it.softfork.bitcoin4s.script.Interpreter._
+import it.softfork.bitcoin4s.script.InterpreterError._
 
 sealed trait StackOp extends ScriptOpCode
 
@@ -53,6 +54,7 @@ object StackOp {
 
   implicit val interpreter = new InterpretableOp[StackOp] {
 
+    //scalastyle:off cyclomatic.complexity method.length
     def interpret(opCode: StackOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_DUP =>
@@ -222,10 +224,13 @@ object StackOp {
           }
       }
     }
+    //scalastyle:on cyclomatic.complexity method.length
 
     def onStackOp(
       opCode: ScriptOpCode
-    )(stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]): InterpreterContext[Option[Boolean]] = {
+    )(
+      stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]
+    ): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         if (stackConvertFunction.isDefinedAt(state.stack)) {
           val newStack = stackConvertFunction(state.stack)

@@ -1,6 +1,7 @@
 package it.softfork.bitcoin4s.crypto
 
 import java.security.SecureRandom
+
 import org.spongycastle.crypto.generators.ECKeyPairGenerator
 import org.spongycastle.crypto.params.{ECKeyGenerationParameters, ECPrivateKeyParameters}
 
@@ -20,11 +21,11 @@ case class PrivateKey(value: BigInt, compressed: Boolean = false) {
     }
   }
 
-  def publicKey() = {
+  def publicKey(): PublicKey = {
     PublicKey(Secp256k1.curve.getG.multiply(value.bigInteger), compressed)
   }
 
-  def getByteArray() = {
+  def getByteArray(): Array[Byte] = {
     if (compressed) {
       value.toByteArray :+ 1.toByte
     } else {
@@ -35,7 +36,7 @@ case class PrivateKey(value: BigInt, compressed: Boolean = false) {
 
 object PrivateKey {
 
-  def generate(compressed: Boolean) = {
+  def generate(compressed: Boolean): PrivateKey = {
     val secureRandom = new SecureRandom
     val generator = new ECKeyPairGenerator
     val keyGenParams = new ECKeyGenerationParameters(Secp256k1.curve, secureRandom)

@@ -1,8 +1,9 @@
 package it.softfork.bitcoin4s.script
 
+import cats.implicits._
+
 import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError._
-import cats.implicits._
 
 sealed trait ConstantOp extends ScriptOpCode {
   override def toString: String = name
@@ -71,6 +72,7 @@ object ConstantOp {
 
   implicit val interpreter = new InterpretableOp[ConstantOp] {
 
+    //scalastyle:off method.length
     override def interpret(opCode: ConstantOp): InterpreterContext[Option[Boolean]] = {
       (opCode: @unchecked) match {
         case opc if opc.value >= 79 && opc.value <= 96 => // From OP_1NEGATE to OP_16
@@ -100,7 +102,10 @@ object ConstantOp {
             .flatMap { state =>
               state.currentScript match {
                 case (dataToPush: ScriptConstant) :: rest =>
-                  if (!checkMinimalPush(opCode, dataToPush) && state.ScriptFlags.requireMinimalEncoding()) {
+                  if (
+                    !checkMinimalPush(opCode, dataToPush) && state.ScriptFlags
+                      .requireMinimalEncoding()
+                  ) {
                     abort(NotMinimalEncoding(opCode, state))
                   } else {
                     setStateAndContinue(
@@ -134,6 +139,7 @@ object ConstantOp {
           }
       }
     }
+    //scalastyle:on method.length
   }
 
   // Similiar to https://github.com/bitcoin/bitcoin/blob/923c5e93a90a6eddde3ab8589fc393da95bbc489/src/script/interpreter.cpp#L215

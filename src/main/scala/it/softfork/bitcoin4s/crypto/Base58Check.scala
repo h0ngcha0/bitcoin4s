@@ -18,7 +18,10 @@ object Base58Check {
   def decode(input: String): (Byte, Array[Byte]) = {
     val raw = Base58.decode(input)
     val (versionAndHash, checksum) = raw.splitAt(raw.length - 4)
-    require(checksum == Base58Check.checksum(versionAndHash.toArray), s"invalid Base58Check data $input")
+    require(
+      checksum == Base58Check.checksum(versionAndHash.toArray),
+      s"invalid Base58Check data $input"
+    )
     (versionAndHash.head, versionAndHash.tail.toArray)
   }
 

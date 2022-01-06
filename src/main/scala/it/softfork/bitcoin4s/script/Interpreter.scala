@@ -1,20 +1,21 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.transaction.Tx
-import it.softfork.bitcoin4s.transaction.TxIn
-import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
-import it.softfork.bitcoin4s.script.ConstantOp._
-import it.softfork.bitcoin4s.script.CryptoOp.{OP_CHECKSIG, OP_HASH160}
-import it.softfork.bitcoin4s.script.InterpreterError._
-import it.softfork.bitcoin4s.Utils._
-import ScriptExecutionStage._
-import it.softfork.bitcoin4s.crypto.Hash
-import it.softfork.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
-import it.softfork.bitcoin4s.script.StackOp.OP_DUP
-
 import cats.FlatMap
 import cats.data._
 import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
+
+import it.softfork.bitcoin4s.crypto.Hash
+import it.softfork.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
+import it.softfork.bitcoin4s.script.ConstantOp._
+import it.softfork.bitcoin4s.script.CryptoOp.{OP_CHECKSIG, OP_HASH160}
+import it.softfork.bitcoin4s.script.InterpreterError._
+import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
+import it.softfork.bitcoin4s.script.ScriptExecutionStage._
+import it.softfork.bitcoin4s.script.StackOp.OP_DUP
+import it.softfork.bitcoin4s.transaction.Tx
+import it.softfork.bitcoin4s.transaction.TxIn
+import it.softfork.bitcoin4s.utils._
 
 sealed trait ScriptExecutionStage
 
@@ -25,7 +26,7 @@ object ScriptExecutionStage {
   case object ExecutingScriptWitness extends ScriptExecutionStage
 }
 
-object InterpreterState {
+object InterpreterState extends StrictLogging {
 
   def apply(
     scriptPubKey: Seq[ScriptElement],
@@ -37,7 +38,7 @@ object InterpreterState {
     amount: Long,
     sigVersion: SigVersion
   ): InterpreterState = {
-    println(s"sigVersion: $sigVersion")
+    logger.info(s"sigVersion: $sigVersion")
 
     InterpreterState(
       scriptPubKey = scriptPubKey,
@@ -73,7 +74,10 @@ case class InterpreterState(
 
   def transactionInput: TxIn = {
     val txInLength = transaction.tx_in.length
-    require(inputIndex >= 0 && inputIndex < txInLength, s"Transaction input ${inputIndex} index must be within range [0 - ${txInLength}].")
+    require(
+      inputIndex >= 0 && inputIndex < txInLength,
+      s"Transaction input ${inputIndex} index must be within range [0 - ${txInLength}]."
+    )
     transaction.tx_in(inputIndex)
   }
 
@@ -103,6 +107,7 @@ case class InterpreterState(
   }
 }
 
+//scalastyle:off magic.number number.of.methods method.length cyclomatic.complexity public.methods.have.type
 object Interpreter {
   type InterpreterErrorHandler[T] = Either[InterpreterError, T]
   type InterpreterContext[T] = StateT[InterpreterErrorHandler, InterpreterState, T]
@@ -138,20 +143,29 @@ object Interpreter {
     Left(error).asInstanceOf[InterpreterErrorHandler[Option[Boolean]]]
   }
 
-  def tailRecMAbort(error: InterpreterError): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = StateT.liftF {
+  def tailRecMAbort(
+    error: InterpreterError
+  ): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = StateT.liftF {
     Left(error).asInstanceOf[InterpreterErrorHandler[Either[Option[Boolean], Option[Boolean]]]]
   }
 
-  def tailRecMEvaluated(maybeValue: Option[Boolean]): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
+  def tailRecMEvaluated(
+    maybeValue: Option[Boolean]
+  ): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
     StateT.pure(Right(maybeValue))
   }
 
-  def tailRecMEvaluated(value: Boolean): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
+  def tailRecMEvaluated(
+    value: Boolean
+  ): InterpreterContext[Either[Option[Boolean], Option[Boolean]]] = {
     StateT.pure(Right(Some(value)))
   }
 
   // Steps: How many steps should the interpreter execute
-  def create(verbose: Boolean = false, maybeSteps: Option[Int] = None): InterpreterContext[Option[Boolean]] = {
+  def create(
+    verbose: Boolean = false,
+    maybeSteps: Option[Int] = None
+  ): InterpreterContext[Option[Boolean]] = {
     for {
       _ <- checkInvalidOpCode()
       _ <- checkDisabledOpCode()
@@ -163,7 +177,10 @@ object Interpreter {
     } yield result
   }
 
-  private def interpretScript(verbose: Boolean, maybeSteps: Option[Int]): InterpreterContext[Option[Boolean]] = {
+  private def interpretScript(
+    verbose: Boolean,
+    maybeSteps: Option[Int]
+  ): InterpreterContext[Option[Boolean]] = {
     tailRecM((None: Option[Boolean], maybeSteps)) {
       case (Some(value), maybeNewSteps @ _) =>
         tailRecMEvaluated(Some(value)).map(_.leftMap { (_, maybeNewSteps) })
@@ -361,7 +378,8 @@ object Interpreter {
 
   private def checkWitnessP2WPKHScriptSigEmpty(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
-      val p2wpkh = (state.scriptExecutionStage == ExecutingScriptPubKey) && state.ScriptFlags.witness()
+      val p2wpkh =
+        (state.scriptExecutionStage == ExecutingScriptPubKey) && state.ScriptFlags.witness()
       val malleated = p2wpkh && !state.scriptSig.isEmpty
 
       if (malleated) {
@@ -397,7 +415,9 @@ object Interpreter {
 
   private def checkMaxPushSize(): InterpreterContext[Option[Boolean]] = {
     getState.flatMap { state =>
-      state.currentScript.filter(_.isInstanceOf[ScriptConstant]).filter(_.bytes.length > MAX_PUSH_SIZE) match {
+      state.currentScript
+        .filter(_.isInstanceOf[ScriptConstant])
+        .filter(_.bytes.length > MAX_PUSH_SIZE) match {
         case Nil =>
           continue
 
@@ -455,7 +475,10 @@ object Interpreter {
     scriptPubkey.lastOption.exists(_ == BitwiseLogicOp.OP_EQUAL)
   }
 
-  private def rebuildScriptPubkeyAndStackFromWitness(witnessHash: ScriptConstant, witnessStack: Seq[ScriptElement]) = {
+  private def rebuildScriptPubkeyAndStackFromWitness(
+    witnessHash: ScriptConstant,
+    witnessStack: Seq[ScriptElement]
+  ) = {
     witnessStack match {
       case Nil =>
         Left(WitnessRebuiltError.WitnessStackEmpty)
@@ -466,7 +489,9 @@ object Interpreter {
             // P2WPKH
             val witnessProgramMatch = Hash.Hash160(head.bytes.toArray).toSeq == witnessHash.bytes
             if (witnessProgramMatch) {
-              val witnessProgram = OP_DUP :: OP_HASH160 :: OP_PUSHDATA(20) :: witnessHash :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil
+              val witnessProgram = OP_DUP :: OP_HASH160 :: OP_PUSHDATA(
+                20
+              ) :: witnessHash :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil
               Right((witnessProgram, witnessStack))
             } else {
               Left(WitnessRebuiltError.WitnessProgramMismatch)
@@ -518,10 +543,15 @@ object Interpreter {
     scriptPubkey match {
       case (version: ConstantOp) :: (_: OP_PUSHDATA) :: (scriptConstant: ScriptConstant) :: Nil =>
         val scriptLength = scriptConstant.bytes.length
-        val isWitnessScript = possibleVersionNumbers.contains(version) && (scriptLength >= 2 && scriptLength <= 40)
+        val isWitnessScript =
+          possibleVersionNumbers.contains(version) && (scriptLength >= 2 && scriptLength <= 40)
 
         if (isWitnessScript) {
-          if (version != OP_0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)) {
+          if (
+            version != OP_0 && state.flags.contains(
+              ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM
+            )
+          ) {
             Left(WitnessRebuiltError.WitnessProgramUpgradableVersion)
           } else {
             Right((version, scriptConstant))
@@ -603,7 +633,10 @@ object Interpreter {
     state: InterpreterState
   ): Either[WitnessRebuiltError, (Seq[ScriptElement], Seq[ScriptElement])] = {
     getWitnessScript(script, state).flatMap { case (version @ _, witnessHash) =>
-      rebuildScriptPubkeyAndStackFromWitness(witnessHash, state.scriptWitnessStack.getOrElse(Seq.empty))
+      rebuildScriptPubkeyAndStackFromWitness(
+        witnessHash,
+        state.scriptWitnessStack.getOrElse(Seq.empty)
+      )
     }
   }
 
@@ -631,3 +664,4 @@ object Interpreter {
     }
   }
 }
+//scalastyle:on magic.number number.of.methods method.length cyclomatic.complexity public.methods.have.type

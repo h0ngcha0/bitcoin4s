@@ -1,10 +1,11 @@
 package it.softfork.bitcoin4s.transaction
 
-import it.softfork.bitcoin4s.transaction.structure.LongCodecWithNegValue
 import play.api.libs.json.Json
 import scodec.{Attempt, Codec}
 import scodec.bits.ByteOrdering
 import scodec.codecs._
+
+import it.softfork.bitcoin4s.transaction.structure.LongCodecWithNegValue
 
 case class TxIn(
   previous_output: OutPoint,
@@ -13,7 +14,8 @@ case class TxIn(
 )
 
 object TxIn {
-  val uInt32WithNegValue: Codec[Long] = new LongCodecWithNegValue(32, false, ByteOrdering.LittleEndian)
+  val uInt32WithNegValue: Codec[Long] =
+    new LongCodecWithNegValue(32, false, ByteOrdering.LittleEndian)
 
   implicit val codec: Codec[TxIn] = {
     ("previous_output" | Codec[OutPoint]) ::

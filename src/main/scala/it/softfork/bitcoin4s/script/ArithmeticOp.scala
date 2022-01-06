@@ -1,12 +1,13 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.Utils._
-import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
-import it.softfork.bitcoin4s.script.InterpreterError._
-import cats.implicits._
-import it.softfork.bitcoin4s.script.Interpreter._
-
 import scala.util.{Failure, Success, Try}
+
+import cats.implicits._
+
+import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
+import it.softfork.bitcoin4s.script.Interpreter._
+import it.softfork.bitcoin4s.script.InterpreterError._
+import it.softfork.bitcoin4s.utils._
 
 sealed trait ArithmeticOp extends ScriptOpCode
 
@@ -73,6 +74,7 @@ object ArithmeticOp {
 
   implicit val interpreter = new InterpretableOp[ArithmeticOp] {
 
+    //scalastyle:off method.length cyclomatic.complexity
     def interpret(opCode: ArithmeticOp): InterpreterContext[Option[Boolean]] = {
       (opCode: @unchecked) match {
         case opc if disabled.contains(opc) =>
@@ -250,8 +252,12 @@ object ArithmeticOp {
           }
       }
     }
+    //scalastyle:on method.length cyclomatic.complexity
 
-    private def oneOperant(opCode: ArithmeticOp, convert: (ScriptNum) => ScriptNum): InterpreterContext[Option[Boolean]] = {
+    private def oneOperant(
+      opCode: ArithmeticOp,
+      convert: (ScriptNum) => ScriptNum
+    ): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         state.stack match {
           case (first: ScriptConstant) :: rest =>
@@ -280,7 +286,10 @@ object ArithmeticOp {
 
     }
 
-    private def twoOperants(opCode: ArithmeticOp, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterContext[Option[Boolean]] = {
+    private def twoOperants(
+      opCode: ArithmeticOp,
+      convert: (ScriptNum, ScriptNum) => ScriptNum
+    ): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         state.stack match {
           case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>

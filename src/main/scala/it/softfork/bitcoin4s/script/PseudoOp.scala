@@ -1,8 +1,9 @@
 package it.softfork.bitcoin4s.script
 
+import cats.implicits._
+
 import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError.BadOpCode
-import cats.implicits._
 
 sealed trait PseudoOp extends ScriptOpCode
 

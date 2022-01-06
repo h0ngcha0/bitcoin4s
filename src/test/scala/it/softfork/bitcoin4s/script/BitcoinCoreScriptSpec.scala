@@ -1,15 +1,15 @@
 package it.softfork.bitcoin4s.script
 
-import com.typesafe.config._
-
-import scala.jdk.CollectionConverters._
-import it.softfork.bitcoin4s.Spec
-import it.softfork.bitcoin4s.Utils._
-import org.spongycastle.util.encoders.Hex
-
 import scala.collection.immutable.ArraySeq
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 import scala.util.control.Exception.allCatch
+
+import com.typesafe.config._
+import org.spongycastle.util.encoders.Hex
+
+import it.softfork.bitcoin4s.Spec
+import it.softfork.bitcoin4s.utils._
 
 // Run bitcoin core script_test.json test cases
 class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
@@ -48,7 +48,8 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
             allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)))
           }
           .map(ScriptConstant.apply)
-        val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringTail.take(4)
+        val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) =
+          stringTail.take(4)
         val scriptFlags = toScriptFlags(scriptFlagsString)
         val expectedResult = ExpectedResult.fromString(expectedResultString).value
 
@@ -63,7 +64,8 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
         )
       } else {
         val stringElements = elements.map(stripDoubleQuotes)
-        val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringElements.take(4)
+        val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) =
+          stringElements.take(4)
         val expectedResult = ExpectedResult.fromString(expectedResultString).value
         val comments = (stringElements.length == 5).option(stringElements.last).getOrElse("")
         val scriptFlags = toScriptFlags(scriptFlagsString)

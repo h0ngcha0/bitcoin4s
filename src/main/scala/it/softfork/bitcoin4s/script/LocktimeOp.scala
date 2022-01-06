@@ -1,11 +1,13 @@
 package it.softfork.bitcoin4s.script
 
+import scala.util.{Failure, Success, Try}
+
+import cats.implicits._
+
 import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError._
-import cats.implicits._
-import it.softfork.bitcoin4s.transaction.Tx
 import it.softfork.bitcoin4s.script.RichTransaction._
-import scala.util.{Failure, Success, Try}
+import it.softfork.bitcoin4s.transaction.Tx
 
 sealed trait LocktimeOp extends ScriptOpCode
 
@@ -24,6 +26,7 @@ object LocktimeOp {
 
   implicit val interpreter = new InterpretableOp[LocktimeOp] {
 
+    //scalastyle:off method.length cyclomatic.complexity
     def interpret(opCode: LocktimeOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_CHECKLOCKTIMEVERIFY | OP_NOP2 =>
@@ -31,7 +34,8 @@ object LocktimeOp {
             if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
               state.stack match {
                 case head :: tail =>
-                  val lockTime = ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
+                  val lockTime =
+                    ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
                   if (lockTime < 0 || lockTime <= state.transaction.lock_time) {
                     abort(CLTVFailed(opCode, state))
                   } else {
@@ -101,6 +105,7 @@ object LocktimeOp {
           }
       }
     }
+    //scalastyle:on method.length cyclomatic.complexity
 
     // NOTE: Mimic the logic here:
     // https://github.com/bitcoin/bitcoin/blob/5961b23898ee7c0af2626c46d5d70e80136578d3/src/script/interpreter.cpp#L1310

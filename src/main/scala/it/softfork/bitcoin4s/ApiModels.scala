@@ -2,11 +2,12 @@ package it.softfork.bitcoin4s
 
 import java.time.ZonedDateTime
 
-import it.softfork.bitcoin4s.script._
 import julienrf.json.derived.flat.owrites
-import it.softfork.bitcoin4s.Utils._
-import it.softfork.bitcoin4s.transaction.{Tx, TxRaw}
 import play.api.libs.json._
+
+import it.softfork.bitcoin4s.script._
+import it.softfork.bitcoin4s.transaction.{Tx, TxRaw}
+import it.softfork.bitcoin4s.utils._
 
 object ApiModels {
 
@@ -16,7 +17,7 @@ object ApiModels {
     case object NoResult extends InterpreterResultOut
     case class Result(value: Boolean) extends InterpreterResultOut
 
-    def fromInterpreterResult(result: Option[Boolean]) = {
+    def fromInterpreterResult(result: Option[Boolean]): InterpreterResultOut = {
       result.map(Result.apply).getOrElse(NoResult)
     }
   }
@@ -35,7 +36,7 @@ object ApiModels {
 
   object InterpreterStateOut {
 
-    def fromInterpreterState(interpreterState: InterpreterState) = {
+    def fromInterpreterState(interpreterState: InterpreterState): InterpreterStateOut = {
       InterpreterStateOut(
         scriptPubKey = interpreterState.scriptPubKey,
         scriptSig = interpreterState.scriptSig,
@@ -83,13 +84,15 @@ object ApiModels {
     }
   }
 
-  implicit val scriptElementFormat: Format[ScriptElement] = Format(scriptElementReader, scriptElementWriter)
+  implicit val scriptElementFormat: Format[ScriptElement] =
+    Format(scriptElementReader, scriptElementWriter)
 
   implicit val scriptExecutionStageWriter: OWrites[ScriptExecutionStage] = {
     owrites[ScriptExecutionStage]((JsPath \ "type").format[String])
   }
 
-  implicit val InterpreterStateWriter: Writes[InterpreterStateOut] = Json.writes[InterpreterStateOut]
+  implicit val InterpreterStateWriter: Writes[InterpreterStateOut] =
+    Json.writes[InterpreterStateOut]
 
   implicit val InterpretOutcome: Writes[InterpreterOutcome] = Json.writes[InterpreterOutcome]
 

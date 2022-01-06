@@ -3,12 +3,14 @@ package it.softfork.bitcoin4s
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Sink
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json.{Json, Writes}
+
 import it.softfork.bitcoin4s.ApiModels.{InterpreterOutcome, TransactionInputNotFound}
 import it.softfork.bitcoin4s.external.blockcypher.{Service => BlockCypherService}
 import it.softfork.bitcoin4s.transaction.TxId
-import play.api.libs.json.{Json, Writes}
 
 class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
 
@@ -79,7 +81,7 @@ class Routes(blockcypherService: BlockCypherService) extends PlayJsonSupport {
     }
   }
 
-  def apply() = {
+  def apply(): Route = {
     clientRoute ~
       pathPrefix("api") {
         transactionRoute ~

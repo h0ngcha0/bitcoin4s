@@ -1,13 +1,14 @@
 package it.softfork.bitcoin4s.transaction
 
-import it.softfork.bitcoin4s.transaction.structure.{ListCodec, VarList}
-import scodec.Codec
-import scodec.{Attempt, DecodeResult}
-import scodec.codecs._
-import scodec.bits.BitVector
-import it.softfork.bitcoin4s.Utils.{hexToBytes, AttemptSeq}
 import Tx.WitnessFlag
 import play.api.libs.json.Json
+import scodec.{Attempt, DecodeResult}
+import scodec.Codec
+import scodec.bits.BitVector
+import scodec.codecs._
+
+import it.softfork.bitcoin4s.transaction.structure.{ListCodec, VarList}
+import it.softfork.bitcoin4s.utils.{hexToBytes, AttemptSeq}
 
 // Credit: https://github.com/yzernik/bitcoin-scodec
 
@@ -26,9 +27,13 @@ object Tx {
 
   def codec(): Codec[Tx] = {
     def encode(tx: Tx): Attempt[BitVector] = {
-      val txCodec: Codec[Tx] =
-        if (tx.flag) codecWithWitness(tx.tx_in.length)
-        else codecWithoutWitness()
+      val txCodec: Codec[Tx] = {
+        if (tx.flag) {
+          codecWithWitness(tx.tx_in.length)
+        } else {
+          codecWithoutWitness()
+        }
+      }
       txCodec.encode(tx)
     }
 
@@ -86,7 +91,11 @@ object Tx {
 
   private def codecWithWitness(txInsCount: Int): Codec[Tx] = {
     ("version" | uint32L) ::
-      ("flag" | mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1))) ::
+      ("flag" | mappedEnum(
+        WitnessFlag.codec,
+        false -> WitnessFlag(0, 0),
+        true -> WitnessFlag(0, 1)
+      )) ::
       ("tx_in" | VarList.varList(Codec[TxIn])) ::
       ("tx_out" | VarList.varList(Codec[TxOut])) ::
       ("tx_witness" | new ListCodec(VarList.varList(Codec[TxWitness]), Some(txInsCount))) ::
@@ -136,6 +145,7 @@ case class TxRaw(
 object TxRaw {
   implicit val format = Json.format[TxRaw]
 
+  // scalastyle:off method.length
   def apply(tx: Tx): Attempt[TxRaw] = {
     val txInsRawAttempt = for {
       txInCount <- VarList.countCodec.encode(tx.tx_in.size).map(_.toHex)
@@ -147,7 +157,11 @@ object TxRaw {
       txOutRaw <- AttemptSeq.apply(tx.tx_out.map(TxOutRaw.apply))
     } yield TxOutsRaw(txOutCount, txOutRaw)
 
-    val flagAttempt = mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1)).encode(tx.flag).map(_.toHex)
+    val flagAttempt = mappedEnum(
+      WitnessFlag.codec,
+      false -> WitnessFlag(0, 0),
+      true -> WitnessFlag(0, 1)
+    ).encode(tx.flag).map(_.toHex)
 
     if (tx.flag) {
       val rawWitnessesAttempt: Attempt[List[TxWitnessesRaw]] = AttemptSeq.apply(
@@ -192,4 +206,5 @@ object TxRaw {
       )
     }
   }
+  // scalastyle:on method.length
 }

@@ -16,7 +16,7 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Run test
         run: |
-          sbt clean coverage test coverageReport && sbt coverageAggregate
+          sbt clean format coverage test coverageReport && sbt coverageAggregate
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:

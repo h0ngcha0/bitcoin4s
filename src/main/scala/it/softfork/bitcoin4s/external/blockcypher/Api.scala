@@ -2,26 +2,27 @@ package it.softfork.bitcoin4s.external.blockcypher
 
 import java.time.ZonedDateTime
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpRequest, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.Materializer
-import it.softfork.bitcoin4s.external.{ApiInterface, HttpSender, TransactionCacheActor}
-import it.softfork.bitcoin4s.external.blockcypher.Api.{rawTxUrl, transactionUnmarshaller}
-import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
-import it.softfork.bitcoin4s.transaction.structure.{Hash => ScodecHash}
-import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxRaw, TxWitness}
-import play.api.libs.json.{Format, JsError, JsSuccess, Json}
+import play.api.libs.json.{Format, JsError, Json, JsSuccess}
 import scodec.bits.ByteVector
+
 import it.softfork.bitcoin4s.ApiModels.{
   scriptElementFormat,
   Transaction => ApiTransaction,
   TransactionInput => ApiTransactionInput,
   TransactionOutput => ApiTransactionOutput
 }
-
-import scala.concurrent.{ExecutionContext, Future}
-import it.softfork.bitcoin4s.Utils.hexToBytes
+import it.softfork.bitcoin4s.external.{ApiInterface, HttpSender, TransactionCacheActor}
+import it.softfork.bitcoin4s.external.blockcypher.Api.{rawTxUrl, transactionUnmarshaller}
+import it.softfork.bitcoin4s.script.{Parser, ScriptElement}
+import it.softfork.bitcoin4s.transaction.{Tx, TxId, TxRaw, TxWitness}
+import it.softfork.bitcoin4s.transaction.structure.{Hash => ScodecHash}
+import it.softfork.bitcoin4s.utils.hexToBytes
 
 class Api(httpSender: HttpSender)(implicit
   ec: ExecutionContext,
@@ -77,7 +78,7 @@ object Api {
   ) {
     val prevTxHash = ScodecHash(ByteVector(hexToBytes(prev_hash)))
 
-    def withParsedScript() = {
+    def withParsedScript(): TransactionInput = {
       val parsedScript = script.map { scriptStr =>
         Parser.parse("0x" + scriptStr)
       }
@@ -101,7 +102,8 @@ object Api {
   }
 
   object TransactionInput {
-    implicit val format: Format[TransactionInput] = Json.using[Json.WithDefaultValues].format[TransactionInput]
+    implicit val format: Format[TransactionInput] =
+      Json.using[Json.WithDefaultValues].format[TransactionInput]
   }
 
   case class TransactionOutput(
@@ -113,7 +115,7 @@ object Api {
     script_type: String
   ) {
 
-    def withParsedScript() = {
+    def withParsedScript(): TransactionOutput = {
       val parsedScript = Parser.parse("0x" + script)
       copy(parsed_script = Some(parsedScript))
     }
@@ -131,7 +133,8 @@ object Api {
   }
 
   object TransactionOutput {
-    implicit val format: Format[TransactionOutput] = Json.using[Json.WithDefaultValues].format[TransactionOutput]
+    implicit val format: Format[TransactionOutput] =
+      Json.using[Json.WithDefaultValues].format[TransactionOutput]
   }
 
   case class Transaction(
@@ -158,14 +161,14 @@ object Api {
   ) {
     val tx = Tx.fromHex(hex)
 
-    def withParsedScript() = {
+    def withParsedScript(): Transaction = {
       val inputsWithParsedScript = inputs.map(_.withParsedScript())
       val outputsWithParsedScript = outputs.map(_.withParsedScript())
 
       copy(inputs = inputsWithParsedScript, outputs = outputsWithParsedScript)
     }
 
-    def withWitness() = {
+    def withWitness(): Transaction = {
       val paddedWitness = tx.tx_witness
         .map(Option.apply)
         .padTo(inputs.length, Option.empty[List[TxWitness]])
@@ -200,10 +203,13 @@ object Api {
   }
 
   object Transaction {
-    implicit val format: Format[Transaction] = Json.using[Json.WithDefaultValues].format[Transaction]
+    implicit val format: Format[Transaction] =
+      Json.using[Json.WithDefaultValues].format[Transaction]
   }
 
-  protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000&includeHex=true")
+  protected def rawTxUrl(txId: TxId) = Uri(
+    s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000&includeHex=true"
+  )
 
   def parseTransaction(raw: String): Transaction = {
     Json.fromJson[Transaction](Json.parse(raw)) match {
@@ -214,5 +220,6 @@ object Api {
     }
   }
 
-  implicit protected val transactionUnmarshaller = Unmarshaller.stringUnmarshaller.map(parseTransaction)
+  implicit protected val transactionUnmarshaller =
+    Unmarshaller.stringUnmarshaller.map(parseTransaction)
 }

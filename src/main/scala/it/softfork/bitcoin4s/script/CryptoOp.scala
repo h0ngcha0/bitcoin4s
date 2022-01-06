@@ -1,21 +1,21 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.crypto.Hash._
-import it.softfork.bitcoin4s.crypto.{PublicKey, Secp256k1, Signature}
-import it.softfork.bitcoin4s.Utils._
-import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
-import it.softfork.bitcoin4s.script.InterpreterError._
-import it.softfork.bitcoin4s.script.RichTransaction._
-import it.softfork.bitcoin4s.script.Interpreter._
-
 import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
+
 import cats.implicits._
+
+import it.softfork.bitcoin4s.crypto.{PublicKey, Secp256k1, Signature}
+import it.softfork.bitcoin4s.crypto.Hash._
 import it.softfork.bitcoin4s.crypto.PublicKey.DecodeResult
 import it.softfork.bitcoin4s.crypto.Signature.{ECDSASignature, EmptySignature}
+import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
+import it.softfork.bitcoin4s.script.Interpreter._
+import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
+import it.softfork.bitcoin4s.script.RichTransaction._
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
-
-import scala.util.{Failure, Success, Try}
+import it.softfork.bitcoin4s.utils._
 
 sealed trait CryptoOp extends ScriptOpCode
 
@@ -56,6 +56,7 @@ object CryptoOp {
 
   implicit val interpreter = new InterpretableOp[CryptoOp] {
 
+    //scalastyle:off cyclomatic.complexity method.length
     def interpret(opCode: CryptoOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_RIPEMD160 =>
@@ -81,7 +82,11 @@ object CryptoOp {
             state.stack match {
               case encodedPublicKey :: encodedSignature :: tail =>
                 def handleResult(result: Boolean) = {
-                  if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL) && !result & encodedSignature.bytes.nonEmpty) {
+                  if (
+                    state.flags.contains(
+                      ScriptFlag.SCRIPT_VERIFY_NULLFAIL
+                    ) && !result & encodedSignature.bytes.nonEmpty
+                  ) {
                     abort(SignatureVerificationNullFail(opCode, state))
                   } else {
                     setStateAndContinue(
@@ -98,21 +103,36 @@ object CryptoOp {
                   case Some((signature, sigHashFlagBytes)) =>
                     signature match {
                       case ECDSASignature(_, s)
-                          if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
+                          if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(
+                            ScriptFlag.SCRIPT_VERIFY_LOW_S
+                          ) =>
                         abort(SignatureHighS(opCode, state))
 
                       case _ =>
                         if (checkSignatureEncoding(encodedSignature.bytes, state.flags)) {
-                          PublicKey.decode(encodedPublicKey.bytes, state.ScriptFlags.strictEncoding()) match {
+                          PublicKey.decode(
+                            encodedPublicKey.bytes,
+                            state.ScriptFlags.strictEncoding()
+                          ) match {
                             case DecodeResult.Ok(decodedPublicKey) =>
                               val notCompressed = !decodedPublicKey.compressed
-                              val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
+                              val executingP2WSH =
+                                state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
 
-                              if (executingP2WSH && notCompressed && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)) {
+                              if (
+                                executingP2WSH && notCompressed && state.flags.contains(
+                                  ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE
+                                )
+                              ) {
                                 abort(WitnessPubkeyUncompressed(opCode, state))
                               } else {
                                 Try {
-                                  checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
+                                  checkSignature(
+                                    decodedPublicKey,
+                                    signature,
+                                    sigHashFlagBytes,
+                                    state
+                                  )
                                 } match {
                                   case Success(result) =>
                                     handleResult(result)
@@ -137,7 +157,10 @@ object CryptoOp {
                     }
 
                   case None =>
-                    if (state.ScriptFlags.strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)) {
+                    if (
+                      state.ScriptFlags
+                        .strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)
+                    ) {
                       abort(SignatureWrongEncoding(OP_CHECKSIG, state))
                     } else {
                       handleResult(false)
@@ -209,19 +232,28 @@ object CryptoOp {
                   checkSignatures(nonEmptyEncodedPubKeys, signatures, state)
                 } match {
                   case Success(checkResult) =>
-                    if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLFAIL) && !checkResult & signatures.exists(_.bytes.nonEmpty)) {
+                    if (
+                      state.flags.contains(
+                        ScriptFlag.SCRIPT_VERIFY_NULLFAIL
+                      ) && !checkResult & signatures.exists(_.bytes.nonEmpty)
+                    ) {
                       abort(SignatureVerificationNullFail(OP_CHECKMULTISIG, state))
                     } else {
                       // NOTE: Popping extra element due to the bug in the reference client
                       rest match {
                         case head :: tail =>
-                          if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_NULLDUMMY) && head.bytes.nonEmpty) {
+                          if (
+                            state.flags.contains(
+                              ScriptFlag.SCRIPT_VERIFY_NULLDUMMY
+                            ) && head.bytes.nonEmpty
+                          ) {
                             // Reference: https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
                             abort(MultiSigNullDummy(opCode, state))
                           } else {
                             setStateAndContinue(
                               state.copy(
-                                stack = checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
+                                stack =
+                                  checkResult.option(ScriptNum(1)).getOrElse(ScriptNum(0)) +: tail,
                                 opCount = state.opCount + 1 + nonEmptyEncodedPubKeys.length
                               )
                             )
@@ -276,25 +308,31 @@ object CryptoOp {
             }
       }
     }
+    //scalastyle:on cyclomatic.complexity method.length
 
-    private def onOpHash(opCode: ScriptOpCode, hash: (Array[Byte]) => Array[Byte]): InterpreterContext[Option[Boolean]] = {
-      def hashTopElement(state: InterpreterState): InterpreterContext[Option[Boolean]] = state.stack match {
-        case head :: tail =>
-          val hashed = hash(head.bytes.toArray)
-          setStateAndContinue(
-            state.copy(
-              stack = ScriptConstant(hashed) +: tail,
-              opCount = state.opCount + 1
+    private def onOpHash(
+      opCode: ScriptOpCode,
+      hash: (Array[Byte]) => Array[Byte]
+    ): InterpreterContext[Option[Boolean]] = {
+      def hashTopElement(state: InterpreterState): InterpreterContext[Option[Boolean]] =
+        state.stack match {
+          case head :: tail =>
+            val hashed = hash(head.bytes.toArray)
+            setStateAndContinue(
+              state.copy(
+                stack = ScriptConstant(hashed) +: tail,
+                opCount = state.opCount + 1
+              )
             )
-          )
-        case _ =>
-          abort(InvalidStackOperation(opCode, state))
-      }
+          case _ =>
+            abort(InvalidStackOperation(opCode, state))
+        }
 
       getState.flatMap(hashTopElement)
     }
   }
 
+  //scalastyle:off cyclomatic.complexity method.length
   @tailrec
   def checkSignatures(
     encodedPublicKeys: Seq[ScriptElement],
@@ -312,7 +350,9 @@ object CryptoOp {
               case Some((signature, sigHashFlagBytes)) =>
                 signature match {
                   case ECDSASignature(_, s)
-                      if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_LOW_S) =>
+                      if s.compareTo(Secp256k1.halfCurveOrder) > 0 && state.flags.contains(
+                        ScriptFlag.SCRIPT_VERIFY_LOW_S
+                      ) =>
                     throw SignatureHighS(OP_CHECKMULTISIG, state)
 
                   case _ =>
@@ -320,9 +360,14 @@ object CryptoOp {
                       PublicKey.decode(encodedPubKey.bytes, strictEnc) match {
                         case DecodeResult.Ok(decodedPublicKey) =>
                           val notCompressed = !decodedPublicKey.compressed
-                          val executingP2WSH = state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
+                          val executingP2WSH =
+                            state.scriptExecutionStage == ScriptExecutionStage.ExecutingScriptWitness
 
-                          if (executingP2WSH && notCompressed && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)) {
+                          if (
+                            executingP2WSH && notCompressed && state.flags.contains(
+                              ScriptFlag.SCRIPT_VERIFY_WITNESS_PUBKEYTYPE
+                            )
+                          ) {
                             throw WitnessPubkeyUncompressed(OP_CHECKMULTISIG, state)
                           } else {
                             checkSignature(decodedPublicKey, signature, sigHashFlagBytes, state)
@@ -341,7 +386,10 @@ object CryptoOp {
                 }
 
               case None =>
-                if (state.ScriptFlags.strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)) {
+                if (
+                  state.ScriptFlags
+                    .strictEncoding() || state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DERSIG)
+                ) {
                   throw SignatureWrongEncoding(OP_CHECKMULTISIG, state)
                 }
 
@@ -361,8 +409,14 @@ object CryptoOp {
       }
     }
   }
+  //scalastyle:on cyclomatic.complexity method.length
 
-  def checkSignature(pubKey: PublicKey, signature: Signature, sigHashFlagBytes: Seq[Byte], state: InterpreterState): Boolean = {
+  def checkSignature(
+    pubKey: PublicKey,
+    signature: Signature,
+    sigHashFlagBytes: Seq[Byte],
+    state: InterpreterState
+  ): Boolean = {
     signature match {
       case EmptySignature =>
         false
@@ -412,7 +466,8 @@ object CryptoOp {
   private def checkSignatureEncoding(signatureBytes: Seq[Byte], flags: Seq[ScriptFlag]): Boolean = {
     val notValidDerEncoded = !Signature.isValidSignatureEncoding(signatureBytes)
     val nonEmptySignature = signatureBytes.nonEmpty
-    val derSigOrStrictEnc = Seq(ScriptFlag.SCRIPT_VERIFY_DERSIG, ScriptFlag.SCRIPT_VERIFY_STRICTENC).exists(flags.contains)
+    val derSigOrStrictEnc = Seq(ScriptFlag.SCRIPT_VERIFY_DERSIG, ScriptFlag.SCRIPT_VERIFY_STRICTENC)
+      .exists(flags.contains)
 
     !(nonEmptySignature && derSigOrStrictEnc && notValidDerEncoded)
   }
