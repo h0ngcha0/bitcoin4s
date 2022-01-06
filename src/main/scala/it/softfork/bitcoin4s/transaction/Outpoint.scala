@@ -1,10 +1,11 @@
 package it.softfork.bitcoin4s.transaction
 
+import play.api.libs.json.Json
 import scodec.{Attempt, Codec}
 import scodec.bits.ByteOrdering
 import scodec.codecs._
+
 import it.softfork.bitcoin4s.transaction.structure._
-import play.api.libs.json.Json
 
 case class OutPoint(
   hash: Hash,

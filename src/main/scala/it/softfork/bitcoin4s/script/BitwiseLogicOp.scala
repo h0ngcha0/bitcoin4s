@@ -1,10 +1,11 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.Utils._
+import cats.implicits._
+
 import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
 import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError._
-import cats.implicits._
+import it.softfork.bitcoin4s.utils._
 
 sealed trait BitwiseLogicOp extends ScriptOpCode
 

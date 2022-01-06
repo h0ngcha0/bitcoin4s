@@ -1,21 +1,21 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.crypto.Hash._
-import it.softfork.bitcoin4s.crypto.{PublicKey, Secp256k1, Signature}
-import it.softfork.bitcoin4s.Utils._
-import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
-import it.softfork.bitcoin4s.script.InterpreterError._
-import it.softfork.bitcoin4s.script.RichTransaction._
-import it.softfork.bitcoin4s.script.Interpreter._
-
 import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
+
 import cats.implicits._
+
+import it.softfork.bitcoin4s.crypto.{PublicKey, Secp256k1, Signature}
+import it.softfork.bitcoin4s.crypto.Hash._
 import it.softfork.bitcoin4s.crypto.PublicKey.DecodeResult
 import it.softfork.bitcoin4s.crypto.Signature.{ECDSASignature, EmptySignature}
+import it.softfork.bitcoin4s.script.FlowControlOp.OP_VERIFY
+import it.softfork.bitcoin4s.script.Interpreter._
+import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
+import it.softfork.bitcoin4s.script.RichTransaction._
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
-
-import scala.util.{Failure, Success, Try}
+import it.softfork.bitcoin4s.utils._
 
 sealed trait CryptoOp extends ScriptOpCode
 
@@ -56,6 +56,7 @@ object CryptoOp {
 
   implicit val interpreter = new InterpretableOp[CryptoOp] {
 
+    //scalastyle:off cyclomatic.complexity method.length
     def interpret(opCode: CryptoOp): InterpreterContext[Option[Boolean]] = {
       opCode match {
         case OP_RIPEMD160 =>
@@ -276,6 +277,7 @@ object CryptoOp {
             }
       }
     }
+    //scalastyle:on cyclomatic.complexity method.length
 
     private def onOpHash(opCode: ScriptOpCode, hash: (Array[Byte]) => Array[Byte]): InterpreterContext[Option[Boolean]] = {
       def hashTopElement(state: InterpreterState): InterpreterContext[Option[Boolean]] = state.stack match {
@@ -295,6 +297,7 @@ object CryptoOp {
     }
   }
 
+  //scalastyle:off cyclomatic.complexity method.length
   @tailrec
   def checkSignatures(
     encodedPublicKeys: Seq[ScriptElement],
@@ -361,6 +364,7 @@ object CryptoOp {
       }
     }
   }
+  //scalastyle:on cyclomatic.complexity method.length
 
   def checkSignature(pubKey: PublicKey, signature: Signature, sigHashFlagBytes: Seq[Byte], state: InterpreterState): Boolean = {
     signature match {

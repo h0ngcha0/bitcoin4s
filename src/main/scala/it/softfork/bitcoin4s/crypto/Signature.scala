@@ -1,7 +1,8 @@
 package it.softfork.bitcoin4s.crypto
 
-import it.softfork.bitcoin4s.Utils._
 import java.math.BigInteger
+
+import it.softfork.bitcoin4s.utils._
 
 object Signature {
   case class ECDSASignature(r: BigInteger, s: BigInteger) extends Signature

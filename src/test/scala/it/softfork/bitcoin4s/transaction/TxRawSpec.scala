@@ -1,8 +1,8 @@
 package it.softfork.bitcoin4s.transaction
 
-import it.softfork.bitcoin4s.Spec
-
 import scala.io.Source
+
+import it.softfork.bitcoin4s.Spec
 
 class TxRawSpec extends Spec {
   "Tx raw encoder" should "be able to encode a transaction into its structured raw format" in {

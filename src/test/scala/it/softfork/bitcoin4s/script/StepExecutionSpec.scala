@@ -1,14 +1,15 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.Spec
-import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
-import it.softfork.bitcoin4s.transaction.Tx
 import cats.implicits._
+
+import it.softfork.bitcoin4s.Spec
 import it.softfork.bitcoin4s.script.BitwiseLogicOp.OP_EQUAL
 import it.softfork.bitcoin4s.script.ConstantOp.OP_FALSE
 import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
 import it.softfork.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptPubKey
+import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
 import it.softfork.bitcoin4s.script.StackOp.OP_DEPTH
+import it.softfork.bitcoin4s.transaction.Tx
 
 class StepExecutionSpec extends Spec {
 

@@ -1,20 +1,21 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.transaction.Tx
-import it.softfork.bitcoin4s.transaction.TxIn
-import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
-import it.softfork.bitcoin4s.script.ConstantOp._
-import it.softfork.bitcoin4s.script.CryptoOp.{OP_CHECKSIG, OP_HASH160}
-import it.softfork.bitcoin4s.script.InterpreterError._
-import it.softfork.bitcoin4s.Utils._
-import ScriptExecutionStage._
-import it.softfork.bitcoin4s.crypto.Hash
-import it.softfork.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
-import it.softfork.bitcoin4s.script.StackOp.OP_DUP
-
 import cats.FlatMap
 import cats.data._
 import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
+
+import it.softfork.bitcoin4s.crypto.Hash
+import it.softfork.bitcoin4s.script.BitwiseLogicOp.OP_EQUALVERIFY
+import it.softfork.bitcoin4s.script.ConstantOp._
+import it.softfork.bitcoin4s.script.CryptoOp.{OP_CHECKSIG, OP_HASH160}
+import it.softfork.bitcoin4s.script.InterpreterError._
+import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
+import it.softfork.bitcoin4s.script.ScriptExecutionStage._
+import it.softfork.bitcoin4s.script.StackOp.OP_DUP
+import it.softfork.bitcoin4s.transaction.Tx
+import it.softfork.bitcoin4s.transaction.TxIn
+import it.softfork.bitcoin4s.utils._
 
 sealed trait ScriptExecutionStage
 
@@ -25,7 +26,7 @@ object ScriptExecutionStage {
   case object ExecutingScriptWitness extends ScriptExecutionStage
 }
 
-object InterpreterState {
+object InterpreterState extends StrictLogging {
 
   def apply(
     scriptPubKey: Seq[ScriptElement],
@@ -37,7 +38,7 @@ object InterpreterState {
     amount: Long,
     sigVersion: SigVersion
   ): InterpreterState = {
-    println(s"sigVersion: $sigVersion")
+    logger.info(s"sigVersion: $sigVersion")
 
     InterpreterState(
       scriptPubKey = scriptPubKey,
@@ -103,6 +104,8 @@ case class InterpreterState(
   }
 }
 
+
+//scalastyle:off magic.number number.of.methods method.length cyclomatic.complexity public.methods.have.type
 object Interpreter {
   type InterpreterErrorHandler[T] = Either[InterpreterError, T]
   type InterpreterContext[T] = StateT[InterpreterErrorHandler, InterpreterState, T]
@@ -631,3 +634,4 @@ object Interpreter {
     }
   }
 }
+//scalastyle:on magic.number number.of.methods method.length cyclomatic.complexity public.methods.have.type

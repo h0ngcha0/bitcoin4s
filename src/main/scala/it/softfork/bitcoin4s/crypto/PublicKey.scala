@@ -3,9 +3,11 @@ package it.softfork.bitcoin4s.crypto
 import org.spongycastle.crypto.params.ECPublicKeyParameters
 import org.spongycastle.crypto.signers.ECDSASigner
 import org.spongycastle.math.ec.ECPoint
-import it.softfork.bitcoin4s.Utils._
-import it.softfork.bitcoin4s.crypto.Signature.ECDSASignature
 
+import it.softfork.bitcoin4s.crypto.Signature.ECDSASignature
+import it.softfork.bitcoin4s.utils._
+
+//scalastyle:off magic.number
 case class PublicKey(point: ECPoint, compressed: Boolean) {
   val encoded: Array[Byte] = point.getEncoded(compressed)
 
@@ -16,6 +18,7 @@ case class PublicKey(point: ECPoint, compressed: Boolean) {
     signer.verifySignature(data, signature.r, signature.s)
   }
 
+
   def isCompressed(): Boolean = {
     encoded.length == 33 && (encoded(0) == 2 || encoded(0) == 3)
   }
@@ -23,6 +26,7 @@ case class PublicKey(point: ECPoint, compressed: Boolean) {
   def isUnCompressed(): Boolean = {
     encoded.length == 65 && encoded(0) == 4
   }
+
 }
 
 object PublicKey {
@@ -54,3 +58,4 @@ object PublicKey {
   }
 
 }
+//scalastyle:on magic.number

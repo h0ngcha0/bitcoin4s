@@ -5,14 +5,14 @@ import scodec.bits.BitVector
 
 final class ListCodec[A](codec: Codec[A], limit: Option[Int] = None) extends Codec[List[A]] {
 
-  def sizeBound = limit match {
+  def sizeBound: SizeBound = limit match {
     case None => SizeBound.unknown
     case Some(lim) => codec.sizeBound * lim.toLong
   }
 
-  def encode(list: List[A]) = Encoder.encodeSeq(codec)(list)
+  def encode(list: List[A]): Attempt[BitVector] = Encoder.encodeSeq(codec)(list)
 
-  def decode(buffer: BitVector) = Decoder.decodeCollect[List, A](codec, limit)(buffer)
+  def decode(buffer: BitVector): Attempt[DecodeResult[List[A]]] = Decoder.decodeCollect[List, A](codec, limit)(buffer)
 
-  override def toString = s"list($codec)"
+  override def toString: String = s"list($codec)"
 }

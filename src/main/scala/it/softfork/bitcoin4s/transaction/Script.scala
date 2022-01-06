@@ -3,12 +3,13 @@ package it.softfork.bitcoin4s.transaction
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs.{bytes, variableSizeBytes}
+
 import it.softfork.bitcoin4s.transaction.structure.VarInt
-import it.softfork.bitcoin4s.Utils.hexToBytes
+import it.softfork.bitcoin4s.utils.hexToBytes
 
 case class Script(value: ByteVector) {
   val hex = value.toHex
-  override def toString = s"Script(0x$hex)"
+  override def toString: String = s"Script(0x$hex)"
 }
 
 object Script {

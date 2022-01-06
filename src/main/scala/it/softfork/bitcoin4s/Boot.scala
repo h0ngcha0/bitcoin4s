@@ -3,6 +3,7 @@ package it.softfork.bitcoin4s
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import com.typesafe.scalalogging.StrictLogging
+
 import it.softfork.bitcoin4s.external.HttpSender
 import it.softfork.bitcoin4s.external.blockcypher.{Api, CachedApi, Service}
 

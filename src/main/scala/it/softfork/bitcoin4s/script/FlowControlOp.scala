@@ -1,13 +1,14 @@
 package it.softfork.bitcoin4s.script
 
 import scala.annotation.tailrec
-import it.softfork.bitcoin4s.Utils._
+import scala.util.{Failure, Success, Try}
+
+import cats.implicits._
+
 import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.ScriptExecutionStage.ExecutingScriptWitness
-import cats.implicits._
-
-import scala.util.{Failure, Success, Try}
+import it.softfork.bitcoin4s.utils._
 
 sealed trait FlowControlOp extends ScriptOpCode
 
@@ -32,6 +33,7 @@ object FlowControlOp {
 
   implicit val interpreter = new InterpretableOp[FlowControlOp] {
 
+    //scalastyle:off method.length cyclomatic.complexity
     def interpret(opCode: FlowControlOp): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         opCode match {
@@ -119,6 +121,7 @@ object FlowControlOp {
         }
       }
     }
+    //scalastyle:on method.length cyclomatic.complexity
   }
 
   // There could be mulitple of OP_ELSE, e.g.:
@@ -129,6 +132,7 @@ object FlowControlOp {
     rest: Seq[ScriptElement] = Seq.empty
   )
 
+  //scalastyle:off method.length
   @tailrec
   private def splitScriptOnConditional(
     script: Seq[ScriptElement],
@@ -189,6 +193,7 @@ object FlowControlOp {
         )
     }
   }
+  //scalastyle:on method.length
 
   private def pushToBranch(
     element: ScriptElement,

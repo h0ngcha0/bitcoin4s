@@ -1,23 +1,23 @@
 package it.softfork.bitcoin4s.external.blockcypher
 
-import akka.actor.Cancellable
-import akka.stream.scaladsl.Source
-import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
-import it.softfork.bitcoin4s.script._
-import it.softfork.bitcoin4s.transaction.TxId
-import org.spongycastle.util.encoders.Hex
-
-import scala.util.control.Exception.allCatch
+import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
-import cats.implicits._
-import it.softfork.bitcoin4s.ApiModels.InterpreterResultOut.NoResult
-import it.softfork.bitcoin4s.ApiModels._
-import it.softfork.bitcoin4s.Utils.hexToBytes
-import it.softfork.bitcoin4s.external.ApiInterface
+import scala.util.control.Exception.allCatch
 
-import scala.collection.immutable.ArraySeq
+import akka.actor.Cancellable
+import akka.stream.scaladsl.Source
+import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
+import org.spongycastle.util.encoders.Hex
+
+import it.softfork.bitcoin4s.ApiModels._
+import it.softfork.bitcoin4s.ApiModels.InterpreterResultOut.NoResult
+import it.softfork.bitcoin4s.external.ApiInterface
+import it.softfork.bitcoin4s.script._
+import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
+import it.softfork.bitcoin4s.transaction.TxId
+import it.softfork.bitcoin4s.utils.hexToBytes
 
 class Service(api: ApiInterface)(implicit
   ec: ExecutionContext
@@ -44,6 +44,7 @@ class Service(api: ApiInterface)(implicit
     }
   }
 
+  // scalastyle:off method.length
   def interpret(
     txId: TxId,
     inputIndex: Int,
@@ -114,6 +115,7 @@ class Service(api: ApiInterface)(implicit
       }
     }
   }
+  // scalastyle:on method.length
 
   def interpretStream(txId: TxId, inputIndex: Int): Source[InterpreterOutcome, Cancellable] = {
     case object Tick

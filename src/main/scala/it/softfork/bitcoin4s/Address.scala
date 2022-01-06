@@ -1,9 +1,9 @@
 package it.softfork.bitcoin4s
 
-import it.softfork.bitcoin4s.crypto.Hash.Hash160
-import it.softfork.bitcoin4s.crypto.PublicKey
 import it.softfork.bitcoin4s.crypto.Base58Check
 import it.softfork.bitcoin4s.crypto.Base58Check.VersionPrefix
+import it.softfork.bitcoin4s.crypto.Hash.Hash160
+import it.softfork.bitcoin4s.crypto.PublicKey
 
 sealed trait Address {
   val value: String

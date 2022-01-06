@@ -2,17 +2,18 @@ package it.softfork.bitcoin4s.external
 
 import java.time.ZonedDateTime
 
+import scala.collection.immutable.HashMap
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.StrictLogging
+
 import it.softfork.bitcoin4s.ApiModels.Transaction
 import it.softfork.bitcoin4s.external.TransactionCacheActor.{Get, InvalidateExpired, Set}
 import it.softfork.bitcoin4s.transaction.TxId
-
-import scala.collection.immutable.HashMap
-import scala.concurrent.duration._
-import scala.concurrent.Future
 
 object TransactionCacheActor {
 

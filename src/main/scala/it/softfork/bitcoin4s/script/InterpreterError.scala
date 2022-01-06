@@ -8,22 +8,23 @@ sealed trait InterpreterError extends RuntimeException with Product {
   super.initCause(new Throwable(s"$description\nopCode: $opCode\nstate: $state"))
 }
 
+//scalastyle:off number.of.methods number.of.types
 object InterpreterError {
 
   case class BadOpCode(opCode: ScriptOpCode, state: InterpreterState, descriptionIn: String) extends InterpreterError {
-    override def description = descriptionIn
+    override def description: String = descriptionIn
   }
 
   object NotEnoughElementsInStack {
 
-    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
+    def apply(opCode: ScriptOpCode, state: InterpreterState): BadOpCode = {
       BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Not enough elements in the stack")
     }
   }
 
   object NotExecutableReservedOpcode {
 
-    def apply(opCode: ScriptOpCode, state: InterpreterState) = {
+    def apply(opCode: ScriptOpCode, state: InterpreterState): BadOpCode = {
       BadOpCode(opCode: ScriptOpCode, state: InterpreterState, "Found not executable reserved opcode")
     }
   }
@@ -33,11 +34,11 @@ object InterpreterError {
   case class InvalidAltStackOperation(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class RequireCleanStack(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Stack is not clean when SCRIPT_VERIFY_CLEANSTACK flag is set"
+    override def description: String = "Stack is not clean when SCRIPT_VERIFY_CLEANSTACK flag is set"
   }
 
   case class NotMinimalEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "MINIMALENCODING flags is set but it's not minimal encoded"
+    override def description: String = "MINIMALENCODING flags is set but it's not minimal encoded"
   }
 
   case class ExceedMaxOpsCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
@@ -55,7 +56,7 @@ object InterpreterError {
   case class WrongSignaturesCount(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class ScriptSigPushOnly(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Script sig should only contain pusheOnly ops"
+    override def description: String = "Script sig should only contain pusheOnly ops"
   }
 
   case class NotAllOperantsAreConstant(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
@@ -67,15 +68,15 @@ object InterpreterError {
   case class OpcodeDisabled(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class DiscourageUpgradableNops(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Found not executable reserved opcode"
+    override def description: String = "Found not executable reserved opcode"
   }
 
   case class DiscourageUpgradableWitnessProgram(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Witness program version is too high"
+    override def description: String = "Witness program version is too high"
   }
 
   case class InValidReservedOpcode(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Found executable reserved opcode that invalidates the transaction"
+    override def description: String = "Found executable reserved opcode that invalidates the transaction"
   }
 
   case class PublicKeyWrongEncoding(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
@@ -85,23 +86,23 @@ object InterpreterError {
   case class InvalidSigHashType(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class MultiSigNullDummy(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Multisig dummy element is not null"
+    override def description: String = "Multisig dummy element is not null"
   }
 
   case class VerificationFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Verification on top of the stack failed"
+    override def description: String = "Verification on top of the stack failed"
   }
 
   case class SignatureVerificationNullFail(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "If NULLFAIL flag is on and signature verification fails, signature has to be empty for script to continue"
+    override def description: String = "If NULLFAIL flag is on and signature verification fails, signature has to be empty for script to continue"
   }
 
   case class CLTVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "CheckLockTimeVerify failed"
+    override def description: String = "CheckLockTimeVerify failed"
   }
 
   case class CSVFailed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "CheckSequenceVerify failed"
+    override def description: String = "CheckSequenceVerify failed"
   }
 
   case class UnbalancedConditional(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
@@ -117,11 +118,11 @@ object InterpreterError {
   case class WitnessProgramWitnessEmpty(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 
   case class SignatureHighS(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Secp256k1 signature has higher S value than half curve"
+    override def description: String = "Secp256k1 signature has higher S value than half curve"
   }
 
   case class MinimalIf(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {
-    override def description = "Argument of OP_IF/OP_NOTIF is not empty bytes or 0x01"
+    override def description: String = "Argument of OP_IF/OP_NOTIF is not empty bytes or 0x01"
   }
 
   case class WitnessPubkeyUncompressed(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
@@ -132,3 +133,4 @@ object InterpreterError {
 
   case class GeneralError(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 }
+//scalastyle:on number.of.methods number.of.types

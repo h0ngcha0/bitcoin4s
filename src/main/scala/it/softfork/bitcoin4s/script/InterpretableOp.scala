@@ -1,10 +1,11 @@
 package it.softfork.bitcoin4s.script
 
 import cats.data.StateT
-import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.script.Interpreter.{InterpreterContext, InterpreterErrorHandler}
-import simulacrum._
 import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
+import simulacrum._
+
+import it.softfork.bitcoin4s.script.Interpreter.{InterpreterContext, InterpreterErrorHandler}
 
 @typeclass trait InterpretableOp[A <: ScriptOpCode] extends StrictLogging {
   def interpret(opCode: A): InterpreterContext[Option[Boolean]]

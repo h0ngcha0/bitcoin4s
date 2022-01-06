@@ -1,15 +1,15 @@
 package it.softfork.bitcoin4s.script
 
-import com.typesafe.config._
-
-import scala.jdk.CollectionConverters._
-import it.softfork.bitcoin4s.Spec
-import it.softfork.bitcoin4s.Utils._
-import org.spongycastle.util.encoders.Hex
-
 import scala.collection.immutable.ArraySeq
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 import scala.util.control.Exception.allCatch
+
+import com.typesafe.config._
+import org.spongycastle.util.encoders.Hex
+
+import it.softfork.bitcoin4s.Spec
+import it.softfork.bitcoin4s.utils._
 
 // Run bitcoin core script_test.json test cases
 class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {

@@ -1,15 +1,17 @@
 package it.softfork.bitcoin4s.external.blockcypher
 
-import cats.implicits._
-import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.Spec
-import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
-import it.softfork.bitcoin4s.script._
-import org.spongycastle.util.encoders.Hex
-import it.softfork.bitcoin4s.Utils.hexToBytes
 import scala.collection.immutable.ArraySeq
 import scala.io.Source
 import scala.util.control.Exception.allCatch
+
+import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
+import org.spongycastle.util.encoders.Hex
+
+import it.softfork.bitcoin4s.Spec
+import it.softfork.bitcoin4s.script._
+import it.softfork.bitcoin4s.script.SigVersion.SIGVERSION_WITNESS_V0
+import it.softfork.bitcoin4s.utils.hexToBytes
 
 class ApiSpec extends Spec with StrictLogging {
 

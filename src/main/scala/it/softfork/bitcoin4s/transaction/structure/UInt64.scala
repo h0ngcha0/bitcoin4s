@@ -1,15 +1,15 @@
 package it.softfork.bitcoin4s.transaction.structure
 
+import scala.math.BigInt.{int2bigInt, long2bigInt}
+
 import scodec.Codec
 import scodec.codecs.int64L
-
-import scala.math.BigInt.{int2bigInt, long2bigInt}
 
 case class UInt64(value: Long) {
 
   import UInt64._
 
-  override def toString = longToBigInt(value).toString
+  override def toString: String = longToBigInt(value).toString
 }
 
 object UInt64 {

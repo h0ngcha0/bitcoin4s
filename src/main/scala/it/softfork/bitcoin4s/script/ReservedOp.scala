@@ -1,8 +1,9 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.script.InterpreterError._
-import it.softfork.bitcoin4s.script.Interpreter._
 import cats.implicits._
+
+import it.softfork.bitcoin4s.script.Interpreter._
+import it.softfork.bitcoin4s.script.InterpreterError._
 
 sealed trait ReservedOp extends ScriptOpCode
 

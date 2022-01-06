@@ -50,6 +50,9 @@ Compile / console / scalacOptions --= Seq(
   "-Xfatal-warnings"
 )
 
+val scalastyleCfgFile     = file("project/scalastyle-config.xml")
+val scalastyleTestCfgFile = file("project/scalastyle-test-config.xml")
+
 val akkaHttpVersion = "10.2.7"
 val akkaVersion = "2.6.18"
 
@@ -125,6 +128,9 @@ buildFrontend := {
 stage := {
   stage.dependsOn(buildFrontend).value
 }
+
+Compile / scalastyleConfig := scalastyleCfgFile
+Test / scalastyleConfig := scalastyleTestCfgFile
 
 Compile / resourceGenerators += Def.task {
   val resourceBase = (Compile / resourceManaged).value / "client"

@@ -1,13 +1,14 @@
 package it.softfork.bitcoin4s
 
-import it.softfork.bitcoin4s.crypto.Hash._
-import it.softfork.bitcoin4s.Config.MnemonicCodesConfig
-
 import scala.util.Try
+
+import it.softfork.bitcoin4s.Config.MnemonicCodesConfig
+import it.softfork.bitcoin4s.crypto.Hash._
 
 class MnemonicCodes(config: MnemonicCodesConfig) {
 
   // FIXME: type input to have length [128, 160, 192, 224, 256]
+  //scalastyle:off magic.number
   def fromEntropy(input: Array[Byte]): Seq[String] = {
     val inputAsBinaryString = input.map(byteToPaddedBinaryString).mkString
     val checkSumAsBinaryString = Sha256(input).map(byteToPaddedBinaryString).mkString
@@ -19,6 +20,7 @@ class MnemonicCodes(config: MnemonicCodesConfig) {
       config.words(index)
     }
   }
+  //scalastyle:on magic.number
 
   def toEntropy(mnemonicCodes: Seq[String]): Array[Byte] = {
     val mnemonicCodesAsPaddedBinaryString = mnemonicCodes

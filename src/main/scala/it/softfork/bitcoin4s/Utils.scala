@@ -1,11 +1,12 @@
 package it.softfork.bitcoin4s
 
 import java.nio.{ByteBuffer, ByteOrder}
+
+import org.spongycastle.util.encoders.Hex
 import scodec.Attempt
 import scodec.bits.BitVector
-import org.spongycastle.util.encoders.Hex
 
-package object Utils {
+package object utils {
 
   implicit class Rich[T](value: T) {
     def toHex: String = "%02x".format(value)

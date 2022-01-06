@@ -1,19 +1,22 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.transaction._
-import it.softfork.bitcoin4s.crypto.Hash.Hash256
-import it.softfork.bitcoin4s.script.ConstantOp.OP_0
-import it.softfork.bitcoin4s.script.RichTransaction._
-import it.softfork.bitcoin4s.Spec
-import cats.implicits._
-import com.typesafe.scalalogging.StrictLogging
-import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
-import it.softfork.bitcoin4s.script.InterpreterError._
-import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
-import it.softfork.bitcoin4s.transaction.structure.Hash
-import it.softfork.bitcoin4s.transaction.OutPoint
 import scala.reflect.ClassTag
 
+import cats.implicits._
+import com.typesafe.scalalogging.StrictLogging
+
+import it.softfork.bitcoin4s.Spec
+import it.softfork.bitcoin4s.crypto.Hash.Hash256
+import it.softfork.bitcoin4s.script.ConstantOp.OP_0
+import it.softfork.bitcoin4s.script.Interpreter.InterpreterErrorHandler
+import it.softfork.bitcoin4s.script.InterpreterError._
+import it.softfork.bitcoin4s.script.RichTransaction._
+import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
+import it.softfork.bitcoin4s.transaction._
+import it.softfork.bitcoin4s.transaction.OutPoint
+import it.softfork.bitcoin4s.transaction.structure.Hash
+
+//scalastyle:off number.of.types
 trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
   sealed trait ExpectedResult extends Product {
@@ -21,6 +24,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     override def toString: String = name
   }
 
+  //scalastyle:off number.of.methods
   object ExpectedResult {
     case object OK extends ExpectedResult
     case object EVAL_FALSE extends ExpectedResult
@@ -104,6 +108,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
     def fromString(str: String) = all.find(_.name == str)
   }
+  //scalastyle:on number.of.methods
 
   case class TestCase(
     scriptSig: Seq[ScriptElement],
@@ -115,6 +120,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     raw: String
   )
 
+  //scalastyle:off cyclomatic.complexity method.length
   def run(test: TestCase, testNumber: Int) = {
     logger.info(s"\n\nTest $testNumber: $test\n\n")
 
@@ -269,6 +275,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
       }
     }
   }
+  //scalastyle:on cyclomatic.complexity method.length
 
   private def checkError[T: ClassTag](
     result: InterpreterErrorHandler[(InterpreterState, Option[Boolean])]
@@ -359,3 +366,4 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
   }
 }
+//scalastyle:on number.of.types

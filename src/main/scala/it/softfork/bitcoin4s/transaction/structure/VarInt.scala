@@ -11,6 +11,7 @@ object VarInt {
 
   import scodec.codecs._
 
+  //scalastyle:off magic.number
   implicit val varIntCodec = Codec[Long](
     (n: Long) =>
       n match {
@@ -54,5 +55,5 @@ object VarInt {
       }
     }
   )
-
+  //scalastyle:on magic.number
 }

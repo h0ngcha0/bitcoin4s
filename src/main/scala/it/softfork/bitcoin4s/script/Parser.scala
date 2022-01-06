@@ -1,14 +1,15 @@
 package it.softfork.bitcoin4s.script
 
-import it.softfork.bitcoin4s.Utils._
+import scala.annotation.tailrec
+import scala.collection.immutable.ArraySeq
+import scala.util.control.Exception.allCatch
+
+import org.spongycastle.util.encoders.Hex
+
 import it.softfork.bitcoin4s.script.ConstantOp._
 import it.softfork.bitcoin4s.script.PseudoOp.OP_INVALIDOPCODE
 import it.softfork.bitcoin4s.script.ReservedOp.OP_NOP10
-import org.spongycastle.util.encoders.Hex
-
-import scala.util.control.Exception.allCatch
-import scala.annotation.tailrec
-import scala.collection.immutable.ArraySeq
+import it.softfork.bitcoin4s.utils._
 
 object Parser {
 
@@ -25,6 +26,7 @@ object Parser {
     parse(bytes)
   }
 
+  //scalastyle:off cyclomatic.complexity
   @tailrec
   private def parseTokensToBytes(tokens: List[String], acc: Seq[Seq[Byte]] = Seq.empty): Seq[Seq[Byte]] = {
     tokens match {
@@ -68,6 +70,7 @@ object Parser {
         acc
     }
   }
+  //scalastyle:on cyclomatic.complexity
 
   @tailrec
   private def parse(bytes: Seq[Byte], acc: Seq[Seq[ScriptElement]]): Seq[Seq[ScriptElement]] = {
