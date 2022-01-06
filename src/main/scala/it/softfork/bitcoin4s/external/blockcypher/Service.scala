@@ -78,7 +78,8 @@ class Service(api: ApiInterface)(implicit
               }
 
               val amount = txOutout.value
-              val sigVersion = if (witnessesStack.isEmpty) SIGVERSION_BASE else SIGVERSION_WITNESS_V0
+              val sigVersion =
+                if (witnessesStack.isEmpty) SIGVERSION_BASE else SIGVERSION_WITNESS_V0
 
               val initialState = InterpreterState(
                 scriptPubKey = scriptPubKey,

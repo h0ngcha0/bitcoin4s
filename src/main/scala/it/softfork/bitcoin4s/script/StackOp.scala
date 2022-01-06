@@ -228,7 +228,9 @@ object StackOp {
 
     def onStackOp(
       opCode: ScriptOpCode
-    )(stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]): InterpreterContext[Option[Boolean]] = {
+    )(
+      stackConvertFunction: PartialFunction[Seq[ScriptElement], Seq[ScriptElement]]
+    ): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         if (stackConvertFunction.isDefinedAt(state.stack)) {
           val newStack = stackConvertFunction(state.stack)

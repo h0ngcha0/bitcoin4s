@@ -28,7 +28,10 @@ object Parser {
 
   //scalastyle:off cyclomatic.complexity
   @tailrec
-  private def parseTokensToBytes(tokens: List[String], acc: Seq[Seq[Byte]] = Seq.empty): Seq[Seq[Byte]] = {
+  private def parseTokensToBytes(
+    tokens: List[String],
+    acc: Seq[Seq[Byte]] = Seq.empty
+  ): Seq[Seq[Byte]] = {
     tokens match {
       case head :: tail =>
         head match {
@@ -59,7 +62,10 @@ object Parser {
             if (unquotedString == "") {
               parseTokensToBytes(tail, OP_0.bytes +: acc)
             } else {
-              parseTokensToBytes(tail, bytesAndLength(ArraySeq.unsafeWrapArray(unquotedString.getBytes())) +: acc)
+              parseTokensToBytes(
+                tail,
+                bytesAndLength(ArraySeq.unsafeWrapArray(unquotedString.getBytes())) +: acc
+              )
             }
 
           case t =>
@@ -72,6 +78,7 @@ object Parser {
   }
   //scalastyle:on cyclomatic.complexity
 
+  //scalastyle:off method.length
   @tailrec
   private def parse(bytes: Seq[Byte], acc: Seq[Seq[ScriptElement]]): Seq[Seq[ScriptElement]] = {
     bytes match {
@@ -81,7 +88,8 @@ object Parser {
           .find(_.hex == head.toHex)
           .orElse {
             val opCodeValue = Integer.parseInt(head.toHex, 16)
-            val isInvalidOpCode = (opCodeValue > OP_NOP10.value) && (opCodeValue < OP_INVALIDOPCODE.value)
+            val isInvalidOpCode =
+              (opCodeValue > OP_NOP10.value) && (opCodeValue < OP_INVALIDOPCODE.value)
             isInvalidOpCode.option(OP_INVALIDOPCODE)
           }
           .getOrElse {
@@ -89,7 +97,11 @@ object Parser {
             throw new RuntimeException(s"No opcode found: $bytes")
           }
 
-        def pushData(opCode: ScriptOpCode, numberOfBytesToPush: Int, restOfData: Seq[Byte]): (Seq[Byte], Seq[Seq[ScriptElement]]) = {
+        def pushData(
+          opCode: ScriptOpCode,
+          numberOfBytesToPush: Int,
+          restOfData: Seq[Byte]
+        ): (Seq[Byte], Seq[Seq[ScriptElement]]) = {
           val maybeBytesToPush = restOfData.takeOpt(numberOfBytesToPush)
           val restOfBytes = restOfData.drop(numberOfBytesToPush)
           val maybeConstantToBePushed = maybeBytesToPush.map { bytesToPush =>
@@ -122,6 +134,7 @@ object Parser {
         parse(restOfBytes, newAcc)
     }
   }
+  //scalastyle:on method.length
 
   private def bytesAndLength(dataBytes: Seq[Byte]): Seq[Byte] = {
     val dataBytesLength = dataBytes.length.toLong

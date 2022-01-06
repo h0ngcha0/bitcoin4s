@@ -18,7 +18,6 @@ case class PublicKey(point: ECPoint, compressed: Boolean) {
     signer.verifySignature(data, signature.r, signature.s)
   }
 
-
   def isCompressed(): Boolean = {
     encoded.length == 33 && (encoded(0) == 2 || encoded(0) == 3)
   }

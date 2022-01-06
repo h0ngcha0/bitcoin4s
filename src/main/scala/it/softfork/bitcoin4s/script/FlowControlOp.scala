@@ -51,17 +51,24 @@ object FlowControlOp {
               case Success(ConditionalBranchSplitResult(branches, rest)) =>
                 state.stack match {
                   case first :: tail =>
-                    val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding())
+                    val firstNumber =
+                      ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding())
                     val positiveBranches = branches.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
                     val negativeBranches = branches.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
 
                     val isP2WSH = state.scriptExecutionStage == ExecutingScriptWitness
-                    val stackTopMinimal = first.bytes == Seq.empty || first.bytes == Seq(1.byteValue)
+                    val stackTopMinimal =
+                      first.bytes == Seq.empty || first.bytes == Seq(1.byteValue)
 
-                    if (isP2WSH && state.flags.contains(ScriptFlag.SCRIPT_VERIFY_MINIMALIF) && !stackTopMinimal) {
+                    if (
+                      isP2WSH && state.flags.contains(
+                        ScriptFlag.SCRIPT_VERIFY_MINIMALIF
+                      ) && !stackTopMinimal
+                    ) {
                       abort(MinimalIf(opCode, state))
                     } else {
-                      val pickNegativeBranches = firstNumber == 0 && opCode == OP_IF || firstNumber != 0 && opCode == OP_NOTIF
+                      val pickNegativeBranches =
+                        firstNumber == 0 && opCode == OP_IF || firstNumber != 0 && opCode == OP_NOTIF
                       val updatedScript = pickNegativeBranches
                         .option(negativeBranches.flatten ++ rest)
                         .getOrElse(positiveBranches.flatten ++ rest)
@@ -102,7 +109,11 @@ object FlowControlOp {
           case OP_VERIFY =>
             state.stack match {
               case first :: tail =>
-                val firstNumber = ScriptNum(first.bytes, state.ScriptFlags.requireMinimalEncoding(), first.bytes.size)
+                val firstNumber = ScriptNum(
+                  first.bytes,
+                  state.ScriptFlags.requireMinimalEncoding(),
+                  first.bytes.size
+                )
                 if (firstNumber == 0) {
                   abort(VerificationFailed(OP_VERIFY, state))
                 } else {

@@ -44,4 +44,3 @@ object Base58 {
   }
 }
 //scalastyle:off magic.number
-

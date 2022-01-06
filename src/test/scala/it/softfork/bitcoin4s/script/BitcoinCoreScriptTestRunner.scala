@@ -63,7 +63,8 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     case object WITNESS_PUBKEYTYPE extends ExpectedResult
     case object NEGATIVE_LOCKTIME extends ExpectedResult
     case object UNSATISFIED_LOCKTIME extends ExpectedResult
-    case object MINIMALIF extends ExpectedResult // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2016-August/013014.html
+    case object MINIMALIF
+        extends ExpectedResult // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2016-August/013014.html
 
     val all = Seq(
       OK,
@@ -126,7 +127,8 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
     val amount = test.witness.map(_._2)
     val creditingTx = creditingTransaction(test.scriptPubKey.flatMap(_.bytes), amount)
-    val spendingTx = spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes), test.witness.map(_._1))
+    val spendingTx =
+      spendingTransaction(creditingTx, test.scriptSig.flatMap(_.bytes), test.witness.map(_._1))
     val sigVersion = if (test.witness.isDefined) SIGVERSION_BASE else SIGVERSION_WITNESS_V0
 
     val initialState = InterpreterState(
@@ -322,7 +324,11 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     }
   }
 
-  def spendingTransaction(creditingTransaction: Tx, scriptSig: Seq[Byte], maybeWitnessScript: Option[Seq[ScriptConstant]]) = {
+  def spendingTransaction(
+    creditingTransaction: Tx,
+    scriptSig: Seq[Byte],
+    maybeWitnessScript: Option[Seq[ScriptConstant]]
+  ) = {
     val maxSequence: Long = 0xffffffff
 
     import scodec.bits._

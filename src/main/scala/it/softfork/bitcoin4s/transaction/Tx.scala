@@ -91,7 +91,11 @@ object Tx {
 
   private def codecWithWitness(txInsCount: Int): Codec[Tx] = {
     ("version" | uint32L) ::
-      ("flag" | mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1))) ::
+      ("flag" | mappedEnum(
+        WitnessFlag.codec,
+        false -> WitnessFlag(0, 0),
+        true -> WitnessFlag(0, 1)
+      )) ::
       ("tx_in" | VarList.varList(Codec[TxIn])) ::
       ("tx_out" | VarList.varList(Codec[TxOut])) ::
       ("tx_witness" | new ListCodec(VarList.varList(Codec[TxWitness]), Some(txInsCount))) ::
@@ -153,7 +157,11 @@ object TxRaw {
       txOutRaw <- AttemptSeq.apply(tx.tx_out.map(TxOutRaw.apply))
     } yield TxOutsRaw(txOutCount, txOutRaw)
 
-    val flagAttempt = mappedEnum(WitnessFlag.codec, false -> WitnessFlag(0, 0), true -> WitnessFlag(0, 1)).encode(tx.flag).map(_.toHex)
+    val flagAttempt = mappedEnum(
+      WitnessFlag.codec,
+      false -> WitnessFlag(0, 0),
+      true -> WitnessFlag(0, 1)
+    ).encode(tx.flag).map(_.toHex)
 
     if (tx.flag) {
       val rawWitnessesAttempt: Attempt[List[TxWitnessesRaw]] = AttemptSeq.apply(

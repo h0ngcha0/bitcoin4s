@@ -84,13 +84,15 @@ object ApiModels {
     }
   }
 
-  implicit val scriptElementFormat: Format[ScriptElement] = Format(scriptElementReader, scriptElementWriter)
+  implicit val scriptElementFormat: Format[ScriptElement] =
+    Format(scriptElementReader, scriptElementWriter)
 
   implicit val scriptExecutionStageWriter: OWrites[ScriptExecutionStage] = {
     owrites[ScriptExecutionStage]((JsPath \ "type").format[String])
   }
 
-  implicit val InterpreterStateWriter: Writes[InterpreterStateOut] = Json.writes[InterpreterStateOut]
+  implicit val InterpreterStateWriter: Writes[InterpreterStateOut] =
+    Json.writes[InterpreterStateOut]
 
   implicit val InterpretOutcome: Writes[InterpreterOutcome] = Json.writes[InterpreterOutcome]
 

@@ -37,50 +37,51 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
 
-    lazy val scriptTests = rawScriptTests.collect {
-      case elements @ (head :: tail) =>
-        if (head.isInstanceOf[ConfigList]) {
-          val witnessElement = head.toList().map(_.render)
-          val amount = (BigDecimal(witnessElement.last) * 100000000).toLong
-          val stringTail = tail.map(stripDoubleQuotes)
-          val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
-          val witnesses = witnessElement.reverse.tail
-            .flatMap { rawWitness =>
-              allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)))
-            }
-            .map(ScriptConstant.apply)
-          val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringTail.take(4)
-          val scriptFlags = toScriptFlags(scriptFlagsString)
-          val expectedResult = ExpectedResult.fromString(expectedResultString).value
+    lazy val scriptTests = rawScriptTests.collect { case elements @ (head :: tail) =>
+      if (head.isInstanceOf[ConfigList]) {
+        val witnessElement = head.toList().map(_.render)
+        val amount = (BigDecimal(witnessElement.last) * 100000000).toLong
+        val stringTail = tail.map(stripDoubleQuotes)
+        val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
+        val witnesses = witnessElement.reverse.tail
+          .flatMap { rawWitness =>
+            allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)))
+          }
+          .map(ScriptConstant.apply)
+        val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) =
+          stringTail.take(4)
+        val scriptFlags = toScriptFlags(scriptFlagsString)
+        val expectedResult = ExpectedResult.fromString(expectedResultString).value
 
-          TestCase(
-            scriptSig = Parser.parse(scriptSigString),
-            scriptPubKey = Parser.parse(scriptPubKeyString),
-            scriptFlags = scriptFlags,
-            expectedResult = expectedResult,
-            comments = comments,
-            witness = Some((witnesses, amount)),
-            raw = elements.toString
-          )
-        } else {
-          val stringElements = elements.map(stripDoubleQuotes)
-          val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) = stringElements.take(4)
-          val expectedResult = ExpectedResult.fromString(expectedResultString).value
-          val comments = (stringElements.length == 5).option(stringElements.last).getOrElse("")
-          val scriptFlags = toScriptFlags(scriptFlagsString)
-          val scriptSig = Parser.parse(scriptSigString)
-          val scriptPubKey = Parser.parse(scriptPubKeyString)
+        TestCase(
+          scriptSig = Parser.parse(scriptSigString),
+          scriptPubKey = Parser.parse(scriptPubKeyString),
+          scriptFlags = scriptFlags,
+          expectedResult = expectedResult,
+          comments = comments,
+          witness = Some((witnesses, amount)),
+          raw = elements.toString
+        )
+      } else {
+        val stringElements = elements.map(stripDoubleQuotes)
+        val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) =
+          stringElements.take(4)
+        val expectedResult = ExpectedResult.fromString(expectedResultString).value
+        val comments = (stringElements.length == 5).option(stringElements.last).getOrElse("")
+        val scriptFlags = toScriptFlags(scriptFlagsString)
+        val scriptSig = Parser.parse(scriptSigString)
+        val scriptPubKey = Parser.parse(scriptPubKeyString)
 
-          TestCase(
-            scriptSig = scriptSig,
-            scriptPubKey = scriptPubKey,
-            scriptFlags = scriptFlags,
-            expectedResult = expectedResult,
-            comments = comments,
-            witness = None,
-            raw = elements.toString
-          )
-        }
+        TestCase(
+          scriptSig = scriptSig,
+          scriptPubKey = scriptPubKey,
+          scriptFlags = scriptFlags,
+          expectedResult = expectedResult,
+          comments = comments,
+          witness = None,
+          raw = elements.toString
+        )
+      }
     }
 
     scriptTests.zipWithIndex.foreach(Function.tupled(run))

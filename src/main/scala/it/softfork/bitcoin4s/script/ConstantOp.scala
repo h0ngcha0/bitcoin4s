@@ -102,7 +102,10 @@ object ConstantOp {
             .flatMap { state =>
               state.currentScript match {
                 case (dataToPush: ScriptConstant) :: rest =>
-                  if (!checkMinimalPush(opCode, dataToPush) && state.ScriptFlags.requireMinimalEncoding()) {
+                  if (
+                    !checkMinimalPush(opCode, dataToPush) && state.ScriptFlags
+                      .requireMinimalEncoding()
+                  ) {
                     abort(NotMinimalEncoding(opCode, state))
                   } else {
                     setStateAndContinue(

@@ -4,10 +4,14 @@ import scodec.{Attempt, Codec, DecodeResult, Err, SizeBound}
 import scodec.bits.{BitVector, ByteOrdering}
 
 // NOTE: Allow -1 so that we can run Bitcoin core tests.
-final class LongCodecWithNegValue(bits: Int, signed: Boolean, ordering: ByteOrdering) extends Codec[Long] {
+final class LongCodecWithNegValue(bits: Int, signed: Boolean, ordering: ByteOrdering)
+    extends Codec[Long] {
 
   //scalastyle:off magic.number
-  require(bits > 0 && bits <= (if (signed) 64 else 63), "bits must be in range [1, 64] for signed and [1, 63] for unsigned")
+  require(
+    bits > 0 && bits <= (if (signed) 64 else 63),
+    "bits must be in range [1, 64] for signed and [1, 63] for unsigned"
+  )
   //scalastyle:on magic.number
 
   val MaxValue = (1L << (if (signed) (bits - 1) else bits)) - 1
@@ -31,7 +35,9 @@ final class LongCodecWithNegValue(bits: Int, signed: Boolean, ordering: ByteOrde
 
   override def decode(buffer: BitVector): Attempt[DecodeResult[Long]] = {
     if (buffer.sizeGreaterThanOrEqual(bitsL)) {
-      Attempt.successful(DecodeResult(buffer.take(bitsL).toLong(signed, ordering), buffer.drop(bitsL)))
+      Attempt.successful(
+        DecodeResult(buffer.take(bitsL).toLong(signed, ordering), buffer.drop(bitsL))
+      )
     } else {
       Attempt.failure(Err.insufficientBits(bitsL, buffer.size))
     }

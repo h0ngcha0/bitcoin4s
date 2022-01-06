@@ -14,7 +14,8 @@ case class TxIn(
 )
 
 object TxIn {
-  val uInt32WithNegValue: Codec[Long] = new LongCodecWithNegValue(32, false, ByteOrdering.LittleEndian)
+  val uInt32WithNegValue: Codec[Long] =
+    new LongCodecWithNegValue(32, false, ByteOrdering.LittleEndian)
 
   implicit val codec: Codec[TxIn] = {
     ("previous_output" | Codec[OutPoint]) ::

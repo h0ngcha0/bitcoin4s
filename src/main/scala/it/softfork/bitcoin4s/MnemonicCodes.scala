@@ -29,13 +29,16 @@ class MnemonicCodes(config: MnemonicCodesConfig) {
       .map(byteToPaddedBinaryString)
     val checkSumLengthInByte = mnemonicCodesAsPaddedBinaryString.length / 8 / 32
     val checkSumIndex = mnemonicCodesAsPaddedBinaryString.length - checkSumLengthInByte / 8
-    val (entropyBinaryString, checksumBinaryString) = mnemonicCodesAsPaddedBinaryString.splitAt(checkSumIndex)
+    val (entropyBinaryString, checksumBinaryString) =
+      mnemonicCodesAsPaddedBinaryString.splitAt(checkSumIndex)
     val entropy = entropyBinaryString.mkString.grouped(8).toArray.map { byteAsBinaryString =>
       Integer.parseInt(byteAsBinaryString, 2).toByte
     }
 
     if (Sha256(entropy).map(byteToPaddedBinaryString).mkString != checksumBinaryString) {
-      throw new IllegalArgumentException(s"Incorrect mnemonic codes, checksum mismatched: $mnemonicCodes")
+      throw new IllegalArgumentException(
+        s"Incorrect mnemonic codes, checksum mismatched: $mnemonicCodes"
+      )
     }
 
     entropy

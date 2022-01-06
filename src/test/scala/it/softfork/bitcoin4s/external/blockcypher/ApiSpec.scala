@@ -16,13 +16,15 @@ import it.softfork.bitcoin4s.utils.hexToBytes
 class ApiSpec extends Spec with StrictLogging {
 
   "Interpreter" should "be able to interpret raw transactions from BlockCypher API" in {
-    Seq("p2sh-example1", "p2pkh-example1", "p2pkh-example2", "multisig-example1").foreach { example =>
-      val rawCreditingTransaction = rawJsonFromResource(s"/blockcypher/$example/crediting_tx.json")
-      val rawSpendingTransaction = rawJsonFromResource(s"/blockcypher/$example/spending_tx.json")
+    Seq("p2sh-example1", "p2pkh-example1", "p2pkh-example2", "multisig-example1").foreach {
+      example =>
+        val rawCreditingTransaction =
+          rawJsonFromResource(s"/blockcypher/$example/crediting_tx.json")
+        val rawSpendingTransaction = rawJsonFromResource(s"/blockcypher/$example/spending_tx.json")
 
-      withClue(example) {
-        runExample(rawCreditingTransaction, rawSpendingTransaction)
-      }
+        withClue(example) {
+          runExample(rawCreditingTransaction, rawSpendingTransaction)
+        }
     }
   }
 

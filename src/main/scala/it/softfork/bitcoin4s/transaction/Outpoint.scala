@@ -13,7 +13,8 @@ case class OutPoint(
 )
 
 object OutPoint {
-  val uInt32WithNegValue: Codec[Long] = new LongCodecWithNegValue(32, false, ByteOrdering.LittleEndian)
+  val uInt32WithNegValue: Codec[Long] =
+    new LongCodecWithNegValue(32, false, ByteOrdering.LittleEndian)
 
   implicit val codec: Codec[OutPoint] = {
     ("hash" | Codec[Hash]) ::

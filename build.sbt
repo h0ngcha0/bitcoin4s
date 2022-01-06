@@ -50,7 +50,7 @@ Compile / console / scalacOptions --= Seq(
   "-Xfatal-warnings"
 )
 
-val scalastyleCfgFile     = file("project/scalastyle-config.xml")
+val scalastyleCfgFile = file("project/scalastyle-config.xml")
 val scalastyleTestCfgFile = file("project/scalastyle-test-config.xml")
 
 val akkaHttpVersion = "10.2.7"
@@ -103,7 +103,8 @@ docker / dockerfile := {
 
 val baseImageName = "liuhongchao/bitcoin4s"
 docker / imageNames := {
-  val branchNameOption = sys.env.get("CI_COMMIT_REF_NAME").orElse(Option(git.gitCurrentBranch.value))
+  val branchNameOption =
+    sys.env.get("CI_COMMIT_REF_NAME").orElse(Option(git.gitCurrentBranch.value))
   Seq(
     branchNameOption.filter(_ == "master").map { _ =>
       ImageName(baseImageName + ":latest")
@@ -119,7 +120,8 @@ docker / imageNames := {
 
 val buildFrontend = taskKey[Unit]("Build frontend")
 buildFrontend := {
-  val exitCode = scala.sys.process.Process(Seq("yarn", "run", "build"), file("client")).run().exitValue()
+  val exitCode =
+    scala.sys.process.Process(Seq("yarn", "run", "build"), file("client")).run().exitValue()
   if (exitCode != 0) {
     sys.error(s"Client build failed with exit code $exitCode")
   }
@@ -149,5 +151,10 @@ Compile / resourceGenerators += Def.task {
 }.taskValue
 
 Revolver.enableDebugging(port = 5050, suspend = false)
+
+addCommandAlias(
+  "format",
+  "scalafmtSbt;scalafmt;test:scalafmt;scalastyle;test:scalastyle"
+)
 
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))

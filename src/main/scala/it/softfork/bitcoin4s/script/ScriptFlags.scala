@@ -73,7 +73,9 @@ object ScriptFlag {
 
   // Making v1-v16 witness program non-standard
   //
-  case object SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM extends ScriptFlag { val value = 1 << 12 }
+  case object SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM extends ScriptFlag {
+    val value = 1 << 12
+  }
 
   // Segwit script only: Require the argument of OP_IF/NOTIF to be exactly 0x01 or empty vector
   //

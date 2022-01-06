@@ -63,5 +63,7 @@ object Hash {
     //scalastyle:on magic.number
   }
 
-  val zeros: Array[Byte] = Hash256(hexToBytes("0000000000000000000000000000000000000000000000000000000000000000"))
+  val zeros: Array[Byte] = Hash256(
+    hexToBytes("0000000000000000000000000000000000000000000000000000000000000000")
+  )
 }

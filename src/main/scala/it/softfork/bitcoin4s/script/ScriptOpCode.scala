@@ -29,7 +29,9 @@ trait ScriptConstant extends ScriptElement {
 //scalastyle:on covariant.equals
 
 object ScriptConstant {
-  def apply(bytesIn: Array[Byte]): ScriptConstant = new ScriptConstant { override val bytes = ArraySeq.unsafeWrapArray(bytesIn) }
+  def apply(bytesIn: Array[Byte]): ScriptConstant = new ScriptConstant {
+    override val bytes = ArraySeq.unsafeWrapArray(bytesIn)
+  }
 }
 
 // Reference: https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L205
@@ -72,7 +74,11 @@ object ScriptNum {
   }
 
   // Does not accept byte array with more than 4 bytes
-  def apply(bytesIn: Seq[Byte], fRequireMinimal: Boolean, maxNumSize: Int = DefaultMaxNumSize): ScriptNum = {
+  def apply(
+    bytesIn: Seq[Byte],
+    fRequireMinimal: Boolean,
+    maxNumSize: Int = DefaultMaxNumSize
+  ): ScriptNum = {
     require(bytesIn.length <= maxNumSize, s"bytes length exceeds maxNumSize $maxNumSize")
     val violateMinimalEncoding = fRequireMinimal && minimallyEncoded(bytesIn)
     require(!violateMinimalEncoding, "non-minimally encoded script number")

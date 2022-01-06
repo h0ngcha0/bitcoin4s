@@ -34,7 +34,8 @@ object LocktimeOp {
             if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
               state.stack match {
                 case head :: tail =>
-                  val lockTime = ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
+                  val lockTime =
+                    ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
                   if (lockTime < 0 || lockTime <= state.transaction.lock_time) {
                     abort(CLTVFailed(opCode, state))
                   } else {

@@ -254,7 +254,10 @@ object ArithmeticOp {
     }
     //scalastyle:on method.length cyclomatic.complexity
 
-    private def oneOperant(opCode: ArithmeticOp, convert: (ScriptNum) => ScriptNum): InterpreterContext[Option[Boolean]] = {
+    private def oneOperant(
+      opCode: ArithmeticOp,
+      convert: (ScriptNum) => ScriptNum
+    ): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         state.stack match {
           case (first: ScriptConstant) :: rest =>
@@ -283,7 +286,10 @@ object ArithmeticOp {
 
     }
 
-    private def twoOperants(opCode: ArithmeticOp, convert: (ScriptNum, ScriptNum) => ScriptNum): InterpreterContext[Option[Boolean]] = {
+    private def twoOperants(
+      opCode: ArithmeticOp,
+      convert: (ScriptNum, ScriptNum) => ScriptNum
+    ): InterpreterContext[Option[Boolean]] = {
       getState.flatMap { state =>
         state.stack match {
           case (first: ScriptConstant) :: (second: ScriptConstant) :: rest =>

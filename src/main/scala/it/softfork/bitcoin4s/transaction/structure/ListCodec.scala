@@ -12,7 +12,8 @@ final class ListCodec[A](codec: Codec[A], limit: Option[Int] = None) extends Cod
 
   def encode(list: List[A]): Attempt[BitVector] = Encoder.encodeSeq(codec)(list)
 
-  def decode(buffer: BitVector): Attempt[DecodeResult[List[A]]] = Decoder.decodeCollect[List, A](codec, limit)(buffer)
+  def decode(buffer: BitVector): Attempt[DecodeResult[List[A]]] =
+    Decoder.decodeCollect[List, A](codec, limit)(buffer)
 
   override def toString: String = s"list($codec)"
 }

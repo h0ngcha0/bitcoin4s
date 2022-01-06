@@ -33,7 +33,10 @@ object Signature {
           _ <- checkPositive(sLength)
           (s, restOfBytesAfterS) <- restOfBytesAfterSLength.splitAtOpt(sLength)
         } yield {
-          (ECDSASignature(new BigInteger(1, r.toArray), new BigInteger(1, s.toArray)), restOfBytesAfterS)
+          (
+            ECDSASignature(new BigInteger(1, r.toArray), new BigInteger(1, s.toArray)),
+            restOfBytesAfterS
+          )
         }
       case _ =>
         None

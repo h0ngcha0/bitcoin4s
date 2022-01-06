@@ -102,7 +102,8 @@ object Api {
   }
 
   object TransactionInput {
-    implicit val format: Format[TransactionInput] = Json.using[Json.WithDefaultValues].format[TransactionInput]
+    implicit val format: Format[TransactionInput] =
+      Json.using[Json.WithDefaultValues].format[TransactionInput]
   }
 
   case class TransactionOutput(
@@ -132,7 +133,8 @@ object Api {
   }
 
   object TransactionOutput {
-    implicit val format: Format[TransactionOutput] = Json.using[Json.WithDefaultValues].format[TransactionOutput]
+    implicit val format: Format[TransactionOutput] =
+      Json.using[Json.WithDefaultValues].format[TransactionOutput]
   }
 
   case class Transaction(
@@ -201,10 +203,13 @@ object Api {
   }
 
   object Transaction {
-    implicit val format: Format[Transaction] = Json.using[Json.WithDefaultValues].format[Transaction]
+    implicit val format: Format[Transaction] =
+      Json.using[Json.WithDefaultValues].format[Transaction]
   }
 
-  protected def rawTxUrl(txId: TxId) = Uri(s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000&includeHex=true")
+  protected def rawTxUrl(txId: TxId) = Uri(
+    s"https://api.blockcypher.com/v1/btc/main/txs/${txId.value}?limit=1000&includeHex=true"
+  )
 
   def parseTransaction(raw: String): Transaction = {
     Json.fromJson[Transaction](Json.parse(raw)) match {
@@ -215,5 +220,6 @@ object Api {
     }
   }
 
-  implicit protected val transactionUnmarshaller = Unmarshaller.stringUnmarshaller.map(parseTransaction)
+  implicit protected val transactionUnmarshaller =
+    Unmarshaller.stringUnmarshaller.map(parseTransaction)
 }

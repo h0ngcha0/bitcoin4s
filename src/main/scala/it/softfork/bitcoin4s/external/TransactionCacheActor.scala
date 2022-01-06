@@ -51,7 +51,12 @@ class TransactionCacheActor() extends Actor with StrictLogging {
 
   def scheduleInvalidateExpired(): Unit = {
     context.system.scheduler
-      .scheduleAtFixedRate(initialDelay = 10.seconds, interval = 2.minutes, receiver = self, message = InvalidateExpired)
+      .scheduleAtFixedRate(
+        initialDelay = 10.seconds,
+        interval = 2.minutes,
+        receiver = self,
+        message = InvalidateExpired
+      )
     ()
   }
 
@@ -62,8 +67,9 @@ class TransactionCacheActor() extends Actor with StrictLogging {
 
   override def receive: Receive = {
     case InvalidateExpired =>
-      transactions = transactions.filterNot { case (txId @ _, TransactionWithCreationTime(tx @ _, createdAt)) =>
-        ZonedDateTime.now.isAfter(createdAt.plusMinutes(2))
+      transactions = transactions.filterNot {
+        case (txId @ _, TransactionWithCreationTime(tx @ _, createdAt)) =>
+          ZonedDateTime.now.isAfter(createdAt.plusMinutes(2))
       }
 
     case Get(txId: TxId) => {
@@ -71,7 +77,8 @@ class TransactionCacheActor() extends Actor with StrictLogging {
     }
 
     case Set(txId: TxId, transaction: Transaction) => {
-      transactions = transactions.updated(txId, TransactionWithCreationTime(transaction, ZonedDateTime.now))
+      transactions =
+        transactions.updated(txId, TransactionWithCreationTime(transaction, ZonedDateTime.now))
     }
 
     case message =>
