@@ -6,7 +6,7 @@ name := "bitcoin4s"
 organization := "it.softfork"
 version := "0.1.0"
 
-ThisBuild / scalaVersion := "2.13.7"
+ThisBuild / scalaVersion := "2.13.8"
 
 ThisBuild / scalacOptions := Seq(
   "-deprecation",
@@ -53,8 +53,8 @@ Compile / console / scalacOptions --= Seq(
 val scalastyleCfgFile = file("project/scalastyle-config.xml")
 val scalastyleTestCfgFile = file("project/scalastyle-test-config.xml")
 
-val akkaHttpVersion = "10.2.7"
-val akkaVersion = "2.6.18"
+val akkaHttpVersion = "10.2.9"
+val akkaVersion = "2.6.19"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -65,17 +65,17 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
   "com.madgag.spongycastle" % "core" % "1.58.0.0",
   "org.scodec" %% "scodec-core" % "1.11.9",
-  "com.iheart" %% "ficus" % "1.5.1",
+  "com.iheart" %% "ficus" % "1.5.2",
   "org.typelevel" %% "cats-core" % "2.7.0",
   "org.typelevel" %% "simulacrum" % "1.0.1",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-  "ch.qos.logback" % "logback-classic" % "1.2.10",
-  "org.scalatest" %% "scalatest" % "3.2.10" % "test",
+  "ch.qos.logback" % "logback-classic" % "1.2.11",
+  "org.scalatest" %% "scalatest" % "3.2.12" % "test",
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "com.typesafe.play" %% "play-functional" % "2.9.2",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.39.2",
   "org.julienrf" %% "play-json-derived-codecs" % "10.0.2",
-  "com.lihaoyi" %% "pprint" % "0.7.1"
+  "com.lihaoyi" %% "pprint" % "0.7.3"
 )
 
 resolvers ++= Seq(
