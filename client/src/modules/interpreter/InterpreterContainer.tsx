@@ -49,8 +49,6 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
     const interpretScript = (step) => {
         setState({
             ...state,
-            currentStep: step,
-            interpretResult: undefined,
             loading: true
         });
 
@@ -58,6 +56,7 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
             .then((interpretResponse) => {
                 setState({
                     ...state,
+                    currentStep: step,
                     loading: false,
                     interpretResult: interpretResponse
                 });
@@ -72,16 +71,17 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
         const initialCallback = () => {
             setState({
                 ...state,
-                interpretResult: undefined,
                 loading: true,
                 executingScript: true
             });
         };
 
         const closeConnectionCallback = () => {
-            setState({
-                ...state,
-                executingScript: false
+            setState(prevState => {
+                return {
+                    ...prevState,
+                    executingScript: false
+                }
             });
         };
 
@@ -99,7 +99,7 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
     };
 
     useEffect(() => {
-        if (state.transactionId && state.inputIndex) {
+        if (state.transactionId) {
             if (state.automatic) {
                 interpretScriptWebsocket();
             } else {
@@ -109,27 +109,11 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
         }
     }, []);
 
-    //    useEffect(() => {
-    //        if (!props.automatic && (props.step !== prevProps.step)) {
-    //            interpretScript(props.step);
-    //        }
-    //    }, [prevProps]);
-    //    componentDidMount() {
-    //        if (state.transactionId && state.inputIndex) {
-    //            if (state.automatic) {
-    //                interpretScriptWebsocket();
-    //            } else {
-    //                const step = props.step ? props.step : 0;
-    //                interpretScript(step);
-    //            }
-    //        }
-    //    }
-
-    //    componentDidUpdate(prevProps) {
-    //        if (!props.automatic && (props.step !== prevProps.step)) {
-    //            interpretScript(props.step);
-    //        }
-    //    }
+    useEffect(() => {
+        if (!props.automatic && (props.step !== state.currentStep)) {
+            interpretScript(props.step);
+        }
+    }, [props.step]);
 
     const prevNextButtons = () => {
         const calculatePrevStep = () => {
@@ -150,10 +134,10 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
 
             const disabledIconStyle = { verticalAlign: "middle", fontSize: "16px", color: "grey" };
             const activeIconStyle = { verticalAlign: "middle", fontSize: "16px", color: "rgb(219, 56, 111)" };
-            const prevStepClassName = prevStep === null ? "not-active" : "";
-            const prevStepIconStyle = prevStep === null ? disabledIconStyle : activeIconStyle;
-            const nextStepClassName = nextStep === null ? "not-active" : "";
-            const nextStepIconStyle = nextStep === null ? disabledIconStyle : activeIconStyle;
+            const prevStepClassName = prevStep === undefined ? "not-active" : "";
+            const prevStepIconStyle = prevStep === undefined ? disabledIconStyle : activeIconStyle;
+            const nextStepClassName = nextStep === undefined ? "not-active" : "";
+            const nextStepIconStyle = nextStep === undefined ? disabledIconStyle : activeIconStyle;
 
             return (
                 <div style={{ maxWidth: '550px', textAlign: 'center', margin: '0 auto', marginTop: "30px" }}>
@@ -189,7 +173,7 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
             if (state.interpretResult) {
                 return <InterpreterComponent interpretResult={state.interpretResult} step={state.currentStep} />;
             } else {
-                return null;
+                return undefined;
             }
         }
     };
