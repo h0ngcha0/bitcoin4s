@@ -30,7 +30,7 @@ TabPanel.propTypes = {
     value: PropTypes.any.isRequired,
 };
 
-function a11yProps(index) {
+function a11yProps(index: string) {
     return {
         id: `scrollable-auto-tab-${index}`,
         'aria-controls': `scrollable-auto-tabpanel-${index}`,
@@ -47,7 +47,7 @@ const useStyles = makeStyles(theme => ({
 
 export default function ScrollableTabs(props) {
     //const { title1, children1, title2, children2, ...other } = props;
-    const {tabs} = props;
+    const { tabs } = props;
     const classes = useStyles();
     const [value, setValue] = React.useState(0);
 
@@ -69,15 +69,15 @@ export default function ScrollableTabs(props) {
             >
                 {
                     _.map(tabs, (tab, index) => {
-                        return <Tab label={tab.title} {...a11yProps(index)} key={index}/>;
+                        return <Tab label={tab.title} {...a11yProps(index)} key={index} />;
                     })
                 }
             </Tabs>
             {
                 _.map(tabs, (tab, index) => {
-                    return  (
+                    return (
                         <TabPanel value={value} index={index} key={index}>
-                            { tab.children }
+                            {tab.children}
                         </TabPanel>
                     );
                 })
