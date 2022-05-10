@@ -1,18 +1,24 @@
 import URI from 'urijs';
 
-class ScriptInterpreterWebsocket {
-  webSocket;
+import { InterpreterOutcome } from '../../api'
 
-  closeConnectionFunctionBuilder = (callback) => () => {
+class ScriptInterpreterWebsocket {
+  webSocket: WebSocket | undefined;
+
+  closeConnectionFunctionBuilder = (callback: () => any) => () => {
     if (this.webSocket) {
       this.webSocket.close();
-      this.webSocket = null;
+      this.webSocket = undefined;
 
       callback();
     }
   };
 
-  interpreterBuilder = (initialCallback, onMessageCallback, closeConnectionCallback) => (transactionId, inputIndex) =>{
+  interpreterBuilder = (
+    initialCallback: () => any,
+    onMessageCallback: (outcome: InterpreterOutcome) => any,
+    closeConnectionCallback: () => any
+  ) => (transactionId, inputIndex) => {
     const uri = new URI({
       protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
       hostname: window.location.host,
