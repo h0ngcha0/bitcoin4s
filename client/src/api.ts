@@ -38,6 +38,27 @@ export interface TxRaw {
   lockTime: String
 }
 
+export interface TransactionInput {
+  prevHash: string,
+  outputIndex: number,
+  script?: string,
+  parsedScript?: ScriptElement[],
+  outputValue: number,
+  sequence: number,
+  scriptType: number,
+  addresses: string[],
+  witness?: string[]
+}
+
+export interface TransactionOutput {
+  value: number,
+  script: number,
+  parsedScript?: ScriptElement[],
+  spentBy?: string[],
+  addresses: string[],
+  scriptType: string
+}
+
 export interface Transaction {
   hash: string,
   hex: string,
@@ -45,7 +66,9 @@ export interface Transaction {
   total: number,
   size: number,
   version: number,
-  lockTime: number
+  lockTime: number,
+  inputs: TransactionInput[],
+  outputs: TransactionOutput[]
 }
 
 function extractResponseData<T>(response: { data: T }): T {

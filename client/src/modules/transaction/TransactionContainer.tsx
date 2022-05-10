@@ -87,7 +87,7 @@ export const TransactionContainer: React.FunctionComponent<TransactionContainerP
                 return <div style={{ marginTop: '32px', textAlign: 'center' }}>{state.error.status},  {state.error.statusText}</div>;
             }
         } else if (state.transaction) {
-            return func();
+            return func(state.transaction);
         }
     };
 
@@ -98,15 +98,13 @@ export const TransactionContainer: React.FunctionComponent<TransactionContainerP
     };
 
     const showTransactionDetails = () => {
-        return executeAfterFetchTransaction(state, () => (
+        return executeAfterFetchTransaction(state, (transaction: Transaction) => (
             <span>
-                <TransactionDetailsComponent transaction={state.transaction} />
+                <TransactionDetailsComponent transaction={transaction} />
                 <div style={{ marginTop: '36px', textAlign: 'center' }}>
                     <a className="image" href="https://explorer.nioctib.tech">
-                        <img src={btcRpcExplorerImage} className={`explorer-image-mobile img-responsive mobile`} alt="Bitcoin RPC Explorer">
-                        </img>
-                        <img src={btcRpcExplorerImage} className={`explorer-image-desktop img-responsive desktop`} alt="Bitcoin RPC Explorer">
-                        </img>
+                        <img src={btcRpcExplorerImage} className={`explorer-image-mobile img-responsive mobile`} alt="Bitcoin RPC Explorer" />
+                        <img src={btcRpcExplorerImage} className={`explorer-image-desktop img-responsive desktop`} alt="Bitcoin RPC Explorer" />
                     </a>
                 </div>
                 <span>
