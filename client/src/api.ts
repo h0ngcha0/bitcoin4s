@@ -32,6 +32,22 @@ export interface InterpreterOutcome {
   step: number | undefined
 }
 
+export interface TxRaw {
+  version: string,
+  flag?: string,
+  lockTime: String
+}
+
+export interface Transaction {
+  hash: string,
+  hex: string,
+  txRaw?: TxRaw[],
+  total: number,
+  size: number,
+  version: number,
+  lockTime: number
+}
+
 function extractResponseData<T>(response: { data: T }): T {
   return response.data;
 }
@@ -46,7 +62,7 @@ export function interpretTransactionInputWithSteps(transactionId: string, inputI
     .then(extractResponseData);
 }
 
-export function fetchTransaction(transactionId) {
+export function fetchTransaction(transactionId): Promise<Transaction | undefined> {
   return axios.get(`/api/transaction/${transactionId}`)
     .then(extractResponseData);
 }
