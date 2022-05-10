@@ -1,17 +1,18 @@
 import axios from 'axios';
 
-interface Result {
-  value: boolean
+interface InterpreterResultOut {
+  value?: boolean,
+  type: string
 }
-//type InterpreterResultOut = 'NoResult' | Result;
-type InterpreterResultOut = Result;
 
 interface ScriptElement {
   type: string,
   value: boolean
 }
 
-type ScriptExecutionStage = 'ExecutingScriptSig' | 'ExecutingScriptPubKey' | 'ExecutingScriptP2SH' | 'ExecutingScriptWitness';
+interface ScriptExecutionStage {
+  type: 'ExecutingScriptSig' | 'ExecutingScriptPubKey' | 'ExecutingScriptP2SH' | 'ExecutingScriptWitness'
+}
 
 interface InterpreterStateOut {
   scriptPubKey: ScriptElement[],

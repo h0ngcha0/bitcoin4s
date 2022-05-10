@@ -12,7 +12,6 @@ import Grid from "@material-ui/core/Grid/Grid";
 import { InterpreterOutcome } from '../../api'
 
 interface InterpreterContainerProps {
-    //    children: React.ReactNode,
     transactionId: string,
     inputIndex: number,
     automatic: boolean,
@@ -187,12 +186,8 @@ export const InterpreterContainer: React.FunctionComponent<InterpreterContainerP
                 <a href={`/#/transaction/${state.transactionId}`}>
                     <img src={desktopLogoImage} className={`logo-image img-responsive desktop`} alt="Bitcoin Playground" />
                 </a>
-                {
-                    prevNextButtons()
-                }
-                {
-                    interpretState()
-                }
+                {prevNextButtons()}
+                {interpretState()}
             </div>
         </div>
     );
