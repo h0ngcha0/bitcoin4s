@@ -16,11 +16,11 @@ import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 import Typography from "@material-ui/core/Typography";
 import { Transaction } from '../../api';
 
-interface TransactionDetailsProps {
+interface TransactionDetailsComponentProps {
     transaction: Transaction
 }
 
-export const TransactionDetailsComponent: React.FunctionComponent<TransactionDetailsProps> = (props) => {
+export const TransactionDetailsComponent: React.FunctionComponent<TransactionDetailsComponentProps> = (props) => {
     const { transaction } = props;
     const inputsLength = transaction.inputs.length;
     return (

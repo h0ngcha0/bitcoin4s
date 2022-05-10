@@ -92,9 +92,11 @@ export const TransactionContainer: React.FunctionComponent<TransactionContainerP
     };
 
     const showRawTransaction = () => {
-        return executeAfterFetchTransaction(state, () => (
-            <TransactionRawComponent transaction={state.transaction} />
-        ));
+        return executeAfterFetchTransaction(state, () => {
+            return state.transaction ? <TransactionRawComponent transaction={state.transaction} /> : (
+                <div style={{ marginTop: '32px', textAlign: 'center' }}> 404, <BitcoinIcon style={{ verticalAlign: "middle", fontSize: "200px" }} /> transaction not found </div>
+            )
+        });
     };
 
     const showTransactionDetails = () => {

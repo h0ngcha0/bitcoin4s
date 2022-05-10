@@ -32,9 +32,47 @@ export interface InterpreterOutcome {
   step: number | undefined
 }
 
+export interface OutPointRaw {
+  hash: string,
+  index: string
+}
+
+export interface TxInRaw {
+  previousOutput: OutPointRaw,
+  sigScript: string,
+  sequence: string
+}
+
+export interface TxInsRaw {
+  count: string,
+  txIns: TxInRaw[]
+}
+
+export interface TxOutRaw {
+  value: string,
+  pkScript: string
+}
+
+export interface TxOutsRaw {
+  count: string,
+  txOuts: TxOutRaw[]
+}
+
+export interface TxWitnessRaw {
+  witness: string
+}
+
+export interface TxWitnessesRaw {
+  count: number,
+  txWitnesses: TxWitnessRaw[]
+}
+
 export interface TxRaw {
   version: string,
   flag?: string,
+  txIns: TxInsRaw,
+  txOuts: TxOutsRaw,
+  txWitnesses: TxWitnessesRaw[],
   lockTime: String
 }
 
@@ -62,7 +100,7 @@ export interface TransactionOutput {
 export interface Transaction {
   hash: string,
   hex: string,
-  txRaw?: TxRaw[],
+  txRaw?: TxRaw,
   total: number,
   size: number,
   version: number,
