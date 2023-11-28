@@ -13,13 +13,6 @@ import Helmet from 'react-helmet';
 import 'flexboxgrid';
 import AppRouter from './AppRouter';
 
-declare module '@mui/styles/defaultTheme' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface DefaultTheme extends Theme {}
-}
-
-//const theme = createMuiTheme();
-
 const theme = createTheme(adaptV4Theme({
     palette: {
         primary: blue
