@@ -7,10 +7,10 @@
     "@types/classnames": "^2.3.1",
     "@types/lodash": "^4.14.182",
     "@types/qs": "^6.9.7",
-    "@types/react": "^17.0.2",
-    "@types/react-dom": "^17.0.2",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "@types/react-helmet": "^6.1.0",
-    "@types/react-router": "^5.1.18",
+    "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.1",
     "prettier": "^2.6.2",
     "react-scripts": "^5.0.1",
@@ -19,8 +19,6 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@material-ui/core": "^4.12.4",
-    "@material-ui/icons": "^4.11.3",
     "@mkyy/mui-search-bar": "^0.5.2",
     "@mui/icons-material": "^5.14.18",
     "@mui/material": "^5.14.18",
@@ -31,9 +29,8 @@
     "flexboxgrid": "^6.3.1",
     "http-proxy-middleware": "^2.0.6",
     "lodash": "^4.17.21",
-    "material-ui-search-bar": "^1.0.0",
     "prop-types": "^15.8.1",
-    "qs": "^6.10.1",
+    "qs": "^6.11.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-error-overlay": "^6.0.11",
@@ -48,6 +45,9 @@
     "build": "./node_modules/.bin/react-scripts build",
     "test": "./node_modules/.bin/react-scripts test --env=jsdom",
     "eject": "./node_modules/.bin/react-scripts eject"
+  },
+  "resolutions": {
+    "@types/react": "^18.2.0"
   },
   "eslintConfig": {
     "extends": [
