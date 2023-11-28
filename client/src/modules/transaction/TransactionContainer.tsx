@@ -7,7 +7,7 @@ import { fetchTransaction } from '../../api';
 import TransactionDetailsComponent from "./TransactionDetailsComponent";
 import Loading from "../Loading";
 import { PurpleColorButton } from "../PurpleColorButton";
-import SearchBar from 'material-ui-search-bar';
+import SearchBar from '@mkyy/mui-search-bar';
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 import RawIcon from '../../assets/icons/RawIcon';
 import ScriptIcon from '../../assets/icons/ScriptIcon';
@@ -129,7 +129,7 @@ export const TransactionContainer: React.FunctionComponent<TransactionContainerP
                     onChange={(newValue) => handleSetTransactionId(newValue)}
                     disabled={state.executingScript}
                     style={{ maxWidth: '500px', textAlign: 'center', margin: '0 auto' }}
-                    onRequestSearch={() => {
+                    onSearch={() => {
                         loadTransaction(state.transactionId);
                     }}
                 />
