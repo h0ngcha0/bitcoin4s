@@ -12,7 +12,13 @@
     "@types/react-helmet": "^6.1.9",
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
-    "prettier": "^2.8.8",
+    "eslint": "^8.37.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-jest": "^27.2.1",
+    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-plugin-security": "^1.7.1",
+    "prettier": "^3.1.0",
     "react-scripts": "^5.0.1",
     "typescript": "^4.9.5"
   },
@@ -44,15 +50,21 @@
     "start": "./node_modules/.bin/react-scripts start",
     "build": "./node_modules/.bin/react-scripts build",
     "test": "./node_modules/.bin/react-scripts test --env=jsdom",
-    "eject": "./node_modules/.bin/react-scripts eject"
+    "eject": "./node_modules/.bin/react-scripts eject",
+    "lint": "eslint . --ext ts,.tsx",
+    "lint:fix": "eslint . --fix --ext .ts,.tsx"
   },
   "resolutions": {
     "@types/react": "^18.2.0"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ]
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "bracketSameLine": false,
+    "trailingComma": "none"
   },
   "browserslist": {
     "production": [

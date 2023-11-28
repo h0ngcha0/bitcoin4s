@@ -1,0 +1,33 @@
+{
+  "plugins": ["security", "header", "jest"],
+  "extends": [
+    "prettier",
+    "plugin:prettier/recommended",
+    "plugin:security/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "rules": {
+    "@typescript-eslint/require-await": ["error"],
+    "no-var": ["error"],
+    "object-curly-spacing": ["error", "always"]
+  },
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "security/detect-non-literal-fs-filename": "off"
+      }
+    }
+  ],
+  "parserOptions": {
+    "ecmaVersion": "es5",
+    "sourceType": "module",
+    "project": ["./tsconfig.json"]
+  },
+  "env": {
+    "node": true,
+    "es6": true,
+    "jest/globals": true
+  }
+}

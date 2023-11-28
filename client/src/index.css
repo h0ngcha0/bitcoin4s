@@ -270,3 +270,9 @@ a.image {
   color: white;
   background: darkred;
 }
+
+.SearchBarComponent-root .search-bar {
+  width: '1000px';
+  text-align: 'center';
+  margin: '0 auto';
+}
