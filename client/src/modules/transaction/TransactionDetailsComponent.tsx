@@ -1,19 +1,19 @@
 import _ from 'lodash';
 
 import React from 'react';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Grid from "@material-ui/core/Grid/Grid";
-import HomeIcon from '@material-ui/icons/Home';
-import LockIcon from '@material-ui/icons/Lock';
-import LockOpenIcon from '@material-ui/icons/LockOpen';
-import DebugIcon from '@material-ui/icons/BugReport';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Grid from "@mui/material/Grid/Grid";
+import HomeIcon from '@mui/icons-material/Home';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import DebugIcon from '@mui/icons-material/BugReport';
 import ScriptOpCodeList from "./ScriptOpCodeList";
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
-import Typography from "@material-ui/core/Typography";
+import Typography from "@mui/material/Typography";
 import { Transaction } from '../../api';
 
 interface TransactionDetailsComponentProps {

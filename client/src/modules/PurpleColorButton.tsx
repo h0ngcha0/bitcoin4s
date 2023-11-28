@@ -1,6 +1,6 @@
-import { withStyles } from '@material-ui/core/styles';
-import { blue, purple } from '@material-ui/core/colors';
-import Button from "@material-ui/core/Button";
+import { withStyles } from '@mui/styles';
+import { blue, purple } from '@mui/material/colors';
+import Button from "@mui/material/Button";
 
 export const PurpleColorButton = withStyles(theme => ({
   root: {

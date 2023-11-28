@@ -11,7 +11,7 @@ import SearchBar from 'material-ui-search-bar';
 import BitcoinIcon from '../../assets/icons/BitcoinIcon';
 import RawIcon from '../../assets/icons/RawIcon';
 import ScriptIcon from '../../assets/icons/ScriptIcon';
-import { Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import ScrollableTabs from "../ScrollableTabs";
 import TransactionRawComponent from "./TransactionRawComponent";
 import { Transaction } from '../../api';

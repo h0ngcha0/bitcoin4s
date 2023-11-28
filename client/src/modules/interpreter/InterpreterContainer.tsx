@@ -5,10 +5,10 @@ import { interpretTransactionInputWithSteps } from '../../api';
 import desktopLogoImage from '../../assets/images/bitcoin-playground-desktop.png';
 import mobileLogoImage from '../../assets/images/bitcoin-playground-mobile.png';
 import Loading from '../Loading';
-import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore';
-import NavigateNextIcon from '@material-ui/icons/NavigateNext';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import ScriptInterpreterWebsocket from './ScriptInterpreterWebsocket';
-import Grid from "@material-ui/core/Grid/Grid";
+import Grid from "@mui/material/Grid/Grid";
 import { InterpreterOutcome } from '../../api'
 
 interface InterpreterContainerProps {
