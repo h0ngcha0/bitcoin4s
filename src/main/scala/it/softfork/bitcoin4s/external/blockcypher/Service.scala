@@ -16,7 +16,7 @@ import it.softfork.bitcoin4s.ApiModels.InterpreterResultOut.NoResult
 import it.softfork.bitcoin4s.external.ApiInterface
 import it.softfork.bitcoin4s.script._
 import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
-import it.softfork.bitcoin4s.transaction.TxId
+import it.softfork.bitcoin4s.transaction.{Script => TxScript, TxId, TxOut}
 import it.softfork.bitcoin4s.utils.hexToBytes
 
 class Service(api: ApiInterface)(implicit
@@ -49,27 +49,42 @@ class Service(api: ApiInterface)(implicit
     txId: TxId,
     inputIndex: Int,
     maybeStep: Option[Int] = None,
-    flags: Seq[ScriptFlag] = Seq(ScriptFlag.SCRIPT_VERIFY_P2SH, ScriptFlag.SCRIPT_VERIFY_WITNESS)
+    flags: Seq[ScriptFlag] = Seq(
+      ScriptFlag.SCRIPT_VERIFY_P2SH,
+      ScriptFlag.SCRIPT_VERIFY_WITNESS,
+      ScriptFlag.SCRIPT_VERIFY_TAPROOT
+    )
   ): Future[Option[InterpreterOutcome]] = {
     getTransaction(txId).flatMap { maybeSpendingTx =>
-      val maybeTxInput = maybeSpendingTx.flatMap { spendingTx =>
-        allCatch.opt(spendingTx.inputs(inputIndex))
+      val maybeInput = maybeSpendingTx.flatMap { spendingTx =>
+        allCatch.opt((spendingTx, spendingTx.inputs(inputIndex)))
       }
 
-      maybeTxInput match {
-        case Some(txInput) =>
-          val prevId = TxId(txInput.prevHash.toString)
-          val outputIndex = txInput.outputIndex
+      maybeInput match {
+        case Some((spendingTransaction, txInput)) =>
+          val previousOutputs = Future.sequence {
+            spendingTransaction.inputs.map { input =>
+              getTransactionOutput(TxId(input.prevHash), input.outputIndex)
+            }
+          }
 
-          getTransactionOutput(prevId, outputIndex).map { maybeTxOutput =>
-            maybeTxOutput.map { txOutout =>
+          previousOutputs.map { maybeOutputs =>
+            val allOutputsAvailable = maybeOutputs.forall(_.isDefined)
+            if (allOutputsAvailable) {
+              val outputs = maybeOutputs.flatten
+              val txOutput = outputs(inputIndex)
+              val spentOutputs = outputs.map { output =>
+                TxOut(output.value, TxScript(hexToBytes(output.script)))
+              }
+
               val scriptSig = txInput.script
                 .map { s =>
                   Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(s)))
                 }
                 .getOrElse(Seq.empty)
 
-              val scriptPubKey = Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(txOutout.script)))
+              val scriptPubKey =
+                Parser.parse(ArraySeq.unsafeWrapArray(hexToBytes(txOutput.script)))
 
               val witnessesStack = txInput.witness.map { rawWitnesses =>
                 rawWitnesses.reverse.flatMap { rawWitness =>
@@ -77,7 +92,7 @@ class Service(api: ApiInterface)(implicit
                 }
               }
 
-              val amount = txOutout.value
+              val amount = txOutput.value
               val sigVersion =
                 if (witnessesStack.isEmpty) SIGVERSION_BASE else SIGVERSION_WITNESS_V0
 
@@ -86,9 +101,10 @@ class Service(api: ApiInterface)(implicit
                 scriptSig = scriptSig,
                 scriptWitnessStack = witnessesStack,
                 flags = flags,
-                transaction = maybeSpendingTx.get.tx, // Has to exist
+                transaction = spendingTransaction.tx,
                 inputIndex = inputIndex,
                 amount = amount,
+                spentOutputs = spentOutputs,
                 sigVersion = sigVersion
               )
 
@@ -96,18 +112,22 @@ class Service(api: ApiInterface)(implicit
 
               logger.info(s"Interpreter finished with $outcome")
 
-              outcome.map { case (finalState @ _, interpretedResult) =>
-                InterpreterOutcome(
-                  result = InterpreterResultOut.fromInterpreterResult(interpretedResult),
-                  state = InterpreterStateOut.fromInterpreterState(finalState),
-                  step = maybeStep
-                )
-              } match {
-                case Left(e) =>
-                  throw e
-                case Right(result) =>
-                  result
+              Some {
+                outcome.map { case (finalState @ _, interpretedResult) =>
+                  InterpreterOutcome(
+                    result = InterpreterResultOut.fromInterpreterResult(interpretedResult),
+                    state = InterpreterStateOut.fromInterpreterState(finalState),
+                    step = maybeStep
+                  )
+                } match {
+                  case Left(e) =>
+                    throw e
+                  case Right(result) =>
+                    result
+                }
               }
+            } else {
+              None
             }
           }
 

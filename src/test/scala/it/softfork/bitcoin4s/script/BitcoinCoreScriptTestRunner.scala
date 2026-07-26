@@ -61,6 +61,17 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
     case object WITNESS_MALLEATED_P2SH extends ExpectedResult
     case object WITNESS_UNEXPECTED extends ExpectedResult
     case object WITNESS_PUBKEYTYPE extends ExpectedResult
+    case object SCHNORR_SIG_SIZE extends ExpectedResult
+    case object SCHNORR_SIG_HASHTYPE extends ExpectedResult
+    case object SCHNORR_SIG extends ExpectedResult
+    case object TAPROOT_WRONG_CONTROL_SIZE extends ExpectedResult
+    case object TAPSCRIPT_VALIDATION_WEIGHT extends ExpectedResult
+    case object TAPSCRIPT_CHECKMULTISIG extends ExpectedResult
+    case object TAPSCRIPT_MINIMALIF extends ExpectedResult
+    case object TAPSCRIPT_EMPTY_PUBKEY extends ExpectedResult
+    case object DISCOURAGE_UPGRADABLE_TAPROOT_VERSION extends ExpectedResult
+    case object DISCOURAGE_OP_SUCCESS extends ExpectedResult
+    case object DISCOURAGE_UPGRADABLE_PUBKEYTYPE extends ExpectedResult
     case object NEGATIVE_LOCKTIME extends ExpectedResult
     case object UNSATISFIED_LOCKTIME extends ExpectedResult
     case object MINIMALIF
@@ -102,6 +113,17 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
       WITNESS_MALLEATED_P2SH,
       WITNESS_UNEXPECTED,
       WITNESS_PUBKEYTYPE,
+      SCHNORR_SIG_SIZE,
+      SCHNORR_SIG_HASHTYPE,
+      SCHNORR_SIG,
+      TAPROOT_WRONG_CONTROL_SIZE,
+      TAPSCRIPT_VALIDATION_WEIGHT,
+      TAPSCRIPT_CHECKMULTISIG,
+      TAPSCRIPT_MINIMALIF,
+      TAPSCRIPT_EMPTY_PUBKEY,
+      DISCOURAGE_UPGRADABLE_TAPROOT_VERSION,
+      DISCOURAGE_OP_SUCCESS,
+      DISCOURAGE_UPGRADABLE_PUBKEYTYPE,
       NEGATIVE_LOCKTIME,
       UNSATISFIED_LOCKTIME,
       MINIMALIF
@@ -146,6 +168,7 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
       transaction = spendingTx,
       inputIndex = 0,
       amount = amount.getOrElse(0),
+      spentOutputs = creditingTx.tx_out,
       sigVersion = sigVersion
     )
 
@@ -275,6 +298,39 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
 
         case ExpectedResult.WITNESS_MALLEATED_P2SH =>
           checkError[WitnessMalleatedP2SH](result)
+
+        case ExpectedResult.SCHNORR_SIG_SIZE =>
+          checkError[SchnorrSignatureWrongSize](result)
+
+        case ExpectedResult.SCHNORR_SIG_HASHTYPE =>
+          checkError[SchnorrSignatureHashType](result)
+
+        case ExpectedResult.SCHNORR_SIG =>
+          checkError[SchnorrSignatureVerificationFailed](result)
+
+        case ExpectedResult.TAPROOT_WRONG_CONTROL_SIZE =>
+          checkError[TaprootWrongControlSize](result)
+
+        case ExpectedResult.TAPSCRIPT_VALIDATION_WEIGHT =>
+          checkError[TapscriptValidationWeight](result)
+
+        case ExpectedResult.TAPSCRIPT_CHECKMULTISIG =>
+          checkError[TapscriptCheckMultiSig](result)
+
+        case ExpectedResult.TAPSCRIPT_MINIMALIF =>
+          checkError[TapscriptMinimalIf](result)
+
+        case ExpectedResult.TAPSCRIPT_EMPTY_PUBKEY =>
+          checkError[TapscriptEmptyPublicKey](result)
+
+        case ExpectedResult.DISCOURAGE_UPGRADABLE_TAPROOT_VERSION =>
+          checkError[DiscourageUpgradableTaprootVersion](result)
+
+        case ExpectedResult.DISCOURAGE_OP_SUCCESS =>
+          checkError[DiscourageOpSuccess](result)
+
+        case ExpectedResult.DISCOURAGE_UPGRADABLE_PUBKEYTYPE =>
+          checkError[DiscourageUpgradablePublicKeyType](result)
 
         case ExpectedResult.UNKNOWN_ERROR =>
           checkError[GeneralError](result)

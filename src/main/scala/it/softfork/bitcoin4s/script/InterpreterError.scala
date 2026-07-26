@@ -174,6 +174,39 @@ object InterpreterError {
   case class WitnessMalleatedP2SH(opCode: ScriptOpCode, state: InterpreterState)
       extends InterpreterError {}
 
+  case class SchnorrSignatureWrongSize(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class SchnorrSignatureHashType(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class SchnorrSignatureVerificationFailed(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class TaprootWrongControlSize(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class TapscriptValidationWeight(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class TapscriptCheckMultiSig(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class TapscriptMinimalIf(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class TapscriptEmptyPublicKey(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class DiscourageOpSuccess(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class DiscourageUpgradableTaprootVersion(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
+  case class DiscourageUpgradablePublicKeyType(opCode: ScriptOpCode, state: InterpreterState)
+      extends InterpreterError {}
+
   case class GeneralError(opCode: ScriptOpCode, state: InterpreterState) extends InterpreterError {}
 }
 //scalastyle:on number.of.methods number.of.types

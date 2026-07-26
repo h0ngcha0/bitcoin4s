@@ -9,6 +9,7 @@ import com.typesafe.config._
 import org.spongycastle.util.encoders.Hex
 
 import it.softfork.bitcoin4s.Spec
+import it.softfork.bitcoin4s.crypto.Secp256k1
 import it.softfork.bitcoin4s.utils._
 
 // Run bitcoin core script_test.json test cases
@@ -40,17 +41,19 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
 
     lazy val scriptTests = rawScriptTests.collect { case elements @ (head :: tail) =>
       if (head.isInstanceOf[ConfigList]) {
-        val witnessElement = head.toList().map(_.render)
+        val witnessElement = head.toList().map(stripDoubleQuotes)
         val amount = (BigDecimal(witnessElement.last) * 100000000).toLong
+        val (expandedWitness, taprootOutput) =
+          expandTaprootWitness(witnessElement.dropRight(1))
         val stringTail = tail.map(stripDoubleQuotes)
         val comments = (stringTail.length == 5).option(stringTail.last).getOrElse("")
-        val witnesses = witnessElement.reverse.tail
-          .flatMap { rawWitness =>
-            allCatch.opt(Hex.decode(stripDoubleQuotes(rawWitness)))
-          }
+        val witnesses = expandedWitness.reverse
           .map(ScriptConstant.apply)
-        val List(scriptSigString, scriptPubKeyString, scriptFlagsString, expectedResultString) =
+        val List(scriptSigString, rawScriptPubKeyString, scriptFlagsString, expectedResultString) =
           stringTail.take(4)
+        val scriptPubKeyString = taprootOutput
+          .map(output => s"0x51 0x20 0x${output.toHex}")
+          .getOrElse(rawScriptPubKeyString)
         val scriptFlags = toScriptFlags(scriptFlagsString)
         val expectedResult = ExpectedResult.fromString(expectedResultString).value
 
@@ -101,6 +104,31 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
       .filter(_.nonEmpty)
       .map(ScriptFlag.fromString(_).value)
     ArraySeq.unsafeWrapArray(result)
+  }
+
+  private def expandTaprootWitness(
+    witness: List[String]
+  ): (List[Array[Byte]], Option[Seq[Byte]]) = {
+    val internalPublicKey = Secp256k1.params.getG.getEncoded(true).tail.toSeq
+
+    witness.foldLeft((List.empty[Array[Byte]], Option.empty[Seq[Byte]])) {
+      case ((elements, output), raw) if raw.startsWith("#SCRIPT#") =>
+        val script = Parser.parse(raw.stripPrefix("#SCRIPT#").trim).flatMap(_.bytes).toArray
+        (elements :+ script, output)
+
+      case ((elements, _), "#CONTROLBLOCK#") =>
+        val script = elements.last
+        val leafHash = Taproot.tapLeafHash(0xc0, script.toIndexedSeq)
+        val (taprootOutput, odd) =
+          Taproot.outputKey(internalPublicKey, leafHash.toIndexedSeq).value
+        val control = Array((0xc0 | odd.option(1).getOrElse(0)).toByte) ++
+          internalPublicKey
+        (elements :+ control, Some(taprootOutput))
+
+      case ((elements, output), raw) =>
+        val decoded = allCatch.opt(Hex.decode(raw)).value
+        (elements :+ decoded, output)
+    }
   }
 
   private def stripDoubleQuotes(config: ConfigValue): String = {

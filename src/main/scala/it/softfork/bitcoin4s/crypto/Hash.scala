@@ -1,5 +1,7 @@
 package it.softfork.bitcoin4s.crypto
 
+import java.nio.charset.StandardCharsets
+
 import org.spongycastle.crypto.Digest
 import org.spongycastle.crypto.digests.{RIPEMD160Digest, SHA1Digest, SHA256Digest, SHA512Digest}
 import org.spongycastle.crypto.generators.PKCS5S2ParametersGenerator
@@ -11,10 +13,12 @@ trait Hash {
   val digest: Digest
 
   def apply(input: Array[Byte]): Array[Byte] = {
-    digest.update(input, 0, input.length)
-    val result = new Array[Byte](digest.getDigestSize)
-    digest.doFinal(result, 0)
-    result
+    digest.synchronized {
+      digest.update(input, 0, input.length)
+      val result = new Array[Byte](digest.getDigestSize)
+      digest.doFinal(result, 0)
+      result
+    }
   }
 }
 
@@ -39,6 +43,14 @@ object Hash {
 
     def apply(input: Array[Byte]): Array[Byte] = {
       Sha256(Sha256(input))
+    }
+  }
+
+  object TaggedSha256 {
+
+    def apply(tag: String, input: Array[Byte]): Array[Byte] = {
+      val tagHash = Sha256(tag.getBytes(StandardCharsets.UTF_8))
+      Sha256(tagHash ++ tagHash ++ input)
     }
   }
 

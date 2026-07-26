@@ -54,6 +54,7 @@ class ApiSpec extends Spec with StrictLogging {
       transaction = spendingTx,
       inputIndex = 0,
       amount = amount,
+      spentOutputs = creditingTransaction.tx.tx_out,
       sigVersion = SIGVERSION_WITNESS_V0
     )
 
