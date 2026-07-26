@@ -425,6 +425,7 @@
 ["-1 0", "BOOLOR", "P2SH,STRICTENC", "OK"],
 ["0 0", "NUMEQUAL", "P2SH,STRICTENC", "OK"],
 ["0 0", "NUMEQUALVERIFY 1", "P2SH,STRICTENC", "OK"],
+["2 0", "NUMEQUALVERIFY", "P2SH,STRICTENC", "NUMEQUALVERIFY"],
 ["-1 0", "NUMNOTEQUAL", "P2SH,STRICTENC", "OK"],
 ["-1 0", "LESSTHAN", "P2SH,STRICTENC", "OK"],
 ["1 0", "GREATERTHAN", "P2SH,STRICTENC", "OK"],
@@ -844,7 +845,7 @@
 ["1 1 ADD", "0 EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
 ["11 1 ADD 12 SUB", "11 EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
 
-["2147483648 0 ADD", "NOP", "P2SH,STRICTENC", "UNKNOWN_ERROR", "arithmetic operands must be in range [-2^31...2^31] "],
+["2147483648 0 ADD", "NOP", "P2SH,STRICTENC", "SCRIPTNUM", "arithmetic operands must be in range [-2^31...2^31] "],
 ["-2147483648 0 ADD", "NOP", "P2SH,STRICTENC", "UNKNOWN_ERROR", "arithmetic operands must be in range [-2^31...2^31] "],
 ["2147483647 DUP ADD", "4294967294 NUMEQUAL", "P2SH,STRICTENC", "UNKNOWN_ERROR", "NUMEQUAL must be in numeric range"],
 ["'abcdef' NOT", "0 EQUAL", "P2SH,STRICTENC", "UNKNOWN_ERROR", "NOT is an arithmetic operand"],
@@ -2604,6 +2605,25 @@
 ["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0x09 0x300602010102010101", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "NULLFAIL", "BIP66-compliant but not NULLFAIL-compliant"],
 ["0 0x09 0x300602010102010101 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66-compliant but not NULLFAIL-compliant"],
 ["0 0x09 0x300602010102010101 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "NULLFAIL", "BIP66-compliant but not NULLFAIL-compliant"],
+
+["CHECKSIGVERIFY and CHECKMULTISIGVERIFY failure tests"],
+["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIGVERIFY 1", "P2SH,STRICTENC", "CHECKSIGVERIFY", "CHECKSIGVERIFY fails with its own error code when the signature check fails"],
+["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIGVERIFY 1", "P2SH,STRICTENC", "CHECKMULTISIGVERIFY", "CHECKMULTISIGVERIFY fails with its own error code when the signature check fails"],
+
+[
+    [
+        "1ffe1234567890",
+        "00",
+        "#SCRIPT# HASH256 DUP SHA1 DROP DUP DROP TOALTSTACK HASH256 DUP DROP TOALTSTACK FROMALTSTACK",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "TAPSCRIPT Tests testing tapscript with many different op codes including ALTSTACK interactions"
+],
 
 ["The End"]
 ]

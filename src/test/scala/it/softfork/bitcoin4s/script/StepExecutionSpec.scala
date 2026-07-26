@@ -108,6 +108,7 @@ class StepExecutionSpec extends Spec {
       transaction = emptyTx,
       inputIndex = 0,
       amount = 10,
+      spentOutputs = Seq.empty,
       sigVersion = SIGVERSION_WITNESS_V0
     )
 

@@ -12,6 +12,8 @@ import it.softfork.bitcoin4s.transaction.Tx
 sealed trait LocktimeOp extends ScriptOpCode
 
 object LocktimeOp {
+  private val LocktimeThreshold = 500000000L
+
   case object OP_CHECKLOCKTIMEVERIFY extends LocktimeOp { val value = 177 }
   case object OP_CHECKSEQUENCEVERIFY extends LocktimeOp { val value = 178 }
   case object OP_NOP2 extends LocktimeOp { val value = 177 }
@@ -33,22 +35,18 @@ object LocktimeOp {
           getState.flatMap { state =>
             if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
               state.stack match {
-                case head :: tail =>
-                  val lockTime =
+                case head :: _ =>
+                  Try {
                     ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
-                  if (lockTime < 0 || lockTime <= state.transaction.lock_time) {
-                    abort(CLTVFailed(opCode, state))
-                  } else {
-                    setStateAndContinue(
-                      state.copy(
-                        stack = ScriptNum(1) +: tail,
-                        opCount = state.opCount + 1
-                      )
-                    )
+                  } match {
+                    case Success(lockTime) if checkLockTime(lockTime, state) =>
+                      setStateAndContinue(state.copy(opCount = state.opCount + 1))
+                    case _ =>
+                      abort(CLTVFailed(opCode, state))
                   }
 
                 case Nil =>
-                  abort(NotEnoughElementsInStack(opCode, state))
+                  abort(InvalidStackOperation(opCode, state))
               }
             } else if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)) {
               abort(DiscourageUpgradableNops(opCode, state))
@@ -61,7 +59,7 @@ object LocktimeOp {
           getState.flatMap { state =>
             if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
               state.stack match {
-                case head :: tail =>
+                case head :: _ =>
                   Try {
                     ScriptNum(head.bytes, state.ScriptFlags.requireMinimalEncoding(), 5).value
                   } match {
@@ -82,12 +80,7 @@ object LocktimeOp {
                       } else if (!checkSequence(sequence, state.transaction, state.inputIndex)) {
                         abort(CSVFailed(opCode, state))
                       } else {
-                        setStateAndContinue(
-                          state.copy(
-                            stack = ScriptNum(1) +: tail,
-                            opCount = state.opCount + 1
-                          )
-                        )
+                        setStateAndContinue(state.copy(opCount = state.opCount + 1))
                       }
 
                     case Failure(_) =>
@@ -142,10 +135,23 @@ object LocktimeOp {
         txToSequenceMasked >= txIn.SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked >= txIn.SEQUENCE_LOCKTIME_TYPE_FLAG
       val sameKindOfNSequence = bothLockByBlockHeight || bothLockByBlockTime
 
-      transactionVersionNotHighEnough &&
+      !transactionVersionNotHighEnough &&
       csvEnabled &&
       sameKindOfNSequence &&
-      txToSequenceMasked > nSequenceMasked
+      txToSequenceMasked >= nSequenceMasked
+    }
+
+    private def checkLockTime(lockTime: Long, state: InterpreterState): Boolean = {
+      val transactionLockTime = state.transaction.lock_time
+      val sameKind =
+        transactionLockTime < LocktimeThreshold && lockTime < LocktimeThreshold ||
+          transactionLockTime >= LocktimeThreshold && lockTime >= LocktimeThreshold
+      val input = state.transaction.tx_in(state.inputIndex)
+
+      lockTime >= 0 &&
+      sameKind &&
+      lockTime <= transactionLockTime &&
+      input.sequence != input.SEQUENCE_FINAL
     }
   }
 }

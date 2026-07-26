@@ -15,6 +15,7 @@ import it.softfork.bitcoin4s.script.ScriptExecutionStage._
 import it.softfork.bitcoin4s.script.StackOp.OP_DUP
 import it.softfork.bitcoin4s.transaction.Tx
 import it.softfork.bitcoin4s.transaction.TxIn
+import it.softfork.bitcoin4s.transaction.TxOut
 import it.softfork.bitcoin4s.utils._
 
 sealed trait ScriptExecutionStage
@@ -28,6 +29,7 @@ object ScriptExecutionStage {
 
 object InterpreterState extends StrictLogging {
 
+  //scalastyle:off parameter.number
   def apply(
     scriptPubKey: Seq[ScriptElement],
     scriptSig: Seq[ScriptElement],
@@ -36,6 +38,7 @@ object InterpreterState extends StrictLogging {
     transaction: Tx,
     inputIndex: Int,
     amount: Long,
+    spentOutputs: Seq[TxOut],
     sigVersion: SigVersion
   ): InterpreterState = {
     logger.info(s"sigVersion: $sigVersion")
@@ -49,9 +52,11 @@ object InterpreterState extends StrictLogging {
       inputIndex = inputIndex,
       flags = flags,
       sigVersion = SigVersion.SIGVERSION_BASE,
-      amount = amount
+      amount = amount,
+      spentOutputs = spentOutputs
     )
   }
+  //scalastyle:on parameter.number
 }
 
 case class InterpreterState(
@@ -68,6 +73,7 @@ case class InterpreterState(
   transaction: Tx,
   inputIndex: Int,
   amount: Long,
+  spentOutputs: Seq[TxOut],
   sigVersion: SigVersion,
   scriptExecutionStage: ScriptExecutionStage = ScriptExecutionStage.ExecutingScriptSig
 ) {
@@ -103,6 +109,10 @@ case class InterpreterState(
 
     def witness(): Boolean = {
       flags.contains(ScriptFlag.SCRIPT_VERIFY_WITNESS)
+    }
+
+    def taproot(): Boolean = {
+      flags.contains(ScriptFlag.SCRIPT_VERIFY_TAPROOT)
     }
   }
 }
@@ -271,7 +281,7 @@ object Interpreter {
                 tailRecMEvaluated(false)
 
               case head :: tail =>
-                maybeExecuteWitnessProgram(Some(state.scriptPubKey), state) match {
+                maybeExecuteWitnessProgram(Some(state.scriptPubKey), state, steps) match {
                   case Some(nextState) =>
                     nextState.map(_ => Left(None))
 
@@ -323,7 +333,7 @@ object Interpreter {
                 tailRecMEvaluated(false)
 
               case head :: tail =>
-                maybeExecuteWitnessProgram(state.scriptP2sh, state) match {
+                maybeExecuteWitnessProgram(state.scriptP2sh, state, steps) match {
                   case Some(nextState) =>
                     nextState.map(_ => Left(None))
 
@@ -336,13 +346,14 @@ object Interpreter {
                 }
             }
 
-          case ExecutingScriptP2SH | ExecutingScriptWitness =>
+          case ExecutingScriptWitness =>
             state.stack match {
               case Nil =>
                 tailRecMEvaluated(false)
 
               case head :: tail =>
-                if (state.ScriptFlags.requireCleanStack() && tail.nonEmpty) {
+                val tapscript = state.sigVersion == SigVersion.SIGVERSION_TAPSCRIPT
+                if ((state.ScriptFlags.requireCleanStack() || tapscript) && tail.nonEmpty) {
                   tailRecMAbort(RequireCleanStack(OP_UNKNOWN, state))
                 } else {
                   tailRecMEvaluated(head.bytes.toBoolean())
@@ -351,8 +362,37 @@ object Interpreter {
         }
     }
 
-    // Update the steps
-    result.map(v => (v, steps.map(_ - 1)))
+    // Count Tapscript pushes as one instruction even though the parser exposes their data separately.
+    result.flatMap { value =>
+      getState.map { nextState =>
+        val tapscriptStarted =
+          steps.isDefined &&
+            state.sigVersion != SigVersion.SIGVERSION_TAPSCRIPT &&
+            nextState.sigVersion == SigVersion.SIGVERSION_TAPSCRIPT
+        val tapscriptSteps = tapscriptStarted
+          .option {
+            val fullScript = nextState.scriptWitness.getOrElse(Seq.empty)
+            instructionCount(fullScript) - instructionCount(nextState.currentScript)
+          }
+          .getOrElse(0)
+
+        (value, steps.map(_ - 1 - tapscriptSteps))
+      }
+    }
+  }
+
+  private def instructionCount(script: Seq[ScriptElement]): Int = {
+    script.zipWithIndex.count {
+      case (_: ScriptConstant, _) =>
+        false
+      case (OP_0, index) if index > 0 =>
+        script(index - 1) match {
+          case _: OP_PUSHDATA | OP_PUSHDATA1 | OP_PUSHDATA2 | OP_PUSHDATA4 => false
+          case _ => true
+        }
+      case _ =>
+        true
+    }
   }
 
   private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {
@@ -513,8 +553,7 @@ object Interpreter {
   }
 
   private def getWitnessScript(
-    scriptPubkey: Seq[ScriptElement],
-    state: InterpreterState
+    scriptPubkey: Seq[ScriptElement]
   ): Either[WitnessRebuiltError, (ConstantOp, ScriptConstant)] = {
     import ConstantOp._
 
@@ -547,15 +586,7 @@ object Interpreter {
           possibleVersionNumbers.contains(version) && (scriptLength >= 2 && scriptLength <= 40)
 
         if (isWitnessScript) {
-          if (
-            version != OP_0 && state.flags.contains(
-              ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM
-            )
-          ) {
-            Left(WitnessRebuiltError.WitnessProgramUpgradableVersion)
-          } else {
-            Right((version, scriptConstant))
-          }
+          Right((version, scriptConstant))
         } else {
           Left(WitnessRebuiltError.WitnessScriptUnableToExtract)
         }
@@ -567,52 +598,107 @@ object Interpreter {
 
   private def maybeExecuteWitnessProgram(
     maybeScript: Option[Seq[ScriptElement]],
-    state: InterpreterState
+    state: InterpreterState,
+    steps: Option[Int]
   ): Option[InterpreterContext[Option[Boolean]]] = {
 
     state.ScriptFlags.witness().flatOption(maybeScript).flatMap { script =>
-      tryRebuildScriptPubkeyAndStackFromWitness(script, state) match {
-        case Right((rebuiltScript, rebuiltStack)) =>
-          val interpreterContext = for {
-            _ <- checkWitnessP2WPKHScriptSigEmpty()
-            _ <- checkWitnessSuperfluousScriptSigOperation()
-            _ <- setState(
-              state.copy(
-                currentScript = rebuiltScript,
-                stack = rebuiltStack,
-                altStack = Seq.empty,
-                opCount = 0,
-                scriptWitness = Some(rebuiltScript),
-                sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
-                scriptExecutionStage = ExecutingScriptWitness
-              )
-            )
-            _ <- checkInvalidOpCode()
-            _ <- checkDisabledOpCode()
-            _ <- checkMaxPushSize()
-            result <- checkMaxScriptSize()
-          } yield {
-            result
+      getWitnessScript(script) match {
+        case Right((version, witnessProgram)) if version.value == OP_0.value =>
+          val rebuilt = rebuildScriptPubkeyAndStackFromWitness(
+            witnessProgram,
+            state.scriptWitnessStack.getOrElse(Seq.empty)
+          )
+
+          Some {
+            rebuilt match {
+              case Right((rebuiltScript, rebuiltStack)) =>
+                for {
+                  _ <- checkWitnessP2WPKHScriptSigEmpty()
+                  _ <- checkWitnessSuperfluousScriptSigOperation()
+                  _ <- setState(
+                    state.copy(
+                      currentScript = rebuiltScript,
+                      stack = rebuiltStack,
+                      altStack = Seq.empty,
+                      opCount = 0,
+                      scriptWitness = Some(rebuiltScript),
+                      sigVersion = SigVersion.SIGVERSION_WITNESS_V0,
+                      scriptExecutionStage = ExecutingScriptWitness
+                    )
+                  )
+                  _ <- checkInvalidOpCode()
+                  _ <- checkDisabledOpCode()
+                  _ <- checkMaxPushSize()
+                  result <- checkMaxScriptSize()
+                } yield {
+                  result
+                }
+
+              case Left(WitnessRebuiltError.WitnessProgramMismatch) =>
+                abort(WitnessProgramMismatch(OP_UNKNOWN, state))
+              case Left(WitnessRebuiltError.WitnessHashWrongLength) =>
+                abort(WitnessProgramWrongLength(OP_UNKNOWN, state))
+              case Left(WitnessRebuiltError.WitnessStackEmpty) =>
+                abort(WitnessProgramWitnessEmpty(OP_UNKNOWN, state))
+              case Left(_) =>
+                abort(GeneralError(OP_UNKNOWN, state))
+            }
           }
 
-          Some(interpreterContext)
+        case Right((version, witnessProgram))
+            if version.value == OP_1.value &&
+              witnessProgram.bytes.length == 32 &&
+              state.scriptExecutionStage == ExecutingScriptPubKey =>
+          Some {
+            for {
+              _ <- checkWitnessP2WPKHScriptSigEmpty()
+              result <-
+                if (state.ScriptFlags.taproot()) {
+                  Taproot.execute(witnessProgram.bytes, state, steps.map(_ - 1)) match {
+                    case Right(nextState) => setStateAndContinue(nextState)
+                    case Left(error) => abort(error)
+                  }
+                } else {
+                  setStateAndContinue(
+                    state.copy(
+                      currentScript = Seq.empty,
+                      stack = Seq(ScriptNum(1)),
+                      altStack = Seq.empty,
+                      scriptWitness = Some(Seq.empty),
+                      scriptExecutionStage = ExecutingScriptWitness
+                    )
+                  )
+                }
+            } yield result
+          }
 
-        case Left(WitnessRebuiltError.WitnessProgramMismatch) =>
-          Some(abort(WitnessProgramMismatch(OP_UNKNOWN, state)))
+        case Right(_)
+            if state.flags.contains(
+              ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM
+            ) =>
+          Some(abort(DiscourageUpgradableWitnessProgram(OP_UNKNOWN, state)))
+
+        case Right(_) =>
+          Some {
+            for {
+              _ <- checkWitnessP2WPKHScriptSigEmpty()
+              result <- setStateAndContinue(
+                state.copy(
+                  currentScript = Seq.empty,
+                  stack = Seq(ScriptNum(1)),
+                  altStack = Seq.empty,
+                  scriptWitness = Some(Seq.empty),
+                  scriptExecutionStage = ExecutingScriptWitness
+                )
+              )
+            } yield result
+          }
 
         case Left(WitnessRebuiltError.WitnessScriptUnableToExtract) =>
           None
 
-        case Left(WitnessRebuiltError.WitnessHashWrongLength) =>
-          Some(abort(WitnessProgramWrongLength(OP_UNKNOWN, state)))
-
-        case Left(WitnessRebuiltError.WitnessStackEmpty) =>
-          Some(abort(WitnessProgramWitnessEmpty(OP_UNKNOWN, state)))
-
-        case Left(WitnessRebuiltError.WitnessProgramUpgradableVersion) =>
-          Some(abort(DiscourageUpgradableWitnessProgram(OP_UNKNOWN, state)))
-
-        case Left(error @ _) =>
+        case Left(_) =>
           Some(abort(GeneralError(OP_UNKNOWN, state)))
       }
     }
@@ -625,19 +711,6 @@ object Interpreter {
     case object WitnessProgramMismatch extends WitnessRebuiltError
     case object WitnessStackEmpty extends WitnessRebuiltError
     case object WitnessHashWrongLength extends WitnessRebuiltError
-    case object WitnessProgramUpgradableVersion extends WitnessRebuiltError
-  }
-
-  private def tryRebuildScriptPubkeyAndStackFromWitness(
-    script: Seq[ScriptElement],
-    state: InterpreterState
-  ): Either[WitnessRebuiltError, (Seq[ScriptElement], Seq[ScriptElement])] = {
-    getWitnessScript(script, state).flatMap { case (version @ _, witnessHash) =>
-      rebuildScriptPubkeyAndStackFromWitness(
-        witnessHash,
-        state.scriptWitnessStack.getOrElse(Seq.empty)
-      )
-    }
   }
 
   private def isPushOnly(script: Seq[ScriptElement]): Boolean = {

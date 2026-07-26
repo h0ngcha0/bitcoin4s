@@ -14,7 +14,12 @@ import it.softfork.bitcoin4s.script.Interpreter._
 import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.OpCodes.OP_UNKNOWN
 import it.softfork.bitcoin4s.script.RichTransaction._
-import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_WITNESS_V0}
+import it.softfork.bitcoin4s.script.SigVersion.{
+  SIGVERSION_BASE,
+  SIGVERSION_TAPROOT,
+  SIGVERSION_TAPSCRIPT,
+  SIGVERSION_WITNESS_V0
+}
 import it.softfork.bitcoin4s.utils._
 
 sealed trait CryptoOp extends ScriptOpCode
@@ -30,6 +35,7 @@ object CryptoOp {
   case object OP_CHECKSIGVERIFY extends CryptoOp { val value = 173 }
   case object OP_CHECKMULTISIG extends CryptoOp { val value = 174 }
   case object OP_CHECKMULTISIGVERIFY extends CryptoOp { val value = 175 }
+  case object OP_CHECKSIGADD extends CryptoOp { val value = 186 }
 
   val all = Set(
     OP_RIPEMD160,
@@ -41,7 +47,8 @@ object CryptoOp {
     OP_CHECKSIG,
     OP_CHECKSIGVERIFY,
     OP_CHECKMULTISIG,
-    OP_CHECKMULTISIGVERIFY
+    OP_CHECKMULTISIGVERIFY,
+    OP_CHECKSIGADD
   )
 
   sealed trait MultiSigCheckError extends Product
@@ -306,6 +313,9 @@ object CryptoOp {
                 )
               )
             }
+
+        case OP_CHECKSIGADD =>
+          getState.flatMap(state => abort(BadOpCode(OP_CHECKSIGADD, state, "Invalid opcode")))
       }
     }
     //scalastyle:on cyclomatic.complexity method.length
@@ -443,6 +453,9 @@ object CryptoOp {
               amount = state.amount,
               sigHashType = sigHashType
             )
+
+          case SIGVERSION_TAPROOT | SIGVERSION_TAPSCRIPT =>
+            throw GeneralError(OP_CHECKSIG, state)
         }
 
         pubKey.verify(hashedTransaction, ecdsaSignature)

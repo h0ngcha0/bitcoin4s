@@ -89,6 +89,29 @@ object ScriptFlag {
   //
   case object SCRIPT_VERIFY_WITNESS_PUBKEYTYPE extends ScriptFlag { val value = 1 << 15 }
 
+  // Making OP_CODESEPARATOR and FindAndDelete fail any non-segwit scripts
+  //
+  // Deliberately excluded from `all` until those validation rules are implemented.
+  case object SCRIPT_VERIFY_CONST_SCRIPTCODE extends ScriptFlag { val value = 1 << 16 }
+
+  // Taproot/Tapscript validation (BIPs 341 & 342)
+  //
+  case object SCRIPT_VERIFY_TAPROOT extends ScriptFlag { val value = 1 << 17 }
+
+  // Making unknown Taproot leaf versions non-standard
+  //
+  case object SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION extends ScriptFlag {
+    val value = 1 << 18
+  }
+
+  // Making unknown OP_SUCCESS non-standard
+  case object SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS extends ScriptFlag { val value = 1 << 19 }
+
+  // Making unknown public key versions (in BIP 342 scripts) non-standard
+  case object SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE extends ScriptFlag {
+    val value = 1 << 20
+  }
+
   val all = Set(
     SCRIPT_VERIFY_NONE,
     SCRIPT_VERIFY_P2SH,
@@ -106,7 +129,11 @@ object ScriptFlag {
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,
     SCRIPT_VERIFY_MINIMALIF,
     SCRIPT_VERIFY_NULLFAIL,
-    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE
+    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE,
+    SCRIPT_VERIFY_TAPROOT,
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION,
+    SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS,
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE
   )
 
   def fromString(str: String): Option[ScriptFlag] = {

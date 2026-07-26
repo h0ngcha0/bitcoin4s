@@ -17,12 +17,12 @@ object VarInt {
       n match {
         case i if i < 0xfd =>
           uint8L.encode(i.toInt)
-        case i if i < 0xffff =>
+        case i if i <= 0xffff =>
           for {
             a <- uint8L.encode(0xfd)
             b <- uint16L.encode(i.toInt)
           } yield a ++ b
-        case i if i < 0xffffffffL =>
+        case i if i <= 0xffffffffL =>
           for {
             a <- uint8L.encode(0xfe)
             b <- uint32L.encode(i)
