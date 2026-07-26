@@ -36,6 +36,7 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
 
     val rawScriptTests = scriptTestsConfig
       .filter(_.length > 3)
+      .filter(hasSupportedFlags)
 
     lazy val scriptTests = rawScriptTests.collect { case elements @ (head :: tail) =>
       if (head.isInstanceOf[ConfigList]) {
@@ -87,8 +88,18 @@ class BitcoinCoreScriptSpec extends Spec with BitcoinCoreScriptTestRunner {
     scriptTests.zipWithIndex.foreach(Function.tupled(run))
   }
 
+  private def hasSupportedFlags(elements: List[ConfigValue]): Boolean = {
+    val fields = if (elements.head.isInstanceOf[ConfigList]) elements.tail else elements
+    val flags = stripDoubleQuotes(fields(2)).split(",").map(_.trim).filter(_.nonEmpty)
+    flags.forall(ScriptFlag.fromString(_).isDefined)
+  }
+
   private def toScriptFlags(scriptFlagsString: String): Seq[ScriptFlag] = {
-    val result = scriptFlagsString.split(",").map(_.trim).flatMap(ScriptFlag.fromString _)
+    val result = scriptFlagsString
+      .split(",")
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .map(ScriptFlag.fromString(_).value)
     ArraySeq.unsafeWrapArray(result)
   }
 

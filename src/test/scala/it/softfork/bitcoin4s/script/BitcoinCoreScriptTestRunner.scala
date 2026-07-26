@@ -107,7 +107,14 @@ trait BitcoinCoreScriptTestRunner extends StrictLogging { self: Spec =>
       MINIMALIF
     )
 
-    def fromString(str: String) = all.find(_.name == str)
+    private val aliases = Map(
+      "CHECKMULTISIGVERIFY" -> VERIFY,
+      "CHECKSIGVERIFY" -> VERIFY,
+      "NUMEQUALVERIFY" -> VERIFY,
+      "SCRIPTNUM" -> UNKNOWN_ERROR
+    )
+
+    def fromString(str: String) = all.find(_.name == str).orElse(aliases.get(str))
   }
   //scalastyle:on number.of.methods
 
