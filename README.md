@@ -6,7 +6,7 @@ bitcoin4s
 Scala library for experimenting with Bitcoin scripts. Provides a step by step debugger through REST API.
 Passes all bitcoin script [test cases](https://github.com/liuhongchao/bitcoin4s/blob/81996cf471ac4a25a28c4bfcb2060d3d0f2cc8bc/src/test/resources/script_test.json) from bitcoin core.
 
-The code in repository runs the https://nioctib.tech website.
+The code in repository runs the [https://bitcoin-decoder.softfork.se](https://bitcoin-decoder.softfork.se/) website.
 
 Table of Content
 ----------------
