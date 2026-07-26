@@ -11,7 +11,11 @@ import it.softfork.bitcoin4s.crypto.{Schnorr, Secp256k1}
 import it.softfork.bitcoin4s.script.ConstantOp.OP_PUSHDATA
 import it.softfork.bitcoin4s.script.InterpreterError._
 import it.softfork.bitcoin4s.script.LocktimeOp.{OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY}
-import it.softfork.bitcoin4s.script.SigVersion.{SIGVERSION_BASE, SIGVERSION_TAPROOT}
+import it.softfork.bitcoin4s.script.SigVersion.{
+  SIGVERSION_BASE,
+  SIGVERSION_TAPROOT,
+  SIGVERSION_TAPSCRIPT
+}
 import it.softfork.bitcoin4s.transaction.{OutPoint, Script, Tx, TxIn, TxOut}
 import it.softfork.bitcoin4s.transaction.structure.{Hash => TransactionHash, VarInt}
 import it.softfork.bitcoin4s.utils._
@@ -77,7 +81,10 @@ class TaprootSpec extends Spec {
     val expectedTapLeafHash =
       "e8c51e124e2048232fda982f65d00d75922e12a59013a5ec14c84abda9cd2182"
 
-    Taproot.tapLeafHash(0xc0, script.toIndexedSeq).toIndexedSeq.toHex shouldEqual expectedTapLeafHash
+    Taproot
+      .tapLeafHash(0xc0, script.toIndexedSeq)
+      .toIndexedSeq
+      .toHex shouldEqual expectedTapLeafHash
     Taproot.serializedWitnessSize(Seq(ScriptConstant(script))) shouldEqual 65539
   }
 
@@ -103,15 +110,36 @@ class TaprootSpec extends Spec {
       "02000000097de20cbff686da83a54981d2b9bab3586f4ca7e48f57f5b55963115f3b334e9c010000000000000000d7b7cab57b1393ace2d064f4d4a2cb8af6def61273e127517d44759b6dafdd990000000000fffffffff8e1f583384333689228c5d28eac13366be082dc57441760d957275419a418420000000000fffffffff0689180aa63b30cb162a73c6d2a38b7eeda2a83ece74310fda0843ad604853b0100000000feffffffaa5202bdf6d8ccd2ee0f0202afbbb7461d9264a25e5bfd3c5a52ee1239e0ba6c0000000000feffffff956149bdc66faa968eb2be2d2faa29718acbfe3941215893a2a3446d32acd050000000000000000000e664b9773b88c09c32cb70a2a3e4da0ced63b7ba3b22f848531bbb1d5d5f4c94010000000000000000e9aa6b8e6c9de67619e6a3924ae25696bb7b694bb677a632a74ef7eadfd4eabf0000000000ffffffffa778eb6a263dc090464cd125c466b5a99667720b1c110468831d058aa1b82af10100000000ffffffff0200ca9a3b000000001976a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac807840cb0000000020ac9a87f5594be208f8532db38cff670c450ed2fea8fcdefcc9a663f78bab962b0065cd1d"
     )
     val spentOutputs = Seq(
-      TxOut(420000000, Script("512053a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343")),
-      TxOut(462000000, Script("5120147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3")),
+      TxOut(
+        420000000,
+        Script("512053a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343")
+      ),
+      TxOut(
+        462000000,
+        Script("5120147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3")
+      ),
       TxOut(294000000, Script("76a914751e76e8199196d454941c45d1b3a323f1433bd688ac")),
-      TxOut(504000000, Script("5120e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e")),
-      TxOut(630000000, Script("512091b64d5324723a985170e4dc5a0f84c041804f2cd12660fa5dec09fc21783605")),
+      TxOut(
+        504000000,
+        Script("5120e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e")
+      ),
+      TxOut(
+        630000000,
+        Script("512091b64d5324723a985170e4dc5a0f84c041804f2cd12660fa5dec09fc21783605")
+      ),
       TxOut(378000000, Script("00147dd65592d0ab2fe0d0257d571abf032cd9db93dc")),
-      TxOut(672000000, Script("512075169f4001aa68f15bbed28b218df1d0a62cbbcf1188c6665110c293c907b831")),
-      TxOut(546000000, Script("5120712447206d7a5238acc7ff53fbe94a3b64539ad291c7cdbc490b7577e4b17df5")),
-      TxOut(588000000, Script("512077e30a5522dd9f894c3f8b8bd4c4b2cf82ca7da8a3ea6a239655c39c050ab220"))
+      TxOut(
+        672000000,
+        Script("512075169f4001aa68f15bbed28b218df1d0a62cbbcf1188c6665110c293c907b831")
+      ),
+      TxOut(
+        546000000,
+        Script("5120712447206d7a5238acc7ff53fbe94a3b64539ad291c7cdbc490b7577e4b17df5")
+      ),
+      TxOut(
+        588000000,
+        Script("512077e30a5522dd9f894c3f8b8bd4c4b2cf82ca7da8a3ea6a239655c39c050ab220")
+      )
     )
     val vectors = Seq(
       (0, 3, "2514a6272f85cfa0f45eb907fcb0d121b808ed37c6ea160a5a9046ed5526d555"),
@@ -236,6 +264,29 @@ class TaprootSpec extends Spec {
         lockTime = 0
       ).left.toOption.value shouldBe a[CSVFailed]
     }
+  }
+
+  it should "expose each Tapscript step to the interpreter" in {
+    val script = comparisonScript(500, OP_CHECKLOCKTIMEVERIFY.value)
+    def run(steps: Int) =
+      runLocktimeScript(
+        script,
+        version = 2,
+        sequence = 0xfffffffeL,
+        lockTime = 500,
+        maybeSteps = Some(steps)
+      ).toOption.value
+
+    val before = run(4)
+    val afterPush = run(5)
+
+    before._2 shouldEqual None
+    before._1.sigVersion shouldEqual SIGVERSION_TAPSCRIPT
+    before._1.currentScript should have size 6
+    afterPush._2 shouldEqual None
+    afterPush._1.stack.head.bytes shouldEqual ScriptNum(500).bytes
+    afterPush._1.currentScript should have size 4
+    run(9)._2 shouldEqual Some(true)
   }
 
   it should "execute the pinned 30,005-opcode Tapscript without a script-size limit" in {
@@ -376,7 +427,8 @@ class TaprootSpec extends Spec {
     script: Array[Byte],
     version: Long,
     sequence: Long,
-    lockTime: Long
+    lockTime: Long,
+    maybeSteps: Option[Int] = None
   ): Either[InterpreterError, (InterpreterState, Option[Boolean])] = {
     val internalPublicKey = Secp256k1.params.getG.getEncoded(true).tail.toIndexedSeq
     val leafHash = Taproot.tapLeafHash(0xc0, script.toIndexedSeq)
@@ -418,7 +470,7 @@ class TaprootSpec extends Spec {
       sigVersion = SIGVERSION_BASE
     )
 
-    Interpreter.create(verbose = false).run(state)
+    Interpreter.create(verbose = false, maybeSteps).run(state)
   }
 
   private def decodeOutput(hex: String): TxOut = {

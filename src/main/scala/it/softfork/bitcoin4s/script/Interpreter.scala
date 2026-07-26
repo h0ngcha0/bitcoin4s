@@ -281,7 +281,7 @@ object Interpreter {
                 tailRecMEvaluated(false)
 
               case head :: tail =>
-                maybeExecuteWitnessProgram(Some(state.scriptPubKey), state) match {
+                maybeExecuteWitnessProgram(Some(state.scriptPubKey), state, steps) match {
                   case Some(nextState) =>
                     nextState.map(_ => Left(None))
 
@@ -333,7 +333,7 @@ object Interpreter {
                 tailRecMEvaluated(false)
 
               case head :: tail =>
-                maybeExecuteWitnessProgram(state.scriptP2sh, state) match {
+                maybeExecuteWitnessProgram(state.scriptP2sh, state, steps) match {
                   case Some(nextState) =>
                     nextState.map(_ => Left(None))
 
@@ -362,8 +362,37 @@ object Interpreter {
         }
     }
 
-    // Update the steps
-    result.map(v => (v, steps.map(_ - 1)))
+    // Count Tapscript pushes as one instruction even though the parser exposes their data separately.
+    result.flatMap { value =>
+      getState.map { nextState =>
+        val tapscriptStarted =
+          steps.isDefined &&
+            state.sigVersion != SigVersion.SIGVERSION_TAPSCRIPT &&
+            nextState.sigVersion == SigVersion.SIGVERSION_TAPSCRIPT
+        val tapscriptSteps = tapscriptStarted
+          .option {
+            val fullScript = nextState.scriptWitness.getOrElse(Seq.empty)
+            instructionCount(fullScript) - instructionCount(nextState.currentScript)
+          }
+          .getOrElse(0)
+
+        (value, steps.map(_ - 1 - tapscriptSteps))
+      }
+    }
+  }
+
+  private def instructionCount(script: Seq[ScriptElement]): Int = {
+    script.zipWithIndex.count {
+      case (_: ScriptConstant, _) =>
+        false
+      case (OP_0, index) if index > 0 =>
+        script(index - 1) match {
+          case _: OP_PUSHDATA | OP_PUSHDATA1 | OP_PUSHDATA2 | OP_PUSHDATA4 => false
+          case _ => true
+        }
+      case _ =>
+        true
+    }
   }
 
   private def checkOpCodeCount(): InterpreterContext[Option[Boolean]] = {
@@ -569,7 +598,8 @@ object Interpreter {
 
   private def maybeExecuteWitnessProgram(
     maybeScript: Option[Seq[ScriptElement]],
-    state: InterpreterState
+    state: InterpreterState,
+    steps: Option[Int]
   ): Option[InterpreterContext[Option[Boolean]]] = {
 
     state.ScriptFlags.witness().flatOption(maybeScript).flatMap { script =>
@@ -625,7 +655,7 @@ object Interpreter {
               _ <- checkWitnessP2WPKHScriptSigEmpty()
               result <-
                 if (state.ScriptFlags.taproot()) {
-                  Taproot.execute(witnessProgram.bytes, state) match {
+                  Taproot.execute(witnessProgram.bytes, state, steps.map(_ - 1)) match {
                     case Right(nextState) => setStateAndContinue(nextState)
                     case Left(error) => abort(error)
                   }

@@ -23,6 +23,7 @@ interface InterpreterStateOut {
   scriptWitnessStack: ScriptElement[] | undefined
   stack: ScriptElement[]
   altStack: ScriptElement[]
+  sigVersion: string
   stage: ScriptExecutionStage
 }
 

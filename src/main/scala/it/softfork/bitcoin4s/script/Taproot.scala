@@ -20,7 +20,7 @@ import it.softfork.bitcoin4s.transaction.structure.VarInt
 import it.softfork.bitcoin4s.utils._
 
 // BIP341 and BIP342 validation for native witness-v1 32-byte programs.
-//scalastyle:off magic.number method.length cyclomatic.complexity number.of.methods
+//scalastyle:off magic.number method.length cyclomatic.complexity number.of.methods file.size.limit
 object Taproot {
   private val TapLeafVersion = 0xc0
   private val ControlBaseSize = 33
@@ -38,11 +38,16 @@ object Taproot {
     (149 to 153) ++
     (187 to 254)
 
-  private val disabled = Set(126, 127, 128, 129, 131, 132, 133, 134, 141, 142, 149, 150, 151, 152, 153)
+  private val disabled =
+    Set(126, 127, 128, 129, 131, 132, 133, 134, 141, 142, 149, 150, 151, 152, 153)
 
   private case class Instruction(code: Int, data: Option[Seq[Byte]], position: Long)
 
-  def execute(program: Seq[Byte], state: InterpreterState): Either[InterpreterError, InterpreterState] = {
+  def execute(
+    program: Seq[Byte],
+    state: InterpreterState,
+    instructionLimit: Option[Int] = None
+  ): Either[InterpreterError, InterpreterState] = {
     val originalWitness = state.scriptWitnessStack.getOrElse(Seq.empty)
 
     originalWitness match {
@@ -78,10 +83,12 @@ object Taproot {
                   originalWitness,
                   annex,
                   tapLeafHash.toIndexedSeq,
-                  state
+                  state,
+                  instructionLimit
                 )
 
-              case _ if state.flags.contains(
+              case _
+                  if state.flags.contains(
                     ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION
                   ) =>
                 Left(DiscourageUpgradableTaprootVersion(OP_UNKNOWN, state))
@@ -110,8 +117,7 @@ object Taproot {
     for {
       point <- Schnorr.liftX(internalPublicKey)
       tweak = Schnorr.unsigned(
-        Hash.TaggedSha256("TapTweak", (internalPublicKey ++ merkleRoot).toArray)
-          .toIndexedSeq
+        Hash.TaggedSha256("TapTweak", (internalPublicKey ++ merkleRoot).toArray).toIndexedSeq
       )
       if tweak.compareTo(Secp256k1.params.getN) < 0
       output = point.add(Secp256k1.params.getG.multiply(tweak)).normalize()
@@ -163,9 +169,9 @@ object Taproot {
       val expectedParity = (control.head & 1) == 1
       val commitmentMatches =
         outputKey(control.slice(1, ControlBaseSize), merkleRoot.toIndexedSeq)
-        .exists { case (output, parity) =>
-          output == program && parity == expectedParity
-        }
+          .exists { case (output, parity) =>
+            output == program && parity == expectedParity
+          }
 
       if (commitmentMatches) {
         Right((leafVersion, leafHash))
@@ -181,7 +187,8 @@ object Taproot {
     originalWitness: Seq[ScriptElement],
     annex: Option[Seq[Byte]],
     tapLeafHash: Seq[Byte],
-    state: InterpreterState
+    state: InterpreterState,
+    instructionLimit: Option[Int]
   ): Either[InterpreterError, InterpreterState] = {
     parseTapscript(script, state).flatMap {
       case None =>
@@ -209,7 +216,8 @@ object Taproot {
             tapscriptState,
             annex,
             tapLeafHash,
-            validationWeight
+            validationWeight,
+            instructionLimit
           )
         }
     }
@@ -221,8 +229,11 @@ object Taproot {
   ): Either[InterpreterError, Option[Vector[Instruction]]] = {
     val bytes = script.toArray
 
-    def parse(offset: Int, position: Long, result: Vector[Instruction])
-      : Either[InterpreterError, Option[Vector[Instruction]]] = {
+    def parse(
+      offset: Int,
+      position: Long,
+      result: Vector[Instruction]
+    ): Either[InterpreterError, Option[Vector[Instruction]]] = {
       if (offset >= bytes.length) {
         Right(Some(result))
       } else {
@@ -283,7 +294,8 @@ object Taproot {
     initialState: InterpreterState,
     annex: Option[Seq[Byte]],
     tapLeafHash: Seq[Byte],
-    initialValidationWeight: Int
+    initialValidationWeight: Int,
+    instructionLimit: Option[Int]
   ): Either[InterpreterError, InterpreterState] = {
 
     @tailrec
@@ -300,6 +312,8 @@ object Taproot {
         } else {
           Right(state.copy(currentScript = Seq.empty, opCount = 0))
         }
+      } else if (instructionLimit.exists(index >= _)) {
+        Right(state.copy(currentScript = scriptElements(instructions.drop(index))))
       } else {
         val instruction = instructions(index)
         val executing = conditions.forall(identity)
@@ -320,8 +334,14 @@ object Taproot {
               ) {
                 Left(NotMinimalEncoding(opCode(instruction.code), state))
               } else {
-                Right((state.copy(stack = ScriptConstant(data.toArray) +: state.stack), conditions,
-                  codeSeparatorPosition, validationWeight))
+                Right(
+                  (
+                    state.copy(stack = ScriptConstant(data.toArray) +: state.stack),
+                    conditions,
+                    codeSeparatorPosition,
+                    validationWeight
+                  )
+                )
               }
 
             case Some(_) =>
@@ -338,8 +358,14 @@ object Taproot {
                       val truthy = value.bytes.toBoolean()
                       val selected =
                         if (instruction.code == OP_NOTIF.value) !truthy else truthy
-                      Right((state.copy(stack = tail), conditions :+ selected,
-                        codeSeparatorPosition, validationWeight))
+                      Right(
+                        (
+                          state.copy(stack = tail),
+                          conditions :+ selected,
+                          codeSeparatorPosition,
+                          validationWeight
+                        )
+                      )
                     }
 
                   case Nil =>
@@ -352,8 +378,14 @@ object Taproot {
             case None if instruction.code == OP_ELSE.value =>
               conditions.lastOption match {
                 case Some(last) =>
-                  Right((state, conditions.dropRight(1) :+ !last, codeSeparatorPosition,
-                    validationWeight))
+                  Right(
+                    (
+                      state,
+                      conditions.dropRight(1) :+ !last,
+                      codeSeparatorPosition,
+                      validationWeight
+                    )
+                  )
                 case None =>
                   Left(UnbalancedConditional(opCode(instruction.code), state))
               }
@@ -432,6 +464,19 @@ object Taproot {
     }
 
     loop(0, initialState, Vector.empty, NoCodeSeparator, initialValidationWeight)
+  }
+
+  private def scriptElements(instructions: Seq[Instruction]): Seq[ScriptElement] = {
+    instructions.flatMap {
+      case Instruction(0, Some(_), _) =>
+        Seq(opCode(0))
+      case Instruction(code, Some(data), _) if data.isEmpty =>
+        Seq(opCode(code), opCode(0))
+      case Instruction(code, Some(data), _) =>
+        Seq(opCode(code), ScriptConstant(data.toArray))
+      case Instruction(code, None, _) =>
+        Seq(opCode(code))
+    }
   }
 
   private def evaluateCheckSig(
@@ -539,9 +584,7 @@ object Taproot {
           codeSeparatorPosition
         ).map(_ => (true, newWeight))
       }
-    } else if (
-      state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE)
-    ) {
+    } else if (state.flags.contains(ScriptFlag.SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE)) {
       Left(DiscourageUpgradablePublicKeyType(OP_CHECKSIG, state))
     } else {
       Right((signaturePresent, newWeight))
@@ -619,9 +662,15 @@ object Taproot {
         message ++= sha256(transaction.tx_in.flatMap { input =>
           encodeOutPoint(input.previous_output)
         }.toArray)
-        message ++= sha256(state.spentOutputs.flatMap(output => uInt64ToBytes(output.value)).toArray)
-        message ++= sha256(state.spentOutputs.flatMap(output => encodeScript(output.pk_script)).toArray)
-        message ++= sha256(transaction.tx_in.flatMap(input => uint32ToBytes(input.sequence)).toArray)
+        message ++= sha256(
+          state.spentOutputs.flatMap(output => uInt64ToBytes(output.value)).toArray
+        )
+        message ++= sha256(
+          state.spentOutputs.flatMap(output => encodeScript(output.pk_script)).toArray
+        )
+        message ++= sha256(
+          transaction.tx_in.flatMap(input => uint32ToBytes(input.sequence)).toArray
+        )
       }
 
       if (outputType == 1) {
@@ -679,17 +728,17 @@ object Taproot {
     state: InterpreterState
   ): Either[InterpreterError, InterpreterState] = {
     val context = opCode match {
-      case op: ArithmeticOp   => op.interpret(false)
+      case op: ArithmeticOp => op.interpret(false)
       case op: BitwiseLogicOp => op.interpret(false)
-      case op: ConstantOp     => op.interpret(false)
-      case op: CryptoOp       => op.interpret(false)
-      case op: FlowControlOp  => op.interpret(false)
-      case op: LocktimeOp     => op.interpret(false)
-      case op: PseudoOp       => op.interpret(false)
-      case op: ReservedOp     => op.interpret(false)
-      case op: SpliceOp       => op.interpret(false)
-      case op: StackOp        => op.interpret(false)
-      case _                  => Interpreter.abort(BadOpCode(opCode, state, "Invalid opcode"))
+      case op: ConstantOp => op.interpret(false)
+      case op: CryptoOp => op.interpret(false)
+      case op: FlowControlOp => op.interpret(false)
+      case op: LocktimeOp => op.interpret(false)
+      case op: PseudoOp => op.interpret(false)
+      case op: ReservedOp => op.interpret(false)
+      case op: SpliceOp => op.interpret(false)
+      case op: StackOp => op.interpret(false)
+      case _ => Interpreter.abort(BadOpCode(opCode, state, "Invalid opcode"))
     }
 
     context.run(state.copy(currentScript = Seq.empty)).map(_._1)

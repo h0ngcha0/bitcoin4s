@@ -21,10 +21,12 @@ object Schnorr {
           false
         } else {
           val challenge = unsigned(
-            Hash.TaggedSha256(
-              "BIP0340/challenge",
-              (signature.take(32) ++ publicKey ++ message).toArray
-            ).toIndexedSeq
+            Hash
+              .TaggedSha256(
+                "BIP0340/challenge",
+                (signature.take(32) ++ publicKey ++ message).toArray
+              )
+              .toIndexedSeq
           ).mod(curveOrder)
           val reconstructed =
             Secp256k1.params.getG.multiply(s).subtract(point.multiply(challenge)).normalize()

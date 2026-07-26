@@ -17,7 +17,7 @@ interface InterpreterComponentProps {
 
 export const InterpreterComponent: React.FunctionComponent<InterpreterComponentProps> = (props) => {
   const { interpretResult } = props
-  const { scriptPubKey, currentScript, stack, altStack, stage } = interpretResult.state
+  const { scriptPubKey, currentScript, stack, altStack, sigVersion, stage } = interpretResult.state
   const result =
     interpretResult.result.type === 'Result' ? (interpretResult.result.value ? 'True' : 'False') : 'NoResult'
 
@@ -53,7 +53,13 @@ export const InterpreterComponent: React.FunctionComponent<InterpreterComponentP
       } else if (stage.type === 'ExecutingScriptP2SH') {
         return executionDescriptionComponent('Script P2SH')
       } else if (stage.type === 'ExecutingScriptWitness') {
-        return executionDescriptionComponent('Script Witness')
+        if (sigVersion === 'SIGVERSION_TAPSCRIPT') {
+          return executionDescriptionComponent('Tapscript')
+        } else if (sigVersion === 'SIGVERSION_TAPROOT') {
+          return executionDescriptionComponent('Taproot key path')
+        } else {
+          return executionDescriptionComponent('Script Witness')
+        }
       } else {
         return executionDescriptionComponent(stage.type)
       }

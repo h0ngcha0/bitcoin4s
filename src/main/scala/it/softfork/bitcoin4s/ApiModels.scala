@@ -31,6 +31,7 @@ object ApiModels {
     scriptWitnessStack: Option[Seq[ScriptElement]] = None,
     stack: Seq[ScriptElement] = Seq.empty,
     altStack: Seq[ScriptElement] = Seq.empty,
+    sigVersion: String,
     stage: ScriptExecutionStage
   )
 
@@ -46,6 +47,7 @@ object ApiModels {
         scriptWitnessStack = interpreterState.scriptWitnessStack,
         stack = interpreterState.stack,
         altStack = interpreterState.altStack,
+        sigVersion = interpreterState.sigVersion.toString,
         stage = interpreterState.scriptExecutionStage
       )
     }
